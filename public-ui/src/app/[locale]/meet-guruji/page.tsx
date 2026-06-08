@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { postAudienceBooking } from "@/lib/api";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function MeetGurujiPage() {
   const { t } = useLanguage();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -40,10 +42,13 @@ export default function MeetGurujiPage() {
   });
 
   const onSubmit = async (data: FormValues) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log("Form data:", data);
-    setIsSubmitted(true);
+    setServerError("");
+    try {
+      await postAudienceBooking(data);
+      setIsSubmitted(true);
+    } catch (err: any) {
+      setServerError(err?.message || "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -152,6 +157,9 @@ export default function MeetGurujiPage() {
                 </div>
 
                 <div className="flex flex-col items-center pt-6 border-t border-champagne/20">
+                  {serverError && (
+                    <p className="w-full text-red-700 text-sm font-semibold bg-red-50 border border-red-200 rounded-lg px-4 py-2 mb-4 text-center">{serverError}</p>
+                  )}
                   <Button
                     type="submit"
                     size="lg"

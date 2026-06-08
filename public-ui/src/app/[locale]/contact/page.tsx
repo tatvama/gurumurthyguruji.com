@@ -12,31 +12,37 @@ import { Link } from "@/components/ui/locale-link";
 import { siteConfig } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
+import { postContact } from "@/lib/api";
+
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function ContactPage() {
   const { t } = useLanguage();
 
-  const [data, setData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: ""
-  })
+  const [data, setData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [status, setStatus] = useState<Status>("idle");
+  const [serverErrors, setServerErrors] = useState<{ field: string; message: string }[]>([]);
 
-  const handleChange = (e: any) => {
-    setData({ ...data, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setData({ ...data, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = (e: any) => {
+  const fieldError = (field: string) =>
+    serverErrors.find((e) => e.field === field)?.message;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(data)
-    setData({
-      name: "",
-      email: "",
-      subject: "",
-      message: ""
-    })
-  }
+    setStatus("loading");
+    setServerErrors([]);
+    try {
+      await postContact(data);
+      setStatus("success");
+      setData({ name: "", email: "", subject: "", message: "" });
+    } catch (err: any) {
+      setStatus("error");
+      setServerErrors(err?.errors || [{ field: "general", message: err?.message || "Something went wrong. Please try again." }]);
+    }
+  };
 
   return (
     <>
@@ -124,27 +130,48 @@ export default function ContactPage() {
               <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/10 via-transparent to-transparent pointer-events-none" />
 
               <h2 className="font-heading text-3xl font-bold text-deep-brown mb-6 relative z-10">{t("contact.form.heading")}</h2>
-              <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="font-semibold text-deep-brown/90">{t("contact.form.nameLabel")}</Label>
-                  <Input id="name" name="name" placeholder={t("contact.form.namePlaceholder")} className="bg-white/80" value={data.name} onChange={handleChange} />
+
+              {status === "success" ? (
+                <div className="text-center py-12 relative z-10">
+                  <div className="w-16 h-16 bg-saffron-accent/15 border border-saffron-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-saffron-accent" />
+                  </div>
+                  <h3 className="font-heading text-2xl font-bold text-deep-brown mb-2">Message Sent!</h3>
+                  <p className="text-deep-brown/75 mb-6">Thank you for reaching out. We will get back to you shortly.</p>
+                  <Button variant="outline" className="border-saffron-accent text-saffron-accent" onClick={() => setStatus("idle")}>
+                    Send Another
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="font-semibold text-deep-brown/90">{t("contact.form.emailLabel")}</Label>
-                  <Input id="email" name="email" type="email" placeholder={t("contact.form.emailPlaceholder")} className="bg-white/80" value={data.email} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject" className="font-semibold text-deep-brown/90">{t("contact.form.subjectLabel")}</Label>
-                  <Input id="subject" name="subject" placeholder={t("contact.form.subjectPlaceholder")} className="bg-white/80" value={data.subject} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message" className="font-semibold text-deep-brown/90">{t("contact.form.messageLabel")}</Label>
-                  <Textarea id="message" name="message" placeholder={t("contact.form.messagePlaceholder")} className="min-h-[150px] bg-white/80" value={data.message} onChange={handleChange} />
-                </div>
-                <Button type="submit" size="lg" className="w-full cursor-pointer">
-                  {t("contact.form.submit")}
-                </Button>
-              </form>
+              ) : (
+                <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="font-semibold text-deep-brown/90">{t("contact.form.nameLabel")}</Label>
+                    <Input id="name" name="name" placeholder={t("contact.form.namePlaceholder")} className="bg-white/80" value={data.name} onChange={handleChange} required />
+                    {fieldError("name") && <p className="text-red-700 text-sm font-semibold">{fieldError("name")}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="font-semibold text-deep-brown/90">{t("contact.form.emailLabel")}</Label>
+                    <Input id="email" name="email" type="email" placeholder={t("contact.form.emailPlaceholder")} className="bg-white/80" value={data.email} onChange={handleChange} required />
+                    {fieldError("email") && <p className="text-red-700 text-sm font-semibold">{fieldError("email")}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subject" className="font-semibold text-deep-brown/90">{t("contact.form.subjectLabel")}</Label>
+                    <Input id="subject" name="subject" placeholder={t("contact.form.subjectPlaceholder")} className="bg-white/80" value={data.subject} onChange={handleChange} required />
+                    {fieldError("subject") && <p className="text-red-700 text-sm font-semibold">{fieldError("subject")}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message" className="font-semibold text-deep-brown/90">{t("contact.form.messageLabel")}</Label>
+                    <Textarea id="message" name="message" placeholder={t("contact.form.messagePlaceholder")} className="min-h-[150px] bg-white/80" value={data.message} onChange={handleChange} required />
+                    {fieldError("message") && <p className="text-red-700 text-sm font-semibold">{fieldError("message")}</p>}
+                  </div>
+                  {status === "error" && fieldError("general") && (
+                    <p className="text-red-700 text-sm font-semibold bg-red-50 border border-red-200 rounded-lg px-4 py-2">{fieldError("general")}</p>
+                  )}
+                  <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={status === "loading"}>
+                    {status === "loading" ? "Sending…" : t("contact.form.submit")}
+                  </Button>
+                </form>
+              )}
               <p className="text-sm text-center text-deep-brown/70 mt-6 relative z-10 font-medium">
                 {t("contact.form.guidanceNote")} <Link href="/meet-guruji" className="underline font-bold text-saffron-accent hover:text-antique-gold">{t("contact.form.guidanceLink")}</Link> {t("contact.form.guidanceNoteEnd")}
               </p>
