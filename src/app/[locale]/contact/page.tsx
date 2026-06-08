@@ -30,6 +30,12 @@ export default function ContactPage() {
   const handleSubmit = (e: any) => {
     e.preventDefault();
     console.log(data)
+    setData({
+      name: "",
+      email: "",
+      subject: "",
+      message: ""
+    })
   }
 
   return (
