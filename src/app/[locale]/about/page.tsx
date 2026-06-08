@@ -54,7 +54,7 @@ export default function AboutPage() {
               className="lg:col-span-5 relative aspect-[3/4] w-full max-w-sm mx-auto"
             >
               <div className="absolute inset-0 bg-saffron-accent/15 rounded-3xl blur-[40px] scale-95 pointer-events-none animate-pulse-slow" />
-              <div className="absolute inset-0 border-gold-double rounded-3xl p-2.5 bg-white shadow-xl overflow-hidden group">
+              <div className="absolute inset-0 rounded-3xl p-2.5 bg-white shadow-xl overflow-hidden group">
                 <div className="w-full h-full rounded-2xl overflow-hidden relative">
                   <Image
                     src="/images/guruji-meditating.png"

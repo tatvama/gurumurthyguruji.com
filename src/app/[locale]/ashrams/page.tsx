@@ -32,7 +32,7 @@ export default function AshramsPage() {
           <LotusDivider className="mb-16" />
 
           {/* Map Section */}
-          <div className="mb-20 rounded-[2.5rem] overflow-hidden border-gold-double bg-white shadow-xl aspect-video md:aspect-[21/8] relative flex items-center justify-center group">
+          <div className="mb-20 rounded-[2.5rem] overflow-hidden bg-white shadow-xl aspect-video md:aspect-[21/8] relative flex items-center justify-center group">
             <div className="absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat opacity-[0.06] bg-[size:150px] pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/10 via-transparent to-transparent pointer-events-none" />
             

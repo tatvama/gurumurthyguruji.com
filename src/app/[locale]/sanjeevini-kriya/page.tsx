@@ -105,7 +105,7 @@ export default function SanjeeviniKriyaPage() {
           </div>
 
           {/* CTA */}
-          <div className="border-gold-double rounded-[3rem] p-12 md:p-20 text-center bg-maroon-gradient text-pearl relative overflow-hidden shadow-2xl group">
+          <div className="sacred-burgundy-bg rounded-[3rem] p-12 md:p-20 text-center text-pearl relative overflow-hidden shadow-2xl group">
             <div className="absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat opacity-[0.06] bg-[size:120px] pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/15 via-transparent to-transparent pointer-events-none" />
             

@@ -9,13 +9,7 @@ export function FreeAudienceCTA() {
   const { t } = useLanguage();
 
   return (
-    <section
-      className="relative overflow-hidden px-4 py-24 text-center md:px-8"
-      style={{
-        background:
-          "linear-gradient(150deg, #2A1505 0%, #3D1018 38%, #1E0D0A 72%, #260810 100%)",
-      }}
-    >
+    <section className="sacred-burgundy-bg relative overflow-hidden px-4 py-24 text-center md:px-8">
       {/* Chakra texture */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-[size:130px] bg-repeat opacity-[0.055]" />
 

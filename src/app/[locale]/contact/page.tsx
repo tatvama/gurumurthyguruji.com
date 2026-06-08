@@ -11,9 +11,26 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "@/components/ui/locale-link";
 import { siteConfig } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
+import { useState } from "react";
 
 export default function ContactPage() {
   const { t } = useLanguage();
+
+  const [data, setData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  })
+
+  const handleChange = (e: any) => {
+    setData({ ...data, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log(data)
+  }
 
   return (
     <>
@@ -72,7 +89,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold text-deep-brown text-base">{t("contact.details.ashramLabel")}</h3>
                       <p className="text-deep-brown/70 mt-1 font-medium leading-relaxed">
-                        {t("contact.details.ashramName")}<br/>
+                        {t("contact.details.ashramName")}<br />
                         {t("contact.details.ashramLocation")}
                       </p>
                     </div>
@@ -81,15 +98,15 @@ export default function ContactPage() {
               </div>
 
               {/* Map Placeholder */}
-              <div className="rounded-[2rem] overflow-hidden border-gold-double bg-white shadow-xl aspect-video relative flex items-center justify-center group">
+              <div className="rounded-[2rem] overflow-hidden bg-white shadow-xl aspect-video relative flex items-center justify-center group">
                 <div className="absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat opacity-[0.06] bg-[size:120px] pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/10 via-transparent to-transparent pointer-events-none" />
                 <div className="text-center relative z-10 text-deep-brown">
-                   <div className="w-12 h-12 rounded-full bg-saffron-accent/15 border border-saffron-accent/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300">
-                     <MapPin className="w-6 h-6 text-saffron-accent" />
-                   </div>
-                   <p className="font-heading text-lg font-bold">{t("contact.map.title")}</p>
-                   <p className="text-xs text-deep-brown/70 font-medium mt-0.5">{t("contact.map.subtitle")}</p>
+                  <div className="w-12 h-12 rounded-full bg-saffron-accent/15 border border-saffron-accent/20 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300">
+                    <MapPin className="w-6 h-6 text-saffron-accent" />
+                  </div>
+                  <p className="font-heading text-lg font-bold">{t("contact.map.title")}</p>
+                  <p className="text-xs text-deep-brown/70 font-medium mt-0.5">{t("contact.map.subtitle")}</p>
                 </div>
               </div>
 
@@ -101,22 +118,22 @@ export default function ContactPage() {
               <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/10 via-transparent to-transparent pointer-events-none" />
 
               <h2 className="font-heading text-3xl font-bold text-deep-brown mb-6 relative z-10">{t("contact.form.heading")}</h2>
-              <form className="space-y-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <Label htmlFor="name" className="font-semibold text-deep-brown/90">{t("contact.form.nameLabel")}</Label>
-                  <Input id="name" placeholder={t("contact.form.namePlaceholder")} className="bg-white/80" />
+                  <Input id="name" name="name" placeholder={t("contact.form.namePlaceholder")} className="bg-white/80" value={data.name} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-semibold text-deep-brown/90">{t("contact.form.emailLabel")}</Label>
-                  <Input id="email" type="email" placeholder={t("contact.form.emailPlaceholder")} className="bg-white/80" />
+                  <Input id="email" name="email" type="email" placeholder={t("contact.form.emailPlaceholder")} className="bg-white/80" value={data.email} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="subject" className="font-semibold text-deep-brown/90">{t("contact.form.subjectLabel")}</Label>
-                  <Input id="subject" placeholder={t("contact.form.subjectPlaceholder")} className="bg-white/80" />
+                  <Input id="subject" name="subject" placeholder={t("contact.form.subjectPlaceholder")} className="bg-white/80" value={data.subject} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message" className="font-semibold text-deep-brown/90">{t("contact.form.messageLabel")}</Label>
-                  <Textarea id="message" placeholder={t("contact.form.messagePlaceholder")} className="min-h-[150px] bg-white/80" />
+                  <Textarea id="message" name="message" placeholder={t("contact.form.messagePlaceholder")} className="min-h-[150px] bg-white/80" value={data.message} onChange={handleChange} />
                 </div>
                 <Button type="submit" size="lg" className="w-full cursor-pointer">
                   {t("contact.form.submit")}

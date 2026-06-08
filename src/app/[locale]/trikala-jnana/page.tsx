@@ -172,7 +172,7 @@ export default function TrikalaJnanaPage() {
         </section>
 
         {/* CTA */}
-        <section className="relative overflow-hidden bg-maroon-gradient px-4 py-24 text-center text-pearl md:px-8">
+        <section className="sacred-burgundy-bg relative overflow-hidden bg-maroon-gradient px-4 py-24 text-center text-pearl md:px-8">
           <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-[size:130px] bg-repeat opacity-[0.05]" />
           <div className="relative z-10 mx-auto max-w-3xl">
             <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-champagne/30 bg-white/5 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-champagne">

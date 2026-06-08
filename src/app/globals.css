@@ -712,13 +712,21 @@ a:focus-visible, button:focus-visible {
 
 /* ─── DARK HERO SECTION ─────────────────────────────────────────── */
 .hero-dark {
-  background: linear-gradient(
-    150deg,
-    #120804 0%,
-    var(--color-deep-brown) 40%,
-    #3a1018 80%,
-    #2a0d14 100%
-  );
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(139, 95, 77, 0.28) 0%,
+      rgba(139, 95, 77, 0.12) 25%,
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      #5b0d14 0%,
+      #64131b 25%,
+      #6f1a1d 50%,
+      #5b1b1f 75%,
+      #4a1014 100%
+    );
 }
 
 /* Dark glass card — for cards on dark backgrounds */
@@ -772,9 +780,83 @@ a:focus-visible, button:focus-visible {
 
 .section-cosmic {
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(52,18,88,0.22) 0%, transparent 52%),
-    radial-gradient(ellipse at 80% 80%, rgba(110,18,32,0.20) 0%, transparent 54%),
-    linear-gradient(150deg, #100C1A 0%, #1A0D0B 40%, #0D0B1A 80%, #14080F 100%);
+    radial-gradient(
+      ellipse at center,
+      rgba(132, 88, 68, 0.22) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at left center,
+      rgba(110, 18, 32, 0.20) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at right center,
+      rgba(110, 18, 32, 0.18) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      #4b0d13 0%,
+      #5b1118 25%,
+      #65161c 50%,
+      #571116 75%,
+      #430a10 100%
+    );
+}
+
+.sacred-burgundy-bg {
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(132, 88, 68, 0.22) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at left center,
+      rgba(110, 18, 32, 0.20) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at right center,
+      rgba(110, 18, 32, 0.18) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      #4b0d13 0%,
+      #5b1118 25%,
+      #65161c 50%,
+      #571116 75%,
+      #430a10 100%
+    );
+}
+
+.sacred-burgundy-bg {
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(132, 88, 68, 0.22) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at left center,
+      rgba(110, 18, 32, 0.20) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at right center,
+      rgba(110, 18, 32, 0.18) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      #4b0d13 0%,
+      #5b1118 25%,
+      #65161c 50%,
+      #571116 75%,
+      #430a10 100%
+    );
 }
 
 .text-om-glow {

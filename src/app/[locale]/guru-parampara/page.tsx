@@ -77,7 +77,7 @@ export default function GuruParamparaPage() {
             className="max-w-2xl mx-auto text-center mb-16 relative"
           >
             <div className="absolute inset-0 bg-saffron-accent/10 rounded-full blur-[60px] w-48 h-48 mx-auto pointer-events-none" />
-            <div className="w-44 h-44 mx-auto rounded-full border-gold-double p-2 bg-white shadow-xl relative overflow-hidden mb-6 group">
+            <div className="w-44 h-44 mx-auto rounded-full p-2 relative overflow-hidden mb-6 group">
               <div className="w-full h-full rounded-full overflow-hidden relative bg-gradient-to-b from-champagne/20 to-pearl">
                 <Image 
                   src="/images/adi-shiva.png"

@@ -27,7 +27,7 @@ export function AboutPreview() {
 
         <Reveal delay={0.1} className="group relative">
           <div className="pointer-events-none absolute inset-0 scale-95 rounded-[2rem] bg-champagne/15 blur-[34px]" />
-          <div className="border-gold-double relative z-10 aspect-square overflow-hidden rounded-[2rem] bg-white p-2 shadow-premium md:aspect-[4/5]">
+          <div className=" relative z-10 aspect-square overflow-hidden rounded-[2rem]shadow-premium md:aspect-[4/5]">
             <div className="relative h-full w-full overflow-hidden rounded-2xl bg-sand/20">
               <Image
                 src="/images/guruji-meditating.png"

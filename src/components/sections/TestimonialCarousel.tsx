@@ -34,6 +34,7 @@ export function TestimonialCarousel() {
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const showNavigation = testimonials.length > 3;
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -79,15 +80,18 @@ export function TestimonialCarousel() {
   }, [emblaApi]);
 
   return (
-    <div ref={containerRef} className="relative mx-auto max-w-5xl px-12 md:px-16">
+    <div
+      ref={containerRef}
+      className="relative mx-auto w-[80vw] max-w-[80vw] px-12 md:px-16"
+    >
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex touch-pan-y">
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="min-w-0 flex-[0_0_100%] px-3 md:flex-[0_0_80%] lg:flex-[0_0_70%]"
+              className="min-w-0 flex-[0_0_100%] px-3 md:flex-[0_0_80%] lg:flex-[0_0_33%]"
             >
-              <div className="corner-ornate relative flex h-full flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-champagne/32 bg-white px-8 py-10 text-center shadow-premium-lg md:px-12">
+              <div className="corner-ornate relative flex h-full flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-champagne/32 bg-white px-8 py-10 text-center md:px-12">
                 {/* Subtle background patterns */}
                 <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-[size:90px] bg-repeat opacity-[0.04]" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-champagne/[0.05] via-transparent to-saffron-accent/[0.03]" />
@@ -136,40 +140,43 @@ export function TestimonialCarousel() {
       </div>
 
       {/* Prev / Next */}
-      {(["prev", "next"] as const).map((dir) => (
-        <button
-          key={dir}
-          onClick={dir === "prev" ? scrollPrev : scrollNext}
-          aria-label={dir === "prev" ? "Previous testimonial" : "Next testimonial"}
-          className={cn(
-            "absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-champagne/40 bg-white text-deep-brown shadow-md transition-all hover:border-transparent hover:bg-saffron-accent hover:text-white hover:shadow-[0_4px_18px_rgba(201,130,43,0.35)]",
-            dir === "prev" ? "left-0" : "right-0",
-          )}
-        >
-          {dir === "prev" ? (
-            <ChevronLeft className="h-5 w-5" />
-          ) : (
-            <ChevronRight className="h-5 w-5" />
-          )}
-        </button>
-      ))}
+      {showNavigation &&
+  (["prev", "next"] as const).map((dir) => (
+    <button
+      key={dir}
+      onClick={dir === "prev" ? scrollPrev : scrollNext}
+      aria-label={dir === "prev" ? "Previous testimonial" : "Next testimonial"}
+      className={cn(
+        "absolute top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-champagne/40 bg-white text-deep-brown shadow-md transition-all hover:border-transparent hover:bg-saffron-accent hover:text-white",
+        dir === "prev" ? "left-0" : "right-0",
+      )}
+    >
+      {dir === "prev" ? (
+        <ChevronLeft className="h-5 w-5" />
+      ) : (
+        <ChevronRight className="h-5 w-5" />
+      )}
+    </button>
+  ))}
 
       {/* Dot indicators */}
-      <div className="relative z-20 mt-7 flex items-center justify-center gap-2">
-        {testimonials.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => emblaApi?.scrollTo(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            className={cn(
-              "h-2 cursor-pointer rounded-full transition-all duration-300",
-              selectedIndex === i
-                ? "w-6 bg-saffron-accent"
-                : "w-2 bg-champagne/30 hover:bg-champagne/60",
-            )}
-          />
-        ))}
-      </div>
+      {showNavigation && (
+  <div className="relative z-20 mt-7 flex items-center justify-center gap-2">
+    {testimonials.map((_, i) => (
+      <button
+        key={i}
+        onClick={() => emblaApi?.scrollTo(i)}
+        aria-label={`Go to slide ${i + 1}`}
+        className={cn(
+          "h-2 cursor-pointer rounded-full transition-all duration-300",
+          selectedIndex === i
+            ? "w-6 bg-saffron-accent"
+            : "w-2 bg-champagne/30 hover:bg-champagne/60",
+        )}
+      />
+    ))}
+  </div>
+)}
     </div>
   );
 }
