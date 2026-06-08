@@ -805,32 +805,6 @@ a:focus-visible, button:focus-visible {
     );
 }
 
-.sacred-burgundy-bg {
-  background:
-    radial-gradient(
-      ellipse at center,
-      rgba(132, 88, 68, 0.22) 0%,
-      transparent 40%
-    ),
-    radial-gradient(
-      ellipse at left center,
-      rgba(110, 18, 32, 0.20) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at right center,
-      rgba(110, 18, 32, 0.18) 0%,
-      transparent 55%
-    ),
-    linear-gradient(
-      135deg,
-      #4b0d13 0%,
-      #5b1118 25%,
-      #65161c 50%,
-      #571116 75%,
-      #430a10 100%
-    );
-}
 
 .sacred-burgundy-bg {
   background:

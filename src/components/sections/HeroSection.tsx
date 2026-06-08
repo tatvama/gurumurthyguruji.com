@@ -16,7 +16,7 @@ const trustItems: { icon: typeof Heart; key: UiKey }[] = [
 export function HeroSection() {
   const { t } = useLanguage();
   return (
-    <section className="hero-dark relative flex min-h-screen items-center justify-center overflow-hidden pb-16 pt-28">
+    <section className="section-cosmic relative flex min-h-screen items-center justify-center overflow-hidden pb-16 pt-28">
       {/* Sacred pattern texture */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[url('/images/pattern-chakras.png')] bg-[size:220px] bg-repeat opacity-[0.045]" />
 
