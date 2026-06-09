@@ -25,19 +25,15 @@ export function AboutPreview() {
           </Link>
         </Reveal>
 
-        <Reveal delay={0.1} className="group relative">
-          <div className="pointer-events-none absolute inset-0 scale-95 rounded-[2rem] bg-champagne/15 blur-[34px]" />
-          <div className=" relative z-10 aspect-square overflow-hidden rounded-[2rem]shadow-premium md:aspect-[4/5]">
-            <div className="relative h-full w-full overflow-hidden rounded-2xl bg-sand/20">
-              <Image
-                src="/images/guruji-meditating.png"
-                alt="Pujya Sri Gurumurthy Guruji in deep meditation"
-                fill
-                sizes="(max-width: 768px) 100vw, 40vw"
-                className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-              />
-            </div>
-          </div>
+        <Reveal delay={0.1} className="relative">
+          <Image
+            src="/images/guruji-meditating.png"
+            alt="Pujya Sri Gurumurthy Guruji in deep meditation"
+            width={400}
+            height={500}
+            sizes="(max-width: 768px) 80vw, 35vw"
+            className="mx-auto h-auto w-[38%] object-contain md:w-[60%]"
+          />
           <div className="absolute -bottom-6 -left-4 z-20 max-w-[220px] rounded-2xl border border-champagne/35 bg-white/95 p-5 shadow-premium backdrop-blur-sm md:-left-8">
             <Quote className="pointer-events-none absolute left-2 top-2 h-6 w-6 text-antique-gold/25" />
             <p className="font-heading relative z-10 pl-2 text-sm italic leading-relaxed text-deep-brown/95">
