@@ -21,21 +21,21 @@ export default function AboutPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-ivory bg-chakra-texture pt-32 pb-24 relative overflow-hidden">
+      <main className="flex-1 bg-ivory bg-chakra-texture pt-24 pb-24 relative overflow-x-hidden sm:pt-32">
         <div className="absolute top-40 left-0 w-80 h-80 bg-saffron-accent/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-40 right-0 w-96 h-96 bg-antique-gold/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
 
           {/* Header with portrait */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center mb-12">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
               className="lg:col-span-7 space-y-6"
             >
-              <h1 className="font-heading text-4xl md:text-6xl font-bold text-deep-brown leading-tight">
+              <h1 className="font-heading text-3xl font-bold text-deep-brown leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
                 {t("aboutpage.h1.a")}{" "}
                 <span className="bg-gradient-to-r from-maroon-accent to-saffron-accent bg-clip-text text-transparent italic">
                   {t("aboutpage.h1.b")}
