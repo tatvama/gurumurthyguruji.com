@@ -2,11 +2,19 @@
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { LotusDivider } from "@/components/ui/lotus-divider";
 import { Button } from "@/components/ui/button";
 import { sevaStats } from "@/lib/data";
-import { HeartHandshake, Utensils } from "lucide-react";
+import { HeartHandshake, Utensils, Sparkles, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { motion } from "framer-motion";
+
+const COSMIC =
+  "radial-gradient(ellipse at center,rgba(132,88,68,0.22) 0%,transparent 40%)," +
+  "radial-gradient(ellipse at left center,rgba(110,18,32,0.20) 0%,transparent 55%)," +
+  "radial-gradient(ellipse at right center,rgba(110,18,32,0.18) 0%,transparent 55%)," +
+  "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)";
+
+const GOLD_LINE = "absolute left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-antique-gold/70 to-transparent";
 
 export default function SevaPage() {
   const { t } = useLanguage();
@@ -14,97 +22,187 @@ export default function SevaPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-pearl bg-chakra-texture pt-32 pb-24 relative overflow-hidden">
-        {/* Soft Decorative Glows */}
-        <div className="absolute top-40 left-0 w-80 h-80 bg-saffron-accent/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-40 right-0 w-96 h-96 bg-antique-gold/5 rounded-full blur-[120px] pointer-events-none" />
+      <main className="flex-1 relative overflow-x-hidden bg-pearl bg-chakra-texture">
 
-        <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
-          
-          <div className="text-center mb-16">
-            <h1 className="font-heading text-4xl md:text-6xl font-bold text-deep-brown mb-6">
-              {t("sevapage.hero.titleLead")} <span className="bg-gradient-to-r from-maroon-accent to-saffron-accent bg-clip-text text-transparent italic text-gold-glow">{t("sevapage.hero.titleAccent")}</span>
+        {/* ── Hero Banner ──────────────────────────────────────────── */}
+        <section className="relative overflow-hidden pt-24 pb-16" style={{ background: COSMIC }}>
+          <div className={`${GOLD_LINE} top-0`} />
+          {/* OM watermark */}
+          {/* OM watermark — pt-16 shifts it below the fixed navbar */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center select-none overflow-hidden pt-28">
+            <span className="font-heading text-[320px] leading-none text-champagne opacity-[0.04]">ॐ</span>
+          </div>
+          {/* glow blobs */}
+          <div className="pointer-events-none absolute -top-20 left-1/4 h-64 w-64 rounded-full bg-saffron-accent/15 blur-[80px]" />
+          <div className="pointer-events-none absolute bottom-0 right-1/4 h-48 w-48 rounded-full bg-maroon-accent/20 blur-[60px]" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 mx-auto max-w-3xl px-4 text-center md:px-8"
+          >
+            {/* eyebrow chip */}
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-champagne/20 bg-champagne/8 px-4 py-1.5">
+              <Sparkles className="h-3 w-3 text-champagne" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.26em] text-champagne/70">
+                Sadhguru Sai Samsthana Trust
+              </span>
+            </div>
+
+            <h1 className="font-heading text-4xl font-bold leading-tight text-pearl sm:text-5xl lg:text-6xl">
+              {t("sevapage.hero.titleLead")}{" "}
+              <span className="italic text-champagne">{t("sevapage.hero.titleAccent")}</span>
             </h1>
-            <p className="text-xl text-deep-brown/85 max-w-2xl mx-auto leading-relaxed">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-pearl/60">
               {t("sevapage.hero.subtitle")}
             </p>
-          </div>
+          </motion.div>
 
-          <LotusDivider className="mb-16" />
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+          {/* Stats inside hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="relative z-10 mx-auto mt-10 grid max-w-3xl grid-cols-3 gap-px overflow-hidden rounded-2xl border border-antique-gold/20 px-4 md:px-8"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
             {sevaStats.map((stat, idx) => (
-              <div 
-                key={idx} 
-                className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-champagne/30 text-center shadow-sm hover:shadow-[0_8px_25px_rgba(201,130,43,0.08)] hover:-translate-y-0.5 transition-all duration-300 group"
+              <div
+                key={idx}
+                className={`flex flex-col items-center py-5 px-3 text-center ${idx < sevaStats.length - 1 ? "border-r border-antique-gold/15" : ""}`}
               >
-                <div className="font-heading text-4xl md:text-5xl font-bold text-saffron-accent mb-2 group-hover:scale-105 transition-transform duration-300">
+                <span className="font-heading text-2xl font-bold leading-none text-champagne sm:text-3xl">
                   {stat.value}
-                </div>
-                <div className="text-xs font-bold uppercase tracking-widest text-deep-brown/70">
+                </span>
+                <span className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-pearl/40">
                   {stat.label}
-                </div>
+                </span>
               </div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Initiatives */}
-          <div className="space-y-12 mb-24">
-            <h2 className="font-heading text-3xl font-bold text-deep-brown text-center mb-12">
-              {t("sevapage.initiatives.heading")}
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white/70 backdrop-blur-sm rounded-[2rem] p-10 border border-champagne/30 hover:border-saffron-accent/40 hover:shadow-[0_10px_25px_rgba(201,130,43,0.08)] transition-all duration-300 group">
-                <div className="w-16 h-16 bg-ivory rounded-2xl flex items-center justify-center mb-6 border border-champagne/20 group-hover:bg-saffron-accent/15 group-hover:border-saffron-accent/30 transition-all duration-300">
-                  <Utensils className="w-8 h-8 text-saffron-accent" />
+          <div className={`${GOLD_LINE} bottom-0`} />
+        </section>
+
+        {/* ── Initiatives ─────────────────────────────────────────── */}
+        <section className="py-14">
+          <div className="mx-auto max-w-5xl px-4 md:px-8">
+
+            {/* section header */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-8 text-center"
+            >
+              <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.26em] text-antique-gold">
+                How We Serve
+              </p>
+              <h2 className="font-heading text-2xl font-bold leading-tight text-deep-brown sm:text-3xl">
+                {t("sevapage.initiatives.heading")}
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Annadana */}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55 }}
+                className="group relative overflow-hidden rounded-2xl border border-champagne/30 bg-white/75 backdrop-blur-sm transition-all duration-300 hover:border-saffron-accent/35 hover:shadow-[0_8px_28px_rgba(75,13,19,0.10)]"
+              >
+                {/* accent top */}
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-saffron-accent/60 to-transparent" />
+                <div className="p-6">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-saffron-accent/20 bg-saffron-accent/8 transition-all duration-300 group-hover:bg-saffron-accent/15">
+                      <Utensils className="h-5 w-5 text-saffron-accent" />
+                    </div>
+                    <h3 className="font-heading text-lg font-bold leading-snug text-deep-brown transition-colors duration-300 group-hover:text-saffron-accent">
+                      {t("sevapage.initiatives.annadana.title")}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-deep-brown/70">
+                    {t("sevapage.initiatives.annadana.body")}
+                  </p>
+                  <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-saffron-accent/70 transition-colors group-hover:text-saffron-accent">
+                    Learn more <ArrowRight className="h-3 w-3" />
+                  </div>
                 </div>
-                <h3 className="font-heading text-2xl font-bold text-deep-brown mb-4 group-hover:text-saffron-accent transition-colors duration-300">
-                  {t("sevapage.initiatives.annadana.title")}
-                </h3>
-                <p className="text-deep-brown/80 leading-relaxed text-base">
-                  {t("sevapage.initiatives.annadana.body")}
-                </p>
-              </div>
-              
-              <div className="bg-white/70 backdrop-blur-sm rounded-[2rem] p-10 border border-champagne/30 hover:border-saffron-accent/40 hover:shadow-[0_10px_25px_rgba(201,130,43,0.08)] transition-all duration-300 group">
-                <div className="w-16 h-16 bg-ivory rounded-2xl flex items-center justify-center mb-6 border border-champagne/20 group-hover:bg-saffron-accent/15 group-hover:border-saffron-accent/30 transition-all duration-300">
-                  <HeartHandshake className="w-8 h-8 text-saffron-accent" />
+              </motion.div>
+
+              {/* Education / Compassionate service */}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: 0.08 }}
+                className="group relative overflow-hidden rounded-2xl border border-champagne/30 bg-white/75 backdrop-blur-sm transition-all duration-300 hover:border-antique-gold/35 hover:shadow-[0_8px_28px_rgba(75,13,19,0.10)]"
+              >
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-antique-gold/60 to-transparent" />
+                <div className="p-6">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-antique-gold/20 bg-antique-gold/8 transition-all duration-300 group-hover:bg-antique-gold/15">
+                      <HeartHandshake className="h-5 w-5 text-antique-gold" />
+                    </div>
+                    <h3 className="font-heading text-lg font-bold leading-snug text-deep-brown transition-colors duration-300 group-hover:text-antique-gold">
+                      {t("sevapage.initiatives.education.title")}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-deep-brown/70">
+                    {t("sevapage.initiatives.education.body")}
+                  </p>
+                  <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-antique-gold/70 transition-colors group-hover:text-antique-gold">
+                    Learn more <ArrowRight className="h-3 w-3" />
+                  </div>
                 </div>
-                <h3 className="font-heading text-2xl font-bold text-deep-brown mb-4 group-hover:text-saffron-accent transition-colors duration-300">
-                  {t("sevapage.initiatives.education.title")}
-                </h3>
-                <p className="text-deep-brown/80 leading-relaxed text-base">
-                  {t("sevapage.initiatives.education.body")}
-                </p>
-              </div>
+              </motion.div>
             </div>
           </div>
+        </section>
 
-          {/* CTA */}
-          <div className="sacred-burgundy-bg rounded-[3rem] p-12 md:p-20 text-center text-pearl relative overflow-hidden shadow-2xl group">
-            <div className="absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat opacity-[0.06] bg-[size:120px] pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/15 via-transparent to-transparent pointer-events-none" />
-            
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-champagne mb-6 relative z-10 text-gold-glow">
-              {t("sevapage.cta.heading")}
-            </h2>
-            <p className="text-lg text-pearl/85 max-w-2xl mx-auto mb-10 relative z-10">
-              {t("sevapage.cta.body")}
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-saffron-accent to-antique-gold text-white border-0 hover:brightness-110 shadow-lg relative z-10 transition-all font-semibold hover:-translate-y-0.5 text-lg px-8 py-6 h-auto"
-            >
-              {t("sevapage.cta.button")}
-            </Button>
-            <p className="text-sm text-pearl/75 mt-6 italic relative z-10">
-              {t("sevapage.cta.note")}
-            </p>
+        {/* ── CTA Banner ──────────────────────────────────────────── */}
+        <section className="relative overflow-hidden py-14" style={{ background: COSMIC }}>
+          <div className={`${GOLD_LINE} top-0`} />
+          <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat bg-[size:120px] opacity-[0.04]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center select-none overflow-hidden">
+            <span className="font-heading text-[280px] leading-none text-champagne opacity-[0.04]">ॐ</span>
           </div>
 
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="relative z-10 mx-auto max-w-2xl px-4 text-center md:px-8"
+          >
+            <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.28em] text-champagne/45">
+              Join the Mission
+            </p>
+            <h2 className="font-heading text-3xl font-bold leading-tight text-champagne sm:text-4xl">
+              {t("sevapage.cta.heading")}
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-pearl/60">
+              {t("sevapage.cta.body")}
+            </p>
+            <div className="mt-8">
+              <Button
+                size="lg"
+                className="h-auto border-0 bg-gradient-to-r from-saffron-accent to-antique-gold px-8 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-110"
+              >
+                {t("sevapage.cta.button")}
+              </Button>
+              <p className="mt-4 text-[11px] italic text-pearl/40">
+                {t("sevapage.cta.note")}
+              </p>
+            </div>
+          </motion.div>
+          <div className={`${GOLD_LINE} bottom-0`} />
+        </section>
+
       </main>
       <Footer />
     </>
