@@ -113,7 +113,7 @@ export function TestimonialCarousel() {
       className="relative mx-auto w-full max-w-6xl px-12 md:px-16 lg:px-20"
     >
       {/* ── Embla viewport ────────────────────────────────────────────── */}
-      <div className="overflow-hidden" ref={emblaRef}>
+      <div className="overflow-x-hidden py-6" ref={emblaRef}>
         <div className="flex touch-pan-y items-center">
 
           {testimonials.map((testimonial, index) => {
@@ -144,9 +144,9 @@ export function TestimonialCarousel() {
                     "relative flex h-full w-full flex-col items-center overflow-hidden rounded-[2rem] border text-center",
                     "transition-[opacity,transform,box-shadow,border-color,padding,background-color] duration-500 ease-in-out",
                     pos === "center"
-                      ? "translate-y-0 scale-100 border-antique-gold/50 bg-white px-6 py-8 md:px-8 md:py-10 shadow-2xl opacity-100 z-10"
+                      ? "translate-y-0 scale-100 border-antique-gold/50 bg-white px-6 py-8 md:px-8 md:py-10 opacity-100 z-10"
                       : pos === "left" || pos === "right"
-                      ? "translate-y-4 scale-95 border-champagne/30 bg-white/70 px-5 py-7 shadow-md opacity-55 z-0"
+                      ? "translate-y-4 scale-95 border-champagne/30 bg-white/70 px-5 py-7 opacity-55 z-0"
                       : "opacity-0 scale-90 pointer-events-none border-transparent bg-white/70 px-5 py-7"
                   )}
                 >
