@@ -34,10 +34,10 @@ export function ScripturalRoots() {
   const { t } = useLanguage();
 
   return (
-    <section className="section-pearl relative overflow-hidden px-4 py-20 sm:py-28 md:px-8">
+    <section className="section-pearl relative overflow-hidden py-20 sm:py-28">
       <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-champagne/12 blur-[120px]" />
 
-      <div className="relative z-10 mx-auto max-w-5xl">
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6 md:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="eyebrow eyebrow-center">{t("scripture.eyebrow")}</span>
           <h2 className="font-heading mt-4 text-4xl font-medium leading-[1.08] tracking-tight text-deep-brown sm:text-5xl">
@@ -48,12 +48,12 @@ export function ScripturalRoots() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-7 md:grid-cols-2">
+        <div className="mt-14 grid grid-cols-1 gap-6 sm:gap-7 md:grid-cols-2">
           {verses.map((v, i) => (
-            <Reveal key={v.refKey} delay={i * 0.1} className="h-full">
-              <div className="card-glass flex h-full flex-col p-8">
+            <Reveal key={v.refKey} delay={i * 0.1} className="flex w-full flex-col">
+              <div className="card-glass flex flex-1 flex-col p-7 sm:p-8">
                 <div className="mb-5 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-antique-gold/10 text-antique-gold ring-1 ring-antique-gold/20">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-antique-gold/10 text-antique-gold ring-1 ring-antique-gold/20">
                     <BookOpenText className="h-5 w-5" strokeWidth={1.6} />
                   </span>
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-antique-gold">
@@ -61,7 +61,7 @@ export function ScripturalRoots() {
                   </span>
                 </div>
 
-                {/* Sanskrit verse — Devanāgarī (kept in a serif that renders it) */}
+                {/* Sanskrit verse — Devanāgarī */}
                 <p
                   lang="sa"
                   className="font-heading text-[1.45rem] leading-[1.6] text-deep-brown"
