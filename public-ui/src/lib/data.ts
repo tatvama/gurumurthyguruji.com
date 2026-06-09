@@ -117,6 +117,15 @@ export const testimonials = [
       kn: "ಆಶ್ರಮಕ್ಕೆ ಬಂದು ಗುರೂಜಿಯ ಆಶೀರ್ವಾದ ಪಡೆದದ್ದು ನನ್ನ ಆಧ್ಯಾತ್ಮಿಕ ಪಯಣದ ಅತ್ಯಂತ ಸುಂದರ ತಿರುವು.",
     },
   },
+  {
+    id: 4,
+    name: "Aman Singh",
+    location: "odisha",
+    quote: {
+      en: "Attending the ashram and receiving Guruji's blessings has been the most beautiful turning point in my spiritual journey.",
+      kn: "ಆಶ್ರಮಕ್ಕೆ ಬಂದು ಗುರೂಜಿಯ ಆಶೀರ್ವಾದ ಪಡೆದದ್ದು ನನ್ನ ಆಧ್ಯಾತ್ಮಿಕ ಪಯಣದ ಅತ್ಯಂತ ಸುಂದರ ತಿರುವು.",
+    },
+  },
 ];
 
 export const teachings = [
