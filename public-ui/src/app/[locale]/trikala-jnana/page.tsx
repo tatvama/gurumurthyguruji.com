@@ -94,22 +94,20 @@ export default function TrikalaJnanaPage() {
         </section>
 
         {/* How Guruji sees */}
-        <section className="section-ivory bg-chakra-texture relative overflow-hidden px-4 py-20 sm:py-28 md:px-8">
+        <section className="section-ivory bg-chakra-texture relative px-4 py-20 sm:py-28 md:px-8">
           <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <Reveal className="order-2 lg:order-1">
-              <div className="relative mx-auto w-full max-w-sm">
-                <div className="golden-aura animate-mandala-glow absolute -inset-6" />
-                <div className="arch-frame relative aspect-[3/4] bg-lotus">
-                  <Image
-                    src="/images/guruji-portrait.png"
-                    alt="Pujya Sri Gurumurthy Guruji offering divine darshan"
-                    fill
-                    sizes="(max-width: 1024px) 80vw, 400px"
-                    className="object-cover object-top"
-                  />
-                </div>
-              </div>
-            </Reveal>
+            {/* Plain div — no Reveal animation so nothing can clip the image */}
+            <div className="order-2 lg:order-1 flex justify-center">
+              <Image
+                src="/images/guruji-portrait.png"
+                alt="Pujya Sri Gurumurthy Guruji offering divine darshan"
+                width={380}
+                height={500}
+                sizes="(max-width: 1024px) 70vw, 380px"
+                className="h-auto w-[55%] object-contain sm:w-[45%] lg:w-[65%]"
+                style={{ height: "auto" }}
+              />
+            </div>
             <Reveal delay={0.1} className="order-1 lg:order-2">
               <span className="eyebrow">{t("trikalapage.sight.eyebrow")}</span>
               <h2 className="font-heading mt-4 text-3xl font-medium leading-tight text-deep-brown sm:text-4xl">
