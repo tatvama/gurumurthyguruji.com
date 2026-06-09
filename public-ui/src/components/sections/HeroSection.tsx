@@ -70,30 +70,32 @@ export function HeroSection() {
             </div>
 
             {/* Display headline */}
-            <h1 className="font-heading mb-5 text-[2.6rem] font-light leading-[1.06] tracking-tight text-pearl sm:text-[3.5rem] lg:text-[4.5rem] xl:text-[5.25rem]">
-              <span className="font-light">{t("hero.h1.line1")}</span>
-              <span className="mt-2 block font-normal italic text-shimmer-gold">
+            <h1 className="font-heading mb-4 leading-tight">
+              <span className="mb-2 block text-[8px] font-bold uppercase tracking-[0.25em] text-champagne/55 sm:text-[11px] lg:text-[16px] xl:text-[22px]">
+                {t("hero.h1.line1")}
+              </span>
+              <span className="block text-[1.6rem] sm:text-[2rem] lg:text-[2.4rem] xl:text-[2.8rem] font-bold tracking-normal text-pearl leading-[1.15]">
                 {t("hero.h1.name")}
               </span>
             </h1>
 
             {/* Tagline */}
-            <p className="mb-5 text-[10.5px] font-bold uppercase tracking-[0.28em] text-champagne/60">
+            <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.25em] text-champagne/55">
               {t("hero.tagline")}
             </p>
 
-            {/* Body */}
-            <p className="mx-auto mb-7 max-w-xl text-[17px] leading-[1.8] text-pearl/68 lg:mx-0">
+            {/* Body — reduced from 17px → 14px */}
+            <p className="mx-auto mb-5 max-w-lg text-[14px] leading-[1.75] text-pearl/62 lg:mx-0">
               {t("hero.body")}
             </p>
 
-            {/* Pull quote */}
-            <blockquote className="mx-auto mb-9 max-w-md border-l-2 border-champagne/30 pl-5 text-base italic leading-relaxed text-pearl/45 lg:mx-0">
+            {/* Pull quote — reduced from text-base → text-[13px] */}
+            <blockquote className="mx-auto mb-7 max-w-md border-l-2 border-champagne/25 pl-4 text-[13px] italic leading-relaxed text-pearl/38 lg:mx-0">
               {t("hero.quote")}
             </blockquote>
 
             {/* CTAs */}
-            <div className="flex flex-col gap-4 sm:flex-row lg:justify-start">
+            <div className="flex flex-col gap-3 sm:flex-row lg:justify-start">
               <Link href="/meet-guruji" className="btn-champagne-pill w-full sm:w-auto">
                 {t("cta.book")}
               </Link>
@@ -103,11 +105,11 @@ export function HeroSection() {
             </div>
 
             {/* Trust row */}
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-pearl/8 pt-7 lg:justify-start">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-pearl/8 pt-5 lg:justify-start">
               {trustItems.map((item, i) => (
-                <span key={item.key} className="inline-flex items-center gap-1.5 text-[13px] text-pearl/42">
-                  {i > 0 && <span className="mr-4 text-pearl/20">·</span>}
-                  <item.icon className="h-3.5 w-3.5 text-champagne/55" />
+                <span key={item.key} className="inline-flex items-center gap-1.5 text-[11.5px] text-pearl/38">
+                  {i > 0 && <span className="mr-3 text-pearl/18">·</span>}
+                  <item.icon className="h-3 w-3 text-champagne/50" />
                   {t(item.key)}
                 </span>
               ))}
@@ -132,9 +134,9 @@ export function HeroSection() {
               <div className="golden-aura animate-mandala-glow absolute -inset-4 z-0" />
 
               {/* Portrait arch frame */}
-              <div className="absolute inset-0 z-10 overflow-hidden rounded-t-full rounded-b-3xl border-[3px] border-champagne/22 shadow-[0_50px_120px_rgba(0,0,0,0.65)]">
+              <div className="absolute inset-0 z-10 overflow-hidden">
                 {/* Subtle top gradient to blend into dark bg */}
-                <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-transparent to-[rgba(21,10,6,0.15)]" />
+                <div className="absolute inset-0 z-10 bg-gradient-to-b" />
                 <Image
                   src="/images/guruji-portrait.png"
                   alt="Pujya Sri Gurumurthy Guruji"
@@ -147,9 +149,9 @@ export function HeroSection() {
             </motion.div>
 
             {/* Floating OM chip — dark frosted style */}
-            <div className="absolute -left-4 bottom-12 z-20 hidden rounded-2xl border border-champagne/22 bg-deep-brown/80 px-4 py-3 shadow-xl backdrop-blur-xl sm:block">
-              <p className="font-heading text-2xl leading-none text-champagne">ॐ</p>
-              <p className="mt-1 text-[9.5px] font-bold uppercase tracking-[0.22em] text-pearl/40">
+            <div className="absolute -bottom-2 left-2 z-20 rounded-2xl border border-champagne/22 bg-deep-brown/85 px-3 py-2.5 shadow-xl backdrop-blur-xl sm:-bottom-0 sm:left-0 sm:px-4 sm:py-3 lg:-left-6">
+              <p className="font-heading text-xl leading-none text-champagne sm:text-2xl">ॐ</p>
+              <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.22em] text-pearl/40 sm:text-[9.5px]">
                 {t("hero.chip")}
               </p>
             </div>
