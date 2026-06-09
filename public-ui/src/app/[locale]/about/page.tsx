@@ -47,26 +47,17 @@ export default function AboutPage() {
               <p className="text-deep-brown/80 leading-relaxed text-lg">{t("aboutpage.intro")}</p>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-              className="lg:col-span-5 relative aspect-[3/4] w-full max-w-sm mx-auto"
-            >
-              <div className="absolute inset-0 bg-saffron-accent/15 rounded-3xl blur-[40px] scale-95 pointer-events-none animate-pulse-slow" />
-              <div className="absolute inset-0 rounded-3xl p-2.5 bg-white shadow-xl overflow-hidden group">
-                <div className="w-full h-full rounded-2xl overflow-hidden relative">
-                  <Image
-                    src="/images/guruji-meditating.png"
-                    alt="Pujya Sri Gurumurthy Guruji in meditation"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                    priority
-                  />
-                </div>
-              </div>
-            </motion.div>
+            <div className="lg:col-span-5 flex justify-center">
+              <Image
+                src="/images/guruji-meditating.png"
+                alt="Pujya Sri Gurumurthy Guruji in meditation"
+                width={420}
+                height={560}
+                sizes="(max-width: 768px) 80vw, 40vw"
+                className="h-auto w-[70%] object-contain sm:w-[60%] lg:w-[78%] xl:w-[70%]"
+                priority
+              />
+            </div>
           </div>
 
           <LotusDivider />
