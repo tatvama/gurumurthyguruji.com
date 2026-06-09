@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   Inter,
   Cormorant_Garamond,
+  Caveat,
   Noto_Sans_Kannada,
   Noto_Serif_Kannada,
 } from "next/font/google";
@@ -17,6 +18,12 @@ import { LOCALES, isLocale } from "@/lib/locales";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const cormorant = Cormorant_Garamond({
@@ -110,9 +117,9 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${cormorant.variable} ${notoKannada.variable} ${notoKannadaSerif.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${notoKannadaSerif.variable} h-full scroll-smooth antialiased`}
     >
-      <body suppressHydrationWarning className="flex min-h-full flex-col bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
+      <body suppressHydrationWarning className="flex min-h-full flex-col overflow-x-hidden bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
         <NavProgress />
         <LanguageProvider initialLang={locale}>
           {children}
