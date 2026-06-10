@@ -814,6 +814,13 @@ export default function AdminPage() {
     [bookings],
   );
 
+  /* ── logged-in user's role derived from admins list ── */
+  const loggedRole = useMemo(
+    () => admins.find((a) => a.mobile === loggedMobile)?.role ?? "admin",
+    [admins, loggedMobile],
+  );
+  const isSuperAdmin = loggedRole === "superadmin";
+
   if (!authed) return (
     <LoginScreen onLogin={(name, mobile) => {
       setLoggedName(name);
@@ -904,8 +911,10 @@ export default function AdminPage() {
               <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(245,230,200,0.4)", marginTop: 1 }}>Admin Console</p>
             </div>
           </div>
-          <div style={{ marginTop: 14, borderRadius: 6, padding: "5px 10px", background: "rgba(201,130,43,0.2)", border: "1px solid rgba(201,130,43,0.35)", display: "inline-block" }}>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#c9822b" }}>Super Admin</span>
+          <div style={{ marginTop: 14, borderRadius: 6, padding: "5px 10px", display: "inline-block", background: isSuperAdmin ? "rgba(201,130,43,0.2)" : "rgba(124,58,237,0.15)", border: `1px solid ${isSuperAdmin ? "rgba(201,130,43,0.35)" : "rgba(124,58,237,0.35)"}` }}>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: isSuperAdmin ? "#c9822b" : "#a78bfa" }}>
+              {isSuperAdmin ? "Super Admin" : "Admin"}
+            </span>
           </div>
         </div>
 
