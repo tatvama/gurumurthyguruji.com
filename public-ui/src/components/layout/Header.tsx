@@ -329,18 +329,21 @@ export function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex min-w-0 shrink items-center gap-2">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-champagne/30 bg-champagne/10 font-heading text-sm leading-none text-champagne transition-all duration-300 sm:h-9 sm:w-9 sm:text-base">
               ॐ
             </span>
-            <span className="truncate font-heading text-[13px] font-bold tracking-wide text-pearl/90 transition-colors duration-300 sm:text-[15px] lg:text-base">
-              <span className="hidden sm:inline">Pujya Sri </span>Gurumurthy{" "}
+            <span
+              className="whitespace-nowrap font-heading font-bold tracking-wide text-pearl/90"
+              style={{ fontSize: "clamp(11px, 1.4vw, 15px)" }}
+            >
+              Pujya Sri Gurumurthy{" "}
               <span className="text-champagne">Guruji</span>
             </span>
           </Link>
 
-          {/* Desktop center nav */}
-          <nav className="hidden items-center gap-0.5 lg:flex">
+          {/* Desktop center nav — shows from 1100 px */}
+          <nav className="hidden items-center min-[1100px]:flex" style={{ gap: "clamp(0px, 0.3vw, 4px)" }}>
             {navItems.map((item) => {
               const active = isGroupActive(item);
               const isOpen = activeDropdown === item.key;
@@ -351,9 +354,10 @@ export function Header() {
                     key={item.key}
                     href={item.href}
                     className={cn(
-                      "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                      "relative rounded-lg py-2 font-medium transition-all duration-200 whitespace-nowrap",
                       linkCn(active),
                     )}
+                    style={{ fontSize: "clamp(11.5px, 1.05vw, 13.5px)", padding: "8px clamp(8px, 0.9vw, 14px)" }}
                   >
                     {t(item.key)}
                     {active && (
@@ -378,9 +382,10 @@ export function Header() {
                     onClick={() => setActiveDropdown(isOpen ? null : item.key)}
                     aria-expanded={isOpen}
                     className={cn(
-                      "flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                      "flex items-center gap-1 rounded-lg py-2 font-medium transition-all duration-200 whitespace-nowrap",
                       linkCn(active),
                     )}
+                    style={{ fontSize: "clamp(11.5px, 1.05vw, 13.5px)", padding: "8px clamp(8px, 0.9vw, 14px)" }}
                   >
                     {t(item.key)}
                     <ChevronDown
@@ -459,13 +464,14 @@ export function Header() {
           </nav>
 
           {/* Right side */}
-          <div className="flex shrink-0 items-center">
+          <div className="flex shrink-0 items-center gap-2">
             {/* Desktop: language toggle + CTA */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden min-[1100px]:flex items-center gap-2 min-[1300px]:gap-3">
               <LanguageToggle tone="light" />
               <Link
                 href="/meet-guruji"
                 className="btn-outline-pill-dark inline-flex items-center gap-2 whitespace-nowrap"
+                style={{ fontSize: "clamp(11px, 1vw, 13px)" }}
               >
                 {t("cta.bookShort")}
                 <span className="relative flex h-2 w-2">
@@ -475,11 +481,11 @@ export function Header() {
               </Link>
             </div>
 
-            {/* Mobile/tablet hamburger */}
+            {/* Hamburger — visible below 1100 px */}
             <button
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation menu"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-pearl/80 transition-colors hover:bg-white/10 hover:text-pearl lg:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-pearl/80 transition-colors hover:bg-white/10 hover:text-pearl min-[1100px]:hidden"
             >
               <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>

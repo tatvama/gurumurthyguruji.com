@@ -2,7 +2,7 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   getAudienceBookings,
@@ -55,6 +55,89 @@ const COSMIC =
   "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)";
 
 type Tab = "bookings" | "contacts" | "admins";
+
+/* ── CustomSelect ──────────────────────────────────────────────────── */
+function CustomSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value) ?? options[0];
+
+  React.useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 8, height: 40, minWidth: 145, padding: "0 12px 0 14px",
+          border: "1.5px solid #b9934a", borderRadius: 10,
+          background: "linear-gradient(135deg,#fffaf4,#fef3e2)",
+          cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#7a4a1e",
+          boxShadow: "0 1px 4px rgba(185,147,69,0.12)",
+          outline: "none", whiteSpace: "nowrap",
+        }}
+      >
+        <span style={{ flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {selected.label}
+        </span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="#b9934a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.18s" }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {/* Dropdown list */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 900,
+          minWidth: "100%", background: "#fff",
+          border: "1.5px solid #e8d9c0", borderRadius: 12,
+          boxShadow: "0 8px 32px rgba(75,13,19,0.13), 0 2px 8px rgba(185,147,69,0.1)",
+          overflow: "hidden",
+        }}>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              style={{
+                display: "block", width: "100%", textAlign: "left",
+                padding: "10px 16px", border: "none", cursor: "pointer", fontSize: 13,
+                fontWeight: opt.value === value ? 700 : 500,
+                color: opt.value === value ? "#7a4a1e" : "#3b1a0e",
+                background: opt.value === value ? "#fef3e2" : "#fff",
+                transition: "background 0.12s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fef3e2"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = opt.value === value ? "#fef3e2" : "#fff"; }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── helpers ────────────────────────────────────────────────────────── */
 function fmt(iso?: string) {
@@ -374,15 +457,6 @@ function DetailPanel({
         ["Message", (item as ContactMessage).message],
       ];
 
-  const timelineEvents = isBooking
-    ? [
-        { label: "Form Submitted",   date: item.createdAt, badge: "Submitted",  color: "#b9934a", bg: "#fef3e2" },
-        { label: "Booking Received", date: item.createdAt, badge: "Received",   color: "#15803d", bg: "#f0fdf4" },
-      ]
-    : [
-        { label: "Message Sent",     date: item.createdAt, badge: "Received",   color: "#15803d", bg: "#f0fdf4" },
-      ];
-
   return (
     <>
       {/* Backdrop */}
@@ -464,32 +538,18 @@ function DetailPanel({
             </div>
           </div>
 
-          {/* Timeline Card */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #ede6d6", overflow: "hidden", boxShadow: "0 1px 8px rgba(75,13,19,0.05)" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0e8d8", display: "flex", alignItems: "center", gap: 8 }}>
-              <Clock size={14} color="#b9934a" />
-              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9b7a5e" }}>Timeline</span>
+          {/* Status card — single "received" confirmation */}
+          <div style={{ background: "#f0fdf4", borderRadius: 14, border: "1px solid #bbf7d0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#dcfce7", border: "1.5px solid #86efac", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <CheckCircle2 size={20} color="#16a34a" />
             </div>
-            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 0 }}>
-              {timelineEvents.map((ev, idx) => (
-                <div key={idx} style={{ display: "flex", gap: 14, position: "relative" }}>
-                  {/* vertical line */}
-                  {idx < timelineEvents.length - 1 && (
-                    <div style={{ position: "absolute", left: 17, top: 34, bottom: -8, width: 2, background: "#ede6d6" }} />
-                  )}
-                  {/* icon dot */}
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: ev.bg, border: `1.5px solid ${ev.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: ev.color }} />
-                  </div>
-                  <div style={{ flex: 1, paddingBottom: idx < timelineEvents.length - 1 ? 20 : 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#3b1a0e" }}>{ev.label}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, background: ev.bg, color: ev.color, border: `1px solid ${ev.color}40`, borderRadius: 20, padding: "2px 9px" }}>{ev.badge}</span>
-                    </div>
-                    <p style={{ fontSize: 11.5, color: "#9b7a5e" }}>{fmt(ev.date)}, {fmtTime(ev.date)}</p>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#15803d", marginBottom: 2 }}>
+                {isBooking ? "Booking Received" : "Message Received"}
+              </p>
+              <p style={{ fontSize: 11.5, color: "#166534" }}>
+                {fmt(item.createdAt)} at {fmtTime(item.createdAt)}
+              </p>
             </div>
           </div>
 
@@ -688,6 +748,8 @@ export default function AdminPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [adminPanel, setAdminPanel] = useState<{ open: boolean; user: AdminUser | null }>({ open: false, user: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filterBooking, setFilterBooking] = useState("all"); // ashram filter
+  const [filterContact, setFilterContact] = useState("all"); // date-period filter
 
   /* ── check existing session ── */
   useEffect(() => {
@@ -746,6 +808,12 @@ export default function AdminPage() {
     setLoggedMobile("");
   }
 
+  /* ── unique ashram values for bookings filter dropdown (must be before any early return) ── */
+  const ashramOptions = useMemo(
+    () => Array.from(new Set(bookings.map((b) => b.nearestAshram).filter(Boolean))).sort(),
+    [bookings],
+  );
+
   if (!authed) return (
     <LoginScreen onLogin={(name, mobile) => {
       setLoggedName(name);
@@ -756,24 +824,45 @@ export default function AdminPage() {
 
   /* ── filtered + paginated data ── */
   const raw = tab === "bookings" ? bookings : contacts;
-  const q = search.toLowerCase();
+  const q   = search.toLowerCase();
   const filtered = raw.filter((r) => {
-    if (tab === "bookings") {
-      const b = r as AudienceBooking;
-      return (
-        b.fullName?.toLowerCase().includes(q) ||
-        b.mobile?.includes(q) ||
-        b.location?.toLowerCase().includes(q) ||
-        b.nearestAshram?.toLowerCase().includes(q)
-      );
-    } else {
-      const c = r as ContactMessage;
-      return (
-        c.name?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.subject?.toLowerCase().includes(q)
-      );
+    /* text search */
+    let match = true;
+    if (q) {
+      if (tab === "bookings") {
+        const b = r as AudienceBooking;
+        match =
+          !!b.fullName?.toLowerCase().includes(q) ||
+          !!b.mobile?.includes(q) ||
+          !!b.location?.toLowerCase().includes(q) ||
+          !!b.nearestAshram?.toLowerCase().includes(q);
+      } else {
+        const c = r as ContactMessage;
+        match =
+          !!c.name?.toLowerCase().includes(q) ||
+          !!c.email?.toLowerCase().includes(q) ||
+          !!c.subject?.toLowerCase().includes(q);
+      }
     }
+    if (!match) return false;
+
+    /* dropdown filter */
+    if (tab === "bookings" && filterBooking !== "all") {
+      return (r as AudienceBooking).nearestAshram === filterBooking;
+    }
+    if (tab === "contacts" && filterContact !== "all") {
+      const d   = new Date(r.createdAt ?? "");
+      const now = new Date();
+      if (filterContact === "today")
+        return d.toDateString() === now.toDateString();
+      if (filterContact === "week") {
+        const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return d >= cutoff;
+      }
+      if (filterContact === "month")
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    return true;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -784,8 +873,12 @@ export default function AdminPage() {
   const bookingCols = ["Name", "Mobile", "Profession", "Location", "Ashram", "Date"];
   const contactCols = ["Name", "Email", "Subject", "Date"];
 
-  /* close sidebar when tab changes on mobile */
-  const tabChange = (t: Tab) => { setTab(t); setPage(1); setSearch(""); setSidebarOpen(false); };
+  /* close sidebar when tab changes on mobile; reset filters */
+  const tabChange = (t: Tab) => {
+    setTab(t); setPage(1); setSearch("");
+    setFilterBooking("all"); setFilterContact("all");
+    setSidebarOpen(false);
+  };
 
   return (
     <div className="adm-root">
@@ -862,73 +955,130 @@ export default function AdminPage() {
       {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
       <main className="adm-main">
 
-        {/* Top bar */}
-        <header className="adm-header">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {/* Hamburger — only visible on mobile */}
-            <button className="adm-hamburger" onClick={() => setSidebarOpen(v => !v)}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#3b1a0e", display: "flex", alignItems: "center" }}>
-              <Menu size={22} />
-            </button>
-            <div>
-              <p className="adm-header-sub">
-                {tab === "bookings" ? "Submissions" : tab === "contacts" ? "Messages" : "Configuration"}
-              </p>
-              <h1 className="adm-header-title">
-                {tab === "bookings" ? "Audience Bookings" : tab === "contacts" ? "Contact Messages" : "Admin Users"}
-              </h1>
+        {/* ── Admins tab: white top bar ───────────────────────────────── */}
+        {tab === "admins" && (
+          <header className="adm-header">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button className="adm-hamburger" onClick={() => setSidebarOpen(v => !v)}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#3b1a0e", display: "flex", alignItems: "center" }}>
+                <Menu size={22} />
+              </button>
+              <div>
+                <p className="adm-header-sub">Configuration</p>
+                <h1 className="adm-header-title">Admin Users</h1>
+              </div>
             </div>
-          </div>
-
-          <div className="adm-header-actions">
-            {/* Live badge */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", border: "1px solid #bbf7d0", flexShrink: 0 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
-              <span className="adm-live-text" style={{ fontSize: 11, fontWeight: 700, color: "#15803d" }}>Live</span>
-            </div>
-
-            {/* New Admin (admins tab only) */}
-            {tab === "admins" && (
+            <div className="adm-header-actions">
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", border: "1px solid #bbf7d0", flexShrink: 0 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
+                <span className="adm-live-text" style={{ fontSize: 11, fontWeight: 700, color: "#15803d" }}>Live</span>
+              </div>
               <button onClick={() => setAdminPanel({ open: true, user: null })} className="adm-btn-gold">
                 <UserPlus size={14} />
                 <span className="adm-btn-label">New Admin</span>
               </button>
-            )}
-
-            {/* Download PDF (bookings / contacts only) */}
-            {(tab === "bookings" || tab === "contacts") && (
-              <button
-                onClick={() =>
-                  downloadPdfDirect(tab, tab === "bookings" ? bookings : contacts)
-                }
-                className="adm-btn-gold"
-              >
-                <FileDown size={14} />
-                <span className="adm-btn-label">Download PDF</span>
+              <button onClick={refresh} className="adm-btn-outline">
+                <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                <span className="adm-btn-label">Refresh</span>
               </button>
-            )}
+            </div>
+          </header>
+        )}
 
-            {/* Refresh */}
-            <button onClick={refresh} className="adm-btn-outline">
-              <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
-              <span className="adm-btn-label">Refresh</span>
-            </button>
+        {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
+        {tab !== "admins" && (
+          <div className="adm-hero-card">
+            <div className="adm-hero-row">
+
+              {/* Left: hamburger (mobile) + icon + title */}
+              <div className="adm-hero-left">
+                <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}>
+                  <Menu size={20} />
+                </button>
+                <div className="adm-hero-icon-wrap">
+                  {tab === "bookings" ? <Users size={22} color="#f5e6c8" /> : <Mail size={22} color="#f5e6c8" />}
+                </div>
+                <div className="adm-hero-text">
+                  <p className="adm-hero-eyebrow">Submissions</p>
+                  <h1 className="adm-hero-h1">
+                    {tab === "bookings" ? "Audience Bookings" : "Contact Messages"}
+                  </h1>
+                  <p className="adm-hero-desc">
+                    {tab === "bookings" ? "Manage audience booking submissions" : "Manage incoming contact messages"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: count + actions */}
+              <div className="adm-hero-right">
+                <div className="adm-hero-count">
+                  <span className="adm-hero-count-num">{filtered.length}</span>
+                  <span className="adm-hero-count-lbl">
+                    {tab === "bookings" ? "Bookings" : "Messages"}
+                  </span>
+                </div>
+                <div className="adm-hero-sep" />
+                {/* Actions group — kept together so they never split across lines */}
+                <div className="adm-hero-actions">
+                  <div className="adm-hero-live">
+                    <span className="adm-live-dot" />
+                    <span>Live</span>
+                  </div>
+                  <button className="adm-hero-btn-out" onClick={refresh}>
+                    <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                    <span className="adm-hero-btn-txt">Refresh</span>
+                  </button>
+                  <button
+                    className="adm-hero-btn-gold"
+                    onClick={() => downloadPdfDirect(tab, tab === "bookings" ? bookings : contacts)}
+                  >
+                    <FileDown size={14} />
+                    <span className="adm-hero-btn-txt">Download PDF</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
           </div>
-        </header>
+        )}
 
-        {/* Search + count bar */}
+        {/* Search + filter bar */}
         {tab !== "admins" && (
           <div className="adm-searchbar">
-            <div style={{ position: "relative", flex: 1 }}>
-              <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#a08060" }} />
-              <input type="text"
+            {/* Search input */}
+            <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+              <Search size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b9934a", pointerEvents: "none" }} />
+              <input
+                type="text"
                 placeholder={tab === "bookings" ? "Search name, mobile, ashram…" : "Search name, email, subject…"}
-                value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                style={{ width: "100%", height: 36, border: "1.5px solid rgba(185,147,69,0.3)", borderRadius: 8, paddingLeft: 32, paddingRight: 12, fontSize: 13, color: "#3b1a0e", background: "#fff", outline: "none", boxSizing: "border-box" }} />
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="adm-search-input"
+              />
             </div>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#9b7a5e", whiteSpace: "nowrap" }}>
-              {filtered.length} record{filtered.length !== 1 ? "s" : ""}
-            </p>
+
+            {/* Filter dropdown */}
+            {tab === "bookings" ? (
+              <CustomSelect
+                value={filterBooking}
+                onChange={(v) => { setFilterBooking(v); setPage(1); }}
+                options={[
+                  { value: "all", label: "All Ashrams" },
+                  ...ashramOptions.map((a) => ({ value: a, label: a })),
+                ]}
+              />
+            ) : (
+              <CustomSelect
+                value={filterContact}
+                onChange={(v) => { setFilterContact(v); setPage(1); }}
+                options={[
+                  { value: "all",   label: "All Time"   },
+                  { value: "today", label: "Today"       },
+                  { value: "week",  label: "This Week"   },
+                  { value: "month", label: "This Month"  },
+                ]}
+              />
+            )}
           </div>
         )}
 
@@ -1017,12 +1167,12 @@ export default function AdminPage() {
               <div className="adm-table-wrap">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#fdf8f2", borderBottom: "1.5px solid #ede6d6" }}>
-                      <th style={{ ...th, width: 44 }}>#</th>
+                    <tr style={{ background: "#2c1810" }}>
+                      <th style={{ ...th, color: "rgba(245,230,200,0.6)", width: 44 }}>#</th>
                       {(tab === "bookings" ? bookingCols : contactCols).map((col) => (
-                        <th key={col} style={th}>{col}</th>
+                        <th key={col} style={{ ...th, color: "rgba(245,230,200,0.6)" }}>{col}</th>
                       ))}
-                      <th style={{ ...th, width: 60 }}>View</th>
+                      <th style={{ ...th, color: "rgba(245,230,200,0.6)", width: 60 }}>View</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1247,16 +1397,150 @@ export default function AdminPage() {
           white-space: nowrap;
         }
 
-        /* ── Search bar ─────────────────────────────── */
-        .adm-searchbar {
-          padding: 14px 28px;
-          background: #faf7f3;
-          border-bottom: 1px solid #ede6d6;
+        /* ── Hero card (bookings / contacts) ───────── */
+        .adm-hero-card {
+          background: ${COSMIC};
+          border-bottom: 1px solid rgba(185,147,69,0.18);
+          padding: 22px 28px 20px;
+          flex-shrink: 0;
+        }
+        .adm-hero-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        /* Left side */
+        .adm-hero-left {
           display: flex;
           align-items: center;
           gap: 14px;
+          min-width: 0;
+          flex: 1;
+        }
+        .adm-hero-ham {
+          display: none;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #f5e6c8;
+          padding: 4px;
+          flex-shrink: 0;
+          align-items: center;
+        }
+        .adm-hero-icon-wrap {
+          width: 50px; height: 50px;
+          border-radius: 50%;
+          background: rgba(245,230,200,0.1);
+          border: 1.5px solid rgba(245,230,200,0.22);
+          display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
+        .adm-hero-text { min-width: 0; }
+        .adm-hero-eyebrow {
+          font-size: 9.5px; font-weight: 700;
+          letter-spacing: 0.2em; text-transform: uppercase;
+          color: rgba(245,230,200,0.45); margin-bottom: 3px;
+        }
+        .adm-hero-h1 {
+          font-size: 20px; font-weight: 900;
+          color: #f5e6c8; line-height: 1.2; margin: 0;
+        }
+        .adm-hero-desc {
+          font-size: 11.5px;
+          color: rgba(245,230,200,0.42);
+          margin-top: 3px;
+        }
+        /* Right side */
+        .adm-hero-right {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+        .adm-hero-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+        .adm-hero-count { text-align: center; min-width: 36px; }
+        .adm-hero-count-num {
+          display: block; font-size: 28px; font-weight: 900;
+          color: #c9822b; line-height: 1;
+        }
+        .adm-hero-count-lbl {
+          display: block; font-size: 8px; font-weight: 700;
+          letter-spacing: 0.16em; text-transform: uppercase;
+          color: rgba(245,230,200,0.36); margin-top: 2px;
+        }
+        .adm-hero-sep {
+          width: 1px; height: 36px;
+          background: rgba(245,230,200,0.12); flex-shrink: 0;
+        }
+        .adm-hero-live {
+          display: flex; align-items: center; gap: 5px;
+          padding: 5px 11px; border-radius: 20px;
+          background: rgba(34,197,94,0.12);
+          border: 1px solid rgba(34,197,94,0.28);
+          font-size: 11px; font-weight: 700; color: #4ade80;
+          white-space: nowrap; flex-shrink: 0;
+        }
+        .adm-live-dot {
+          width: 7px; height: 7px; border-radius: 50%;
+          background: #22c55e; flex-shrink: 0;
+          display: inline-block;
+        }
+        .adm-hero-btn-out {
+          display: flex; align-items: center; gap: 6px;
+          padding: 8px 14px; border-radius: 9px;
+          border: 1.5px solid rgba(245,230,200,0.2);
+          background: rgba(245,230,200,0.08);
+          cursor: pointer; font-size: 12px; font-weight: 700;
+          color: rgba(245,230,200,0.82); white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .adm-hero-btn-gold {
+          display: flex; align-items: center; gap: 6px;
+          padding: 8px 14px; border-radius: 9px; border: none;
+          background: linear-gradient(135deg,#c9822b,#b9934a);
+          cursor: pointer; font-size: 12px; font-weight: 700;
+          color: #fff; white-space: nowrap;
+          box-shadow: 0 2px 12px rgba(185,147,69,0.35);
+          flex-shrink: 0;
+        }
+        .adm-hero-btn-txt { display: inline; }
+
+        /* ── Search bar ─────────────────────────────── */
+        .adm-searchbar {
+          padding: 14px 28px;
+          background: #f5f0ea;
+          border-bottom: 1px solid #e8dfd0;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+        .adm-search-input {
+          width: 100%;
+          height: 40px;
+          border: 1.5px solid rgba(185,147,69,0.45);
+          border-radius: 10px;
+          padding-left: 36px;
+          padding-right: 14px;
+          font-size: 13px;
+          color: #3b1a0e;
+          background: #fff;
+          outline: none;
+          box-sizing: border-box;
+          box-shadow: 0 1px 4px rgba(185,147,69,0.08);
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .adm-search-input:focus {
+          border-color: #b9934a;
+          box-shadow: 0 0 0 3px rgba(185,147,69,0.14);
+        }
+        .adm-search-input::placeholder { color: #c4a882; }
 
         /* ── Table wrapper ──────────────────────────── */
         .adm-content {
@@ -1292,6 +1576,8 @@ export default function AdminPage() {
         @media (max-width: 1024px) {
           .adm-sidebar { width: 180px; min-width: 180px; }
           .adm-header  { padding: 0 18px; }
+          .adm-hero-card { padding: 18px 20px; }
+          .adm-hero-h1 { font-size: 18px; }
           .adm-searchbar { padding: 12px 18px; }
           .adm-content { padding: 16px 18px; }
           .adm-pagination { padding: 10px 18px; }
@@ -1335,6 +1621,27 @@ export default function AdminPage() {
           }
           .adm-header-title { font-size: 15px; }
           .adm-header-sub   { display: none; }
+
+          /* Hero card — mobile stack */
+          .adm-hero-card  { padding: 14px 16px 16px; }
+          .adm-hero-ham   { display: flex !important; }
+          .adm-hero-row   { flex-direction: column; align-items: flex-start; gap: 12px; }
+          .adm-hero-icon-wrap { width: 40px; height: 40px; }
+          .adm-hero-h1    { font-size: 16px; }
+          .adm-hero-desc  { display: none; }
+          /* Bottom action row: count left, buttons right */
+          .adm-hero-right {
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0;
+          }
+          .adm-hero-sep   { display: none; }
+          .adm-hero-count-num  { font-size: 22px; }
+          .adm-hero-actions    { gap: 7px; }
+          .adm-hero-btn-out    { padding: 7px 11px; font-size: 11px; }
+          .adm-hero-btn-gold   { padding: 7px 11px; font-size: 11px; }
+          .adm-hero-live       { padding: 5px 9px; font-size: 10.5px; }
 
           /* Hide button labels — show icons only */
           .adm-btn-label  { display: none; }
