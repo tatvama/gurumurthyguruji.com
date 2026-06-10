@@ -955,34 +955,49 @@ export default function AdminPage() {
       {/* ── MAIN CONTENT ──────────────────────────────────────────────── */}
       <main className="adm-main">
 
-        {/* ── Admins tab: white top bar ───────────────────────────────── */}
+        {/* ── Admins tab: dark hero card (same style as bookings/contacts) ── */}
         {tab === "admins" && (
-          <header className="adm-header">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button className="adm-hamburger" onClick={() => setSidebarOpen(v => !v)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#3b1a0e", display: "flex", alignItems: "center" }}>
-                <Menu size={22} />
-              </button>
-              <div>
-                <p className="adm-header-sub">Configuration</p>
-                <h1 className="adm-header-title">Admin Users</h1>
+          <div className="adm-hero-card">
+            <div className="adm-hero-row">
+              {/* Left: hamburger + icon + title */}
+              <div className="adm-hero-left">
+                <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}>
+                  <Menu size={20} />
+                </button>
+                <div className="adm-hero-icon-wrap">
+                  <ShieldCheck size={22} color="#f5e6c8" />
+                </div>
+                <div className="adm-hero-text">
+                  <p className="adm-hero-eyebrow">Configuration</p>
+                  <h1 className="adm-hero-h1">Admin Users</h1>
+                  <p className="adm-hero-desc">Manage who can log in to the admin console</p>
+                </div>
+              </div>
+
+              {/* Right: count + actions */}
+              <div className="adm-hero-right">
+                <div className="adm-hero-count">
+                  <span className="adm-hero-count-num">{admins.length}</span>
+                  <span className="adm-hero-count-lbl">Admins</span>
+                </div>
+                <div className="adm-hero-sep" />
+                <div className="adm-hero-actions">
+                  <div className="adm-hero-live">
+                    <span className="adm-live-dot" />
+                    <span>Live</span>
+                  </div>
+                  <button className="adm-hero-btn-out" onClick={refresh}>
+                    <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                    <span className="adm-hero-btn-txt">Refresh</span>
+                  </button>
+                  <button className="adm-hero-btn-gold" onClick={() => setAdminPanel({ open: true, user: null })}>
+                    <UserPlus size={14} />
+                    <span className="adm-hero-btn-txt">New Admin</span>
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="adm-header-actions">
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#f0fdf4", border: "1px solid #bbf7d0", flexShrink: 0 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
-                <span className="adm-live-text" style={{ fontSize: 11, fontWeight: 700, color: "#15803d" }}>Live</span>
-              </div>
-              <button onClick={() => setAdminPanel({ open: true, user: null })} className="adm-btn-gold">
-                <UserPlus size={14} />
-                <span className="adm-btn-label">New Admin</span>
-              </button>
-              <button onClick={refresh} className="adm-btn-outline">
-                <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
-                <span className="adm-btn-label">Refresh</span>
-              </button>
-            </div>
-          </header>
+          </div>
         )}
 
         {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
