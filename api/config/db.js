@@ -48,6 +48,27 @@ export const initDB = async () => {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        mobile VARCHAR(20) NOT NULL UNIQUE,
+        role VARCHAR(20) NOT NULL DEFAULT 'admin',
+        password VARCHAR(100) NOT NULL DEFAULT '123456',
+        sections_count INTEGER DEFAULT 0,
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        last_login TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    /* Seed the default super admin if not exists */
+    await client.query(`
+      INSERT INTO admin_users (name, mobile, role, password, sections_count, status)
+      VALUES ('Super Admin', '9999999999', 'superadmin', '123456', 0, 'active')
+      ON CONFLICT (mobile) DO NOTHING;
+    `);
+
     console.log("Database tables verified / created.");
   } finally {
     client.release();

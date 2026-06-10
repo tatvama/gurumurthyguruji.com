@@ -34,82 +34,89 @@ export default function GuruParamparaPage() {
 
           <LotusDivider className="mb-16" />
 
-          {/* Lineage Chart Card */}
+          {/* ── Section 1: Header ─────────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="relative max-w-4xl mx-auto mb-20"
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative max-w-4xl mx-auto mb-6"
           >
-            {/* Outer glow ring */}
-            <div className="pointer-events-none absolute -inset-3 rounded-[2.5rem] bg-gradient-to-br from-saffron-accent/15 via-antique-gold/10 to-maroon-accent/15 blur-xl" />
+            {/* Outer glow */}
+            <div className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-saffron-accent/15 via-antique-gold/10 to-maroon-accent/15 blur-xl" />
 
-            {/* Card */}
-            <div className="relative overflow-hidden rounded-3xl border border-antique-gold/25 shadow-[0_8px_48px_rgba(75,13,19,0.18)]">
+            <div
+              className="relative overflow-hidden rounded-2xl"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center,rgba(132,88,68,0.22) 0%,transparent 40%)," +
+                  "radial-gradient(ellipse at left center,rgba(110,18,32,0.20) 0%,transparent 55%)," +
+                  "radial-gradient(ellipse at right center,rgba(110,18,32,0.18) 0%,transparent 55%)," +
+                  "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)",
+              }}
+            >
+              {/* Top gold line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-antique-gold/80 to-transparent" />
+              {/* Bottom gold line */}
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-antique-gold/60 to-transparent" />
 
-              {/* Card header — cosmic gradient matching navbar */}
-              <div
-                className="relative px-6 py-7 text-center md:px-10"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center,rgba(132,88,68,0.22) 0%,transparent 40%)," +
-                    "radial-gradient(ellipse at left center,rgba(110,18,32,0.20) 0%,transparent 55%)," +
-                    "radial-gradient(ellipse at right center,rgba(110,18,32,0.18) 0%,transparent 55%)," +
-                    "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)",
-                }}
-              >
-                {/* Decorative OM watermark */}
-                <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none opacity-[0.06]">
-                  <span className="font-heading text-[180px] leading-none text-champagne">ॐ</span>
-                </div>
-                {/* Top gold line */}
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-antique-gold/80 to-transparent" />
+              {/* Decorative OM watermark */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none opacity-[0.06]">
+                <span className="font-heading text-[180px] leading-none text-champagne">ॐ</span>
+              </div>
 
-                <p className="relative z-10 mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-champagne/50">
+              <div className="relative z-10 px-6 py-8 text-center md:px-10">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-champagne/50">
                   Sacred Lineage
                 </p>
-                <h2 className="relative z-10 font-heading text-2xl font-bold text-pearl sm:text-3xl">
+                <h2 className="font-heading text-2xl font-bold text-pearl sm:text-3xl">
                   {t("parampara.tree.heading")}
                 </h2>
-                <p className="relative z-10 mt-2 text-sm text-pearl/55 max-w-xl mx-auto leading-relaxed">
+                <p className="mt-2 text-sm text-pearl/55 max-w-xl mx-auto leading-relaxed">
                   {t("parampara.tree.subtitle")}
                 </p>
               </div>
+            </div>
+          </motion.div>
 
-              {/* Image area — ivory background, full image visible */}
-              <div className="bg-ivory/90 p-4 md:p-6">
-                <div
-                  className="group relative w-full cursor-zoom-in overflow-hidden rounded-2xl border border-antique-gold/15 shadow-inner"
-                  onClick={() => setLightboxOpen(true)}
-                >
-                  {/* Full image — object-contain so nothing gets cropped */}
-                  <Image
-                    src="/images/guru-parampara-tree.jpg"
-                    alt="Guru Parampara Lineage Tree"
-                    width={1200}
-                    height={750}
-                    sizes="(max-width: 1024px) 100vw, 800px"
-                    className="h-auto w-full object-contain transition-transform duration-700 group-hover:scale-[1.015]"
-                    priority
-                    style={{ height: "auto" }}
-                  />
+          {/* ── Section 2: Lineage Image — fully responsive, no crop ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="relative max-w-4xl mx-auto mb-20"
+          >
+            {/* Outer glow ring */}
+            <div className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-saffron-accent/15 via-antique-gold/10 to-maroon-accent/15 blur-xl" />
 
-                  {/* Hover overlay with expand button */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/20">
-                    <span className="flex translate-y-2 items-center gap-2 rounded-full bg-white/95 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-deep-brown opacity-0 shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                      <svg className="h-4 w-4 text-saffron-accent" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m4-3H6" />
-                      </svg>
-                      {t("parampara.tree.expandButton")}
-                    </span>
-                  </div>
-                </div>
+            <div
+              className="group relative w-full cursor-zoom-in overflow-hidden rounded-2xl border border-antique-gold/25 shadow-[0_8px_48px_rgba(75,13,19,0.18)]"
+              onClick={() => setLightboxOpen(true)}
+            >
+              {/*
+                width + height set the intrinsic aspect ratio only.
+                style width:100% / height:auto lets HTML decide the
+                rendered size — fully fluid, zero cropping, no object-fit.
+              */}
+              <Image
+                src="/images/guru-parampara-tree.jpg"
+                alt="Guru Parampara Lineage Tree"
+                width={1200}
+                height={750}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 896px"
+                style={{ width: "100%", height: "auto", display: "block" }}
+                className="transition-transform duration-700 group-hover:scale-[1.015]"
+                priority
+              />
 
-                {/* Bottom caption */}
+              {/* Hover overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/20">
+                <span className="flex translate-y-2 items-center gap-2 rounded-full bg-white/95 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-deep-brown opacity-0 shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <svg className="h-4 w-4 text-saffron-accent" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m4-3H6" />
+                  </svg>
+                  {t("parampara.tree.expandButton")}
+                </span>
               </div>
-
-              {/* Bottom gold line */}
-              <div className="h-[2px] bg-gradient-to-r from-transparent via-antique-gold/60 to-transparent" />
             </div>
           </motion.div>
 

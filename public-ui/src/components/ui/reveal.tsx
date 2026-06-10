@@ -8,6 +8,14 @@ import type { ReactNode } from "react";
  * Animates once when scrolled into view; respects prefers-reduced-motion
  * via framer-motion's global reducer.
  */
+
+const SHARED = (delay: number, y: number) => ({
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" } as const,
+  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const, delay },
+});
+
 export function Reveal({
   children,
   delay = 0,
@@ -21,16 +29,9 @@ export function Reveal({
   className?: string;
   as?: "div" | "li" | "span";
 }) {
-  const MotionTag = motion[as];
-  return (
-    <MotionTag
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay }}
-    >
-      {children}
-    </MotionTag>
-  );
+  const props = { className, ...SHARED(delay, y) };
+
+  if (as === "li")   return <motion.li   {...props}>{children}</motion.li>;
+  if (as === "span") return <motion.span {...props}>{children}</motion.span>;
+  return               <motion.div  {...props}>{children}</motion.div>;
 }

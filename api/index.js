@@ -7,6 +7,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import { initDB } from "./config/db.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import audienceRoutes from "./routes/audienceRoutes.js";
+import adminUserRoutes from "./routes/adminUserRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,9 +16,19 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST", "PATCH"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, mobile apps, server-to-server)
+      if (!origin) return callback(null, true);
+      // Allow any localhost port in development
+      if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+      // Allow configured production URL
+      const allowed = process.env.CLIENT_URL;
+      if (allowed && origin === allowed) return callback(null, true);
+      callback(new Error("CORS: origin not allowed"));
+    },
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
+    credentials: false,
   })
 );
 
@@ -32,6 +43,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/contacts", contactRoutes);
 app.use("/api/audience-bookings", audienceRoutes);
+app.use("/api/admin-users", adminUserRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });
