@@ -30,9 +30,10 @@ const BLANK: FormData = {
 /* ═══════════════════════════════════════════════════════
    PRIMARY ORANGE — matches reference exactly
 ═══════════════════════════════════════════════════════ */
-const KO  = "#FA580C";
-const KOL = "#FFF3E8";
-const KOG = "rgba(250,88,12,0.38)";
+const KO   = "#6B121C";                    // deep maroon — primary accent on light bg
+const KOL  = "#F7ECEA";                    // light maroon tint
+const KOG  = "rgba(107,18,28,0.35)";       // maroon glow
+const GOLD = "#D8B76A";                    // champagne gold — accent on dark maroon bg
 
 /* ═══════════════════════════════════════════════════════
    HELPERS
@@ -55,14 +56,14 @@ function mkRef() {
    ICONS
 ═══════════════════════════════════════════════════════ */
 const Ico = {
-  User:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  Phone:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 13a19.79 19.79 0 0 1-3.09-8.63A2 2 0 0 1 3.22 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
-  Mail:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
-  Gender: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 3l-6 6M15 3h6v6"/></svg>,
-  Brief:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
-  Cal:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
-  Clock:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
-  Pin:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  User:   () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>,
+  Phone:  () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 13a19.79 19.79 0 0 1-3.09-8.63A2 2 0 0 1 3.22 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  Mail:   () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>,
+  Gender: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 3l-6 6M15 3h6v6"/></svg>,
+  Brief:  () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 0h-4V4h4v2z"/></svg>,
+  Cal:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10z"/></svg>,
+  Clock:  () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6.5v5.5l3.8 2.2" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>,
+  Pin:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>,
   Check:  () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   Camera: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
   ChevDown: () => <svg width="18" height="10" viewBox="0 0 18 10" fill="none"><path d="M1 1L9 9L17 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
@@ -83,10 +84,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
 
   return (
     <section
-      className="relative flex min-h-screen items-center justify-center overflow-hidden pb-20 pt-28"
-      style={{
-        background: "radial-gradient(ellipse at 60% 40%, rgba(110,38,8,0.55) 0%, transparent 60%), radial-gradient(ellipse at 20% 70%, rgba(80,10,0,0.40) 0%, transparent 55%), linear-gradient(160deg,#110400 0%,#1c0600 30%,#240800 60%,#150400 100%)",
-      }}
+      className="section-cosmic relative flex min-h-screen items-center justify-center overflow-hidden pb-20 pt-28"
     >
 
       {/* Chakra texture pattern */}
@@ -131,7 +129,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
       {/* Orange border line — visible at bottom of 100vh hero */}
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 z-10"
-        style={{ height: 2.5, background: `linear-gradient(90deg, transparent 0%, ${KO} 20%, ${KO} 80%, transparent 100%)` }}
+        style={{ height: 2.5, background: `linear-gradient(90deg, transparent 0%, ${GOLD} 20%, ${GOLD} 80%, transparent 100%)` }}
       />
 
       {/* ── Main content ─────────────────────────────────── */}
@@ -147,7 +145,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
           >
             {/* Badge */}
             <div className="badge-dark mx-auto mb-7 w-fit lg:mx-0">
-              <span style={{ color: KO, fontSize: 9 }}>●</span>
+              <span style={{ color: GOLD, fontSize: 9 }}>●</span>
               <span style={{ fontSize: 10.5, letterSpacing: "0.2em" }}>TRUSTED COSMIC GUIDANCE</span>
             </div>
 
@@ -156,7 +154,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               style={{
                 fontFamily: "var(--font-dm-serif), serif",
                 fontSize: "clamp(44px, 6vw, 64px)",
-                color: KO,
+                color: GOLD,
                 lineHeight: 1,
                 marginBottom: 12,
               }}
@@ -179,8 +177,8 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               <span style={{ display: "block", color: "#FFFFFF" }}>
                 Have a{" "}
                 <span style={{
-                  color: "#FA580C",
-                  textShadow: "0 0 32px rgba(250,88,12,0.55), 0 0 8px rgba(250,88,12,0.30)",
+                  color: GOLD,
+                  textShadow: "0 0 32px rgba(216,183,106,0.55), 0 0 8px rgba(216,183,106,0.30)",
                 }}>Story</span>
               </span>
             </h1>
@@ -351,9 +349,9 @@ function StatsBar() {
         style={{
           display: "flex",
           alignItems: "stretch",
-          background: "linear-gradient(135deg, #1e0800 0%, #2a1000 50%, #1e0800 100%)",
+          background: "linear-gradient(135deg, #4b0d13 0%, #5b1118 30%, #65161c 50%, #571116 75%, #430a10 100%)",
           borderRadius: "0 0 14px 14px",
-          border: "1px solid rgba(250,88,12,0.20)",
+          border: "1px solid rgba(216,183,106,0.25)",
           borderTop: "none",
           boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
           overflow: "hidden",
@@ -371,7 +369,7 @@ function StatsBar() {
               alignItems: "center",
               justifyContent: "center",
               padding: "20px 8px",
-              borderLeft: i > 0 ? "1px solid rgba(250,88,12,0.15)" : "none",
+              borderLeft: i > 0 ? "1px solid rgba(216,183,106,0.18)" : "none",
               textAlign: "center",
             }}
           >
@@ -380,7 +378,7 @@ function StatsBar() {
                 fontFamily: "var(--font-cinzel), serif",
                 fontSize: "clamp(20px, 2.6vw, 28px)",
                 fontWeight: 700,
-                color: KO,
+                color: GOLD,
                 lineHeight: 1,
                 display: "block",
                 marginBottom: 6,
@@ -421,7 +419,7 @@ function StepHeader({ phase }: { phase: Phase }) {
   const { title, sub } = STEP_META[step];
 
   return (
-    <div style={{ background: "linear-gradient(180deg,#FFFCF5 0%,#FFFAF0 100%)", borderRadius: "16px 16px 0 0", padding: "24px 28px 20px", borderBottom: "2.5px solid #F97316" }}>
+    <div style={{ background: "linear-gradient(180deg,#FFFCF5 0%,#FFFAF0 100%)", borderRadius: "16px 16px 0 0", padding: "24px 28px 20px", borderBottom: `2.5px solid ${KO}` }}>
       {/* Step circles — flex row with equal-margin connectors */}
       <div style={{ display: "flex", alignItems: "center", width: "100%", marginBottom: 18 }}>
         {([1, 2, 3, 4] as number[]).map((n, i) => {
@@ -475,7 +473,7 @@ const iBase: React.CSSProperties = {
 };
 const fieldWrap: React.CSSProperties = {
   border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12,
-  padding: "12px 16px", background: "#fff",
+  padding: "16px 16px", background: "#fff",
   display: "flex", alignItems: "center", gap: 10,
   boxShadow: "0 1px 6px rgba(42,28,19,0.05)", transition: "border-color 0.15s",
 };
@@ -484,7 +482,7 @@ function FieldBox({ hint, children, error }: { hint?: string; children: React.Re
   return (
     <div>
       <div style={{ ...fieldWrap, borderColor: error ? "#fca5a5" : "rgba(200,170,130,0.50)" }}>{children}</div>
-      {hint && !error && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(217,119,6,0.70)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
+      {hint && !error && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
       {error         && <p style={{ fontSize: 11.5, color: "#ef4444", marginTop: 5, marginLeft: 2 }}>{error}</p>}
     </div>
   );
@@ -493,7 +491,7 @@ function FieldBox({ hint, children, error }: { hint?: string; children: React.Re
 function LabeledBox({ label, hint, icon, iconRight, onIconRightClick, children }: { label: string; hint?: string; icon: React.ReactNode; iconRight?: boolean; onIconRightClick?: () => void; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12, padding: "9px 14px", background: "#fff", boxShadow: "0 1px 6px rgba(42,28,19,0.05)" }}>
+      <div style={{ border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12, padding: "13px 14px", background: "#fff", boxShadow: "0 1px 6px rgba(42,28,19,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {/* Left icon */}
           <span style={{ color: KO, flexShrink: 0, display: "flex" }}>{icon}</span>
@@ -514,7 +512,7 @@ function LabeledBox({ label, hint, icon, iconRight, onIconRightClick, children }
           )}
         </div>
       </div>
-      {hint && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(217,119,6,0.70)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
+      {hint && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
     </div>
   );
 }
@@ -548,7 +546,7 @@ function Testimonial() {
   return (
     <div style={{ background: "linear-gradient(135deg, #FFFDF5 0%, #FFF6E0 50%, #FFF2D4 100%)", border: "1px solid rgba(216,183,106,0.45)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 18px rgba(216,183,106,0.18)" }}>
       <div className="flex gap-4 items-start">
-        <div style={{ width: 44, height: 44, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg,${KO},#F5A040)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#fff", fontWeight: 700, boxShadow: `0 4px 12px ${KOG}` }}>P</div>
+        <div style={{ width: 44, height: 44, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg,${KO},#9B3B44)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#fff", fontWeight: 700, boxShadow: `0 4px 12px ${KOG}` }}>P</div>
         <div>
           <p style={{ color: KO, fontSize: 14, marginBottom: 6 }}>★★★★★</p>
           <p style={{ fontSize: 13, color: "rgba(42,28,19,0.72)", lineHeight: 1.72, fontStyle: "italic" }}>
@@ -572,7 +570,7 @@ function StepIcon({ children }: { children: React.ReactNode }) {
         background: "linear-gradient(135deg,#FFF0D6,#FFE4B5)",
         border: "2.5px solid rgba(210,170,100,0.75)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 26, boxShadow: `0 4px 20px rgba(250,88,12,0.15), inset 0 1px 0 rgba(255,255,255,0.90)`,
+        fontSize: 26, boxShadow: `0 4px 20px rgba(107,18,28,0.15), inset 0 1px 0 rgba(255,255,255,0.90)`,
       }}>
         {children}
       </div>
@@ -616,7 +614,7 @@ const orangeBtn: React.CSSProperties = {
   boxShadow: `0 4px 18px ${KOG}`,
   transition: "all 0.2s", letterSpacing: "0.03em",
 };
-const orangeBtnDisabled: React.CSSProperties = { ...orangeBtn, background: "rgba(250,88,12,0.32)", boxShadow: "none", cursor: "not-allowed" };
+const orangeBtnDisabled: React.CSSProperties = { ...orangeBtn, background: "rgba(107,18,28,0.32)", boxShadow: "none", cursor: "not-allowed" };
 
 /* ═══════════════════════════════════════════════════════
    STEP 1 — IDENTITY
@@ -842,10 +840,10 @@ function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
         {SERVICES.map(s => {
           const sel = form.service === s.id;
           return (
-            <button key={s.id} onClick={() => set("service", s.id)} style={{ padding: "22px 14px 18px", borderRadius: 16, textAlign: "center", cursor: "pointer", border: `2px solid ${sel ? KO : "rgba(200,170,130,0.38)"}`, background: sel ? KOL : "#FFFAF5", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 4px 18px rgba(250,88,12,0.18)` : "0 2px 8px rgba(42,28,19,0.06)" }}>
+            <button key={s.id} onClick={() => set("service", s.id)} style={{ padding: "22px 14px 18px", borderRadius: 16, textAlign: "center", cursor: "pointer", border: `2px solid ${sel ? KO : "rgba(200,170,130,0.38)"}`, background: sel ? KOL : "#FFFAF5", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 4px 18px rgba(107,18,28,0.18)` : "0 2px 8px rgba(42,28,19,0.06)" }}>
               {sel && <div style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: KO, display: "flex", alignItems: "center", justifyContent: "center" }}><Ico.Check /></div>}
               {/* Icon box — warm peach, rounded square */}
-              <div style={{ width: 58, height: 58, borderRadius: 16, margin: "0 auto 13px", background: sel ? "linear-gradient(135deg,#FFE0B8,#FFCF96)" : "linear-gradient(135deg,#FFF0E0,#FFE5D0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: sel ? `0 3px 12px rgba(250,88,12,0.20)` : "0 2px 6px rgba(42,28,19,0.08)" }}>{s.icon}</div>
+              <div style={{ width: 58, height: 58, borderRadius: 16, margin: "0 auto 13px", background: sel ? "linear-gradient(135deg,#FFE0B8,#FFCF96)" : "linear-gradient(135deg,#FFF0E0,#FFE5D0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: sel ? `0 3px 12px rgba(107,18,28,0.20)` : "0 2px 6px rgba(42,28,19,0.08)" }}>{s.icon}</div>
               {/* Title — always Cinzel orange */}
               <p style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 14, fontWeight: 700, marginBottom: 7, color: KO, lineHeight: 1.25 }}>{s.title}</p>
               <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.44)", lineHeight: 1.55, textAlign: "center" }}>{s.desc}</p>
@@ -860,7 +858,7 @@ function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
           <textarea style={{ ...iBase, resize: "vertical", minHeight: 96, lineHeight: 1.7 }} placeholder="What guidance are you seeking? *" value={form.guidance} onChange={e => set("guidance", e.target.value)} />
         </div>
       </div>
-      <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(217,119,6,0.70)", marginTop: 6, paddingLeft: 14 }}>Focus your intention so Guruji can seek specific divine guidance</p>
+      <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>Focus your intention so Guruji can seek specific divine guidance</p>
       {err && <p style={{ fontSize: 12, color: "#ef4444", textAlign: "center", marginTop: 10 }}>{err}</p>}
       <p style={{ textAlign: "center", color: "rgba(200,170,130,0.55)", fontSize: 18, letterSpacing: "10px", margin: "13px 0 6px" }}>+ + +</p>
       <div className="flex gap-3">
@@ -941,7 +939,7 @@ function SuccessScreen({ caseRef, reset }: { caseRef: string; reset: () => void 
       <p style={{ fontSize: 14, color: "rgba(42,28,19,0.58)", lineHeight: 1.78, maxWidth: 370, margin: "0 auto 30px", fontStyle: "italic" }}>
         Your cosmic details have been received. Guruji will personally prepare your sacred reading with divine care and wisdom.
       </p>
-      <div style={{ display: "inline-block", border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 14, padding: "16px 36px", background: "#FFFBF6", marginBottom: 32, boxShadow: "0 4px 20px rgba(250,88,12,0.10)" }}>
+      <div style={{ display: "inline-block", border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 14, padding: "16px 36px", background: "#FFFBF6", marginBottom: 32, boxShadow: "0 4px 20px rgba(107,18,28,0.10)" }}>
         <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase", color: "rgba(42,28,19,0.42)", marginBottom: 8 }}>Your Case Reference</p>
         <p className="font-heading" style={{ fontSize: 22, fontWeight: 700, color: KO, letterSpacing: "0.06em" }}>{caseRef}</p>
       </div>
@@ -1032,7 +1030,7 @@ export default function KundliPage() {
             <div className="mx-auto px-4 py-10 pb-16" style={{ maxWidth: 760 }}>
 
               {/* Main card — trust badges are OUTSIDE this card */}
-              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 8px 40px rgba(249,115,22,0.14), 0 3px 14px rgba(249,115,22,0.08)", overflow: "visible", marginBottom: 0 }}>
+              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(107,18,28,0.18)", boxShadow: "0 8px 40px rgba(107,18,28,0.12), 0 3px 14px rgba(107,18,28,0.07)", overflow: "visible", marginBottom: 0 }}>
                 <StepHeader phase={phase} />
 
                 <AnimatePresence mode="wait">
