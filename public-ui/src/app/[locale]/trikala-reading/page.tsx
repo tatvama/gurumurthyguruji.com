@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
@@ -327,11 +327,33 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
    STATS BAR — dark floating pill card, matches reference
 ═══════════════════════════════════════════════════════ */
 function StatsBar() {
+  const [counts, setCounts] = useState({ readings: 0, years: 0, hrs: 0 });
+
+  useEffect(() => {
+    const DURATION = 2200;
+    const targets = { readings: 5800, years: 12, hrs: 48 };
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const p = Math.min(elapsed / DURATION, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setCounts({
+        readings: Math.floor(ease * targets.readings),
+        years:    Math.floor(ease * targets.years),
+        hrs:      Math.floor(ease * targets.hrs),
+      });
+      if (p < 1) requestAnimationFrame(tick);
+      else setCounts(targets);
+    }
+    requestAnimationFrame(tick);
+  }, []);
+
   const items = [
-    { value: "5800+", label: "Readings Given" },
-    { value: "4.9★",  label: "Avg Rating" },
-    { value: "12",    label: "Years of Wisdom" },
-    { value: "48",    label: "Hrs Avg Delivery" },
+    { value: `${counts.readings}+`, label: "Readings Given" },
+    { value: "4.9★",                label: "Avg Rating" },
+    { value: `${counts.years}`,     label: "Years of Wisdom" },
+    { value: `${counts.hrs}`,       label: "Hrs Avg Delivery" },
   ];
   return (
     /* light section bg + orange top divider — card floats centered on it */
@@ -419,7 +441,7 @@ function StepHeader({ phase }: { phase: Phase }) {
 
   return (
     <div style={{ background: "#fff", borderRadius: "16px 16px 0 0", padding: "24px 28px 20px", borderBottom: `2px solid ${KO}` }}>
-      {/* Step circles — full width row */}
+      {/* Step circles — flex row with equal-margin connectors */}
       <div style={{ display: "flex", alignItems: "center", width: "100%", marginBottom: 18 }}>
         {([1, 2, 3, 4] as number[]).map((n, i) => {
           const done   = step > n;
@@ -427,22 +449,23 @@ function StepHeader({ phase }: { phase: Phase }) {
           return (
             <React.Fragment key={n}>
               <div style={{
-                width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-                background: done ? "#22c55e" : active ? KO : "#fff",
+                width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                background: done ? KO : active ? KO : "#fff",
                 border: done ? "none" : active ? "none" : `1.5px solid rgba(200,170,130,0.55)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: active ? `0 4px 18px ${KOG}` : done ? "0 3px 10px rgba(34,197,94,0.30)" : "0 1px 4px rgba(42,28,19,0.06)",
+                boxShadow: active ? `0 4px 18px ${KOG}` : done ? `0 3px 10px ${KOG}` : "none",
                 transition: "all 0.3s",
               }}>
                 {done
                   ? <Ico.Check />
-                  : <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 14, fontWeight: 700, color: active ? "#fff" : "rgba(42,28,19,0.28)" }}>{n}</span>
+                  : <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 13, fontWeight: 700, color: active ? "#fff" : "rgba(42,28,19,0.28)" }}>{n}</span>
                 }
               </div>
               {i < 3 && (
                 <div style={{
-                  flex: 1, height: 1.5, margin: "0 4px", transition: "background 0.3s",
-                  background: done ? "#22c55e" : "rgba(200,170,130,0.38)",
+                  flex: 1, height: 1.5, margin: "0 14px",
+                  background: done ? KO : "rgba(200,170,130,0.40)",
+                  transition: "background 0.3s",
                 }} />
               )}
             </React.Fragment>
@@ -542,7 +565,7 @@ function TrustBadges() {
 
 function Testimonial() {
   return (
-    <div style={{ background: "#FFFBF6", border: "1px solid rgba(200,170,130,0.38)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 18px rgba(42,28,19,0.06)" }}>
+    <div style={{ background: "linear-gradient(135deg, #FFFDF5 0%, #FFF6E0 50%, #FFF2D4 100%)", border: "1px solid rgba(216,183,106,0.45)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 18px rgba(216,183,106,0.18)" }}>
       <div className="flex gap-4 items-start">
         <div style={{ width: 44, height: 44, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg,${KO},#F5A040)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#fff", fontWeight: 700, boxShadow: `0 4px 12px ${KOG}` }}>P</div>
         <div>
@@ -915,8 +938,8 @@ export default function KundliPage() {
 
             <div className="mx-auto px-4 py-10 pb-16" style={{ maxWidth: 640 }}>
 
-              {/* Main card — unified single card, trust badges inside */}
-              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(200,170,130,0.32)", boxShadow: "0 10px 50px rgba(50,20,5,0.12), 0 3px 14px rgba(50,20,5,0.06)", overflow: "hidden", marginBottom: 4 }}>
+              {/* Main card — trust badges are OUTSIDE this card */}
+              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 8px 40px rgba(249,115,22,0.14), 0 3px 14px rgba(249,115,22,0.08)", overflow: "hidden", marginBottom: 0 }}>
                 <StepHeader phase={phase} />
 
                 <AnimatePresence mode="wait">
@@ -934,23 +957,21 @@ export default function KundliPage() {
                     {phase === "done" && <SuccessScreen caseRef={caseRef} reset={reset} />}
                   </motion.div>
                 </AnimatePresence>
-
-                {/* Trust badges always inside the card at the bottom */}
-                {phase !== "done" && (
-                  <div style={{ borderTop: "1px solid rgba(200,170,130,0.18)" }}>
-                    <TrustBadges />
-                  </div>
-                )}
               </div>
 
-              {/* Testimonial below card — step 2+ */}
-              <AnimatePresence>
-                {phase !== 1 && phase !== "done" && (
-                  <motion.div key="testimonial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-                    <Testimonial />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Trust badges outside the card — below with thin separator */}
+              {phase !== "done" && (
+                <div style={{ borderTop: "1px solid rgba(200,170,130,0.28)", marginTop: 8 }}>
+                  <TrustBadges />
+                </div>
+              )}
+
+              {/* Testimonial below trust badges — all steps except done */}
+              {phase !== "done" && (
+                <div style={{ marginTop: 16 }}>
+                  <Testimonial />
+                </div>
+              )}
 
             </div>
           </div>
