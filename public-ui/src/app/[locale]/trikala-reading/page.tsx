@@ -253,7 +253,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, ease: "easeOut", delay: 0.15 }}
             className="relative mx-auto w-full"
-            style={{ maxWidth: 430 }}
+            style={{ maxWidth: 560 }}
           >
             <div className="relative flex flex-col items-center">
               {/* Golden radial glow behind image */}
@@ -269,9 +269,9 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               <Image
                 src="/images/Guruji-Head-Image.png"
                 alt="Pujya Sri Gurumurthy Guruji"
-                width={430}
-                height={500}
-                sizes="(max-width: 768px) 90vw, 430px"
+                width={560}
+                height={650}
+                sizes="(max-width: 768px) 90vw, 560px"
                 className="relative z-10 w-full h-auto object-contain"
                 priority
               />
