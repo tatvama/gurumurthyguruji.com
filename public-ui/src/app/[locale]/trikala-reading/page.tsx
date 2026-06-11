@@ -1054,7 +1054,7 @@ export default function KundliPage() {
 
               {/* Trust badges outside the card — below with thin separator */}
               {phase !== "done" && (
-                <div style={{ borderTop: "1px solid rgba(200,170,130,0.28)", marginTop: 8 }}>
+                <div style={{ borderTop: "1px solid rgba(200,170,130,0.28)", marginTop: 6 }}>
                   <TrustBadges />
                 </div>
               )}

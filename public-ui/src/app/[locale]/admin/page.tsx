@@ -51,6 +51,7 @@ import {
   FileDown,
   Menu,
   BookOpen,
+  Star,
 } from "lucide-react";
 
 /* ── constants ──────────────────────────────────────────────────────── */
@@ -911,7 +912,7 @@ function FollowUps({ caseId }: { caseId: string }) {
       <div style={{ border: "1px solid #E8E0D4", borderRadius: 12, padding: "18px 18px 16px", background: "#fff", marginBottom: 16 }}>
 
         {/* Row 1 — Type + DateTime */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+        <div className="tdp-fu-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <div>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 6 }}>Type</p>
             <div style={{ position: "relative" }}>
@@ -1276,15 +1277,35 @@ function TrikalaDetailPanel({
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{
         position: "fixed", inset: 0, zIndex: 600,
-        background: "#F5F1EC",
+        background: "#F2F3F5",
         display: "flex", flexDirection: "column",
         fontFamily: "'Inter','Segoe UI',sans-serif",
         overflow: "hidden",
       }}
     >
+      <style>{`
+        @media (max-width: 900px) {
+          .tdp-top      { padding: 0 12px !important; gap: 8px !important; }
+          .tdp-logo-txt { display: none !important; }
+          .tdp-admin    { display: none !important; }
+          .tdp-vdiv     { display: none !important; }
+          .tdp-body     { flex-direction: column !important; overflow-y: auto !important; padding: 14px !important; gap: 14px !important; }
+          .tdp-left     { width: 100% !important; overflow-y: visible !important; padding-right: 0 !important; }
+          .tdp-right    { overflow: visible !important; }
+          .tdp-tabs     { overflow-x: auto !important; scrollbar-width: none; }
+          .tdp-tabs::-webkit-scrollbar { display: none; }
+          .tdp-tabs button { flex: 0 0 auto !important; padding: 9px 14px !important; }
+          .tdp-content  { overflow-y: visible !important; min-height: 320px; }
+          .tdp-fu-grid  { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 560px) {
+          .tdp-top { height: 52px !important; }
+          .tdp-body { padding: 10px !important; }
+        }
+      `}</style>
       {/* ── TOP BAR ─────────────────────────────────────── */}
-      <div style={{
-        background: "#fff", borderBottom: "1px solid #E8E0D4",
+      <div className="tdp-top" style={{
+        background: "#fff", borderBottom: "1px solid #E8E8EA",
         padding: "0 20px", height: 48,
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
       }}>
@@ -1306,58 +1327,58 @@ function TrikalaDetailPanel({
 
       {/* ── BODY ────────────────────────────────────────── */}
       {/* flex row; left panel scrolls, right panel scrolls */}
-      <div style={{
-        flex: 1, display: "flex", gap: 16, padding: "16px 20px 16px",
+      <div className="tdp-body" style={{
+        flex: 1, display: "flex", gap: 24, padding: "24px 40px",
         overflow: "hidden", minHeight: 0,
       }}>
 
-        {/* ── LEFT PANEL (280 px, scrollable) ──────────── */}
-        <div style={{
-          width: 280, flexShrink: 0,
-          display: "flex", flexDirection: "column", gap: 12,
-          overflowY: "auto", paddingRight: 8, marginRight: 8, marginLeft: 12,
+        {/* ── LEFT PANEL (300 px, scrollable) ──────────── */}
+        <div className="tdp-left" style={{
+          width: 300, flexShrink: 0,
+          display: "flex", flexDirection: "column", gap: 14,
+          overflowY: "auto", paddingRight: 4,
         }}>
 
-          {/* Profile card */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "20px 18px 16px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div style={{ width: 70, height: 70, borderRadius: "50%", background: "linear-gradient(135deg,#d4a946,#b9934a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 auto 10px", boxShadow: "0 3px 14px rgba(185,147,69,0.35)" }}>
+          {/* Profile card — cream gradient header */}
+          <div style={{ background: "linear-gradient(180deg,#FDF8EC 0%,#FBF4E2 60%,#fff 100%)", borderRadius: 14, border: "1px solid #EDE9E0", padding: "26px 18px 20px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", flexShrink: 0 }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#FCF6E8", border: "1.5px solid rgba(185,147,69,0.55)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-cinzel), Georgia, serif", fontSize: 26, fontWeight: 700, color: "#b9934a", margin: "0 auto 12px" }}>
               {reading.fullName[0]?.toUpperCase()}
             </div>
-            <p style={{ fontSize: 16, fontWeight: 800, color: "#2c1810", marginBottom: 2 }}>{reading.fullName}</p>
-            <p style={{ fontSize: 11, color: "#9b7a5e", marginBottom: 10 }}>Case # {reading.caseReference}</p>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "4px 12px", background: stsCfg.bg, color: stsCfg.color }}>
+            <p style={{ fontSize: 16, fontWeight: 800, color: "#23262d", marginBottom: 3 }}>{reading.fullName}</p>
+            <p style={{ fontSize: 11.5, color: "#9aa0ab", marginBottom: 12 }}>Case # {reading.caseReference}</p>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "4px 14px", background: stsCfg.bg, color: stsCfg.color, border: "1px solid rgba(0,0,0,0.05)" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: stsCfg.dot, display: "inline-block" }} />
               {reading.status}
             </span>
           </div>
 
           {/* Info rows */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDEDEF", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", flexShrink: 0 }}>
             {infoRows.map(({ icon, label, value }, i) => (
-              <div key={label} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 14px", borderBottom: i < infoRows.length - 1 ? "1px solid #F5EFE7" : "none" }}>
+              <div key={label} style={{ display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 16px", borderBottom: i < infoRows.length - 1 ? "1px solid #F2F3F5" : "none" }}>
                 <span style={{ color: "#b9934a", flexShrink: 0, marginTop: 2, display: "flex" }}>{icon}</span>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 1 }}>{label}</p>
-                  <p style={{ fontSize: 13, color: "#2c1810", wordBreak: "break-word", lineHeight: 1.4 }}>{value || "—"}</p>
+                  <p style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", color: "#9aa0ab", textTransform: "uppercase", marginBottom: 2 }}>{label}</p>
+                  <p style={{ fontSize: 13.5, fontWeight: 600, color: "#23262d", wordBreak: "break-word", lineHeight: 1.45 }}>{value || "—"}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Devotee's Question */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDEDEF", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: "1px solid #F2F3F5" }}>
               <span style={{ color: "#b9934a" }}><TIco.Question /></span>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#6b5744" }}>Devotee&apos;s Question</p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#23262d" }}>Devotee&apos;s Question</p>
             </div>
-            <p style={{ fontSize: 13, color: "#2c1810", lineHeight: 1.65, fontStyle: "italic" }}>&ldquo;{reading.guidanceQuery}&rdquo;</p>
+            <p style={{ fontSize: 13.5, color: "#3a3f48", lineHeight: 1.65, fontStyle: "italic", padding: "14px 16px" }}>&ldquo;{reading.guidanceQuery}&rdquo;</p>
           </div>
 
           {/* Update Status */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDEDEF", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
               <span style={{ color: "#b9934a" }}><TIco.Status /></span>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#6b5744", letterSpacing: "0.06em", textTransform: "uppercase" }}>Update Status</p>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#3a3f48", letterSpacing: "0.06em", textTransform: "uppercase" }}>Update Status</p>
             </div>
             <div style={{ position: "relative", marginBottom: 10 }}>
               <select value={status} onChange={e => setStatus(e.target.value as typeof status)}
@@ -1378,56 +1399,63 @@ function TrikalaDetailPanel({
         </div>
 
         {/* ── RIGHT PANEL (flex-1, scrollable) ─────────── */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", marginRight: 12 }}>
+        <div className="tdp-right" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", gap: 18 }}>
 
-          {/* Tab bar */}
-          <div style={{ display: "flex", background: "#fff", borderRadius: "12px 12px 0 0", border: "1px solid #E8E0D4", borderBottom: "none", flexShrink: 0, overflow: "hidden" }}>
-            {DETAIL_TABS.map((t, i) => {
+          {/* Tab bar — segmented control */}
+          <div className="tdp-tabs" style={{ display: "flex", background: "#EAEBEE", borderRadius: 12, padding: 4, flexShrink: 0, gap: 4 }}>
+            {DETAIL_TABS.map(t => {
               const active = activeTab === t;
               return (
                 <button key={t} onClick={() => setActiveTab(t)}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 22px", background: active ? "#fff" : "#F9F5F0", border: "none", borderRight: i < DETAIL_TABS.length - 1 ? "1px solid #E8E0D4" : "none", borderBottom: active ? "2.5px solid #b9934a" : "2.5px solid transparent", cursor: "pointer", fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "#2c1810" : "#9b7a5e", whiteSpace: "nowrap", transition: "all 0.15s" }}>
-                  <span style={{ color: active ? "#b9934a" : "#9b7a5e" }}>{tabIcon[t]}</span>
+                  style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    padding: "10px 12px", borderRadius: 9, border: "none",
+                    background: active ? "#fff" : "transparent",
+                    boxShadow: active ? "0 1px 5px rgba(0,0,0,0.08)" : "none",
+                    cursor: "pointer", fontSize: 13, fontWeight: active ? 700 : 500,
+                    color: active ? "#b9934a" : "#878d98", whiteSpace: "nowrap", transition: "all 0.15s",
+                  }}>
+                  <span style={{ color: active ? "#b9934a" : "#a0a6b0", display: "flex" }}>{tabIcon[t]}</span>
                   {t}
                 </button>
               );
             })}
           </div>
 
-          {/* Tab content — scrollable */}
-          <div style={{ flex: 1, background: "#fff", border: "1px solid #E8E0D4", borderTop: "none", borderRadius: "0 0 12px 12px", overflowY: "auto", padding: "22px 24px" }}>
+          {/* Tab content — floating white card, scrollable */}
+          <div className="tdp-content" style={{ flex: 1, background: "#fff", border: "1px solid #EDEDEF", borderRadius: 14, overflowY: "auto", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             {activeTab === "Analysis" && (
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <TIco.Star />
-                    <p style={{ fontSize: 14, fontWeight: 700, color: "#2c1810" }}>Guruji&apos;s Private Analysis</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderBottom: "1px solid #F2F3F5" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <span style={{ color: "#b9934a", display: "flex" }}><TIco.Star /></span>
+                    <p style={{ fontSize: 14.5, fontWeight: 700, color: "#23262d" }}>Guruji&apos;s Private Analysis</p>
                   </div>
-                  <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 9, border: "none", background: "#b9934a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(185,147,69,0.30)" }}>
+                  <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#d4a946,#c39a3e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(185,147,69,0.35)" }}>
                     <TIco.Pencil /> Regenerate
                   </button>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 260, color: "#9b7a5e", textAlign: "center", gap: 14 }}>
-                  <span style={{ fontSize: 48 }}>⏳</span>
-                  <p style={{ fontSize: 13.5, color: "#9b7a5e", lineHeight: 1.7 }}>Kundli report not yet generated.<br />Wait for Make.com to process the chart first.</p>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, color: "#878d98", textAlign: "center", gap: 14, padding: "20px 24px" }}>
+                  <span style={{ fontSize: 42 }}>⏳</span>
+                  <p style={{ fontSize: 13.5, color: "#878d98", lineHeight: 1.7 }}>Kundli report not yet generated. Wait for Make.com to process the chart first.</p>
                 </div>
               </div>
             )}
-            {activeTab === "Notes" && <PrivateNotes caseId={reading.caseReference} />}
+            {activeTab === "Notes" && <div style={{ padding: "22px 24px" }}><PrivateNotes caseId={reading.caseReference} /></div>}
             {activeTab === "AI Chat" && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 260, color: "#9b7a5e", textAlign: "center", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, color: "#878d98", textAlign: "center", gap: 12, padding: "22px 24px" }}>
                 <TIco.AI />
                 <p style={{ fontSize: 13.5 }}>AI Chat coming soon.</p>
               </div>
             )}
-            {activeTab === "Pad" && <WritingPad caseId={reading.caseReference} />}
-            {activeTab === "Follow-ups" && <FollowUps caseId={reading.caseReference} />}
+            {activeTab === "Pad" && <div style={{ padding: "22px 24px" }}><WritingPad caseId={reading.caseReference} /></div>}
+            {activeTab === "Follow-ups" && <div style={{ padding: "22px 24px" }}><FollowUps caseId={reading.caseReference} /></div>}
           </div>
         </div>
       </div>
 
       {/* ── FOOTER ───────────────────────────────────────── */}
-      <div style={{ textAlign: "center", padding: "10px", fontSize: 11, color: "#c4b5a0", borderTop: "1px solid #E8E0D4", background: "#fff", flexShrink: 0 }}>
+      <div style={{ textAlign: "center", padding: "10px", fontSize: 11, color: "#b6bbc4", flexShrink: 0 }}>
         Guruji Astro · Admin Panel · {new Date().getFullYear()}
       </div>
     </motion.div>
@@ -1531,6 +1559,30 @@ export default function AdminPage() {
     if (authed && tab === "trikala") fetchTrikala();
   }, [authed, tab, fetchTrikala]);
 
+  /* ── open/close trikala detail — synced to ?case= URL param ── */
+  const openTrikalaDetail = useCallback((r: TrikalaReading) => {
+    setTrikalaDetail(r);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("case", r.caseReference);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  const closeTrikalaDetail = useCallback(() => {
+    setTrikalaDetail(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("case");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  /* ── restore detail panel from ?case= on refresh once readings load ── */
+  useEffect(() => {
+    const caseRef = searchParams.get("case");
+    if (!caseRef || trikalaDetail || trikalaReadings.length === 0) return;
+    const match = trikalaReadings.find(r => r.caseReference === caseRef);
+    if (match) setTrikalaDetail(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trikalaReadings]);
+
   function logout() {
     sessionStorage.removeItem("admin_key");
     sessionStorage.removeItem("admin_name");
@@ -1619,6 +1671,8 @@ export default function AdminPage() {
     setSidebarOpen(false);
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", t);
+    params.delete("case");
+    setTrikalaDetail(null);
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
@@ -1794,22 +1848,48 @@ export default function AdminPage() {
           const activeLabel = FILTER_PILLS.find(p => p.key === trikalaFilter)?.label ?? "All Cases";
 
           return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "28px 28px 32px", gap: 0, background: "#F5F1EC", minHeight: 0 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: 0, gap: 0, background: "#F5F1EC", minHeight: 0 }}>
 
-              {/* Mobile hamburger + Page header */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 24 }}>
-                <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)} style={{ marginTop: 4 }}>
-                  <Menu size={20} />
-                </button>
-                <div>
-                  <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1a0e07", letterSpacing: "-0.01em", margin: 0 }}>Devotee Requests</h1>
-                  <p style={{ fontSize: 12.5, color: "#9b7a5e", marginTop: 3 }}>Manage all incoming spiritual consultation requests</p>
+              {/* Dark maroon hero header — same style as Bookings/Contacts */}
+              <div className="adm-hero-card">
+                <div className="adm-hero-row">
+                  {/* Left: hamburger (mobile) + icon + title */}
+                  <div className="adm-hero-left">
+                    <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}>
+                      <Menu size={20} />
+                    </button>
+                    <div className="adm-hero-icon-wrap">
+                      <Star size={22} color="#f5e6c8" />
+                    </div>
+                    <div className="adm-hero-text">
+                      <p className="adm-hero-eyebrow">Submissions</p>
+                      <h1 className="adm-hero-h1">Devotee Requests</h1>
+                      <p className="adm-hero-desc">Manage all incoming spiritual consultation requests</p>
+                    </div>
+                  </div>
+                  {/* Right: count + actions */}
+                  <div className="adm-hero-right">
+                    <div className="adm-hero-count">
+                      <span className="adm-hero-count-num">{total}</span>
+                      <span className="adm-hero-count-lbl">Requests</span>
+                    </div>
+                    <div className="adm-hero-sep" />
+                    <div className="adm-hero-actions">
+                      <div className="adm-hero-live">
+                        <span className="adm-live-dot" />
+                        <span>Live</span>
+                      </div>
+                      <button className="adm-hero-btn-out" onClick={fetchTrikala}>
+                        <RefreshCw size={13} style={trikalaLoading ? { animation: "spin 1s linear infinite" } : {}} />
+                        <span className="adm-hero-btn-txt">Refresh</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <button onClick={fetchTrikala} style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid #E8E0D4", background: "#fff", color: "#6b5744", fontSize: 12.5, cursor: "pointer", fontWeight: 600 }}>
-                  <RefreshCw size={13} style={trikalaLoading ? { animation: "spin 1s linear infinite" } : {}} />
-                  Refresh
-                </button>
               </div>
+
+              {/* Content area below hero — padded */}
+              <div style={{ padding: "24px 28px 32px" }}>
 
               {/* Stat cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 22 }}>
@@ -1930,7 +2010,7 @@ export default function AdminPage() {
                               </td>
                               {/* Open button */}
                               <td style={{ padding: "13px 16px" }}>
-                                <button onClick={() => setTrikalaDetail(r)}
+                                <button onClick={() => openTrikalaDetail(r)}
                                   style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", color: "#3b2010", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}
                                   onMouseEnter={e => { e.currentTarget.style.borderColor = "#b9934a"; e.currentTarget.style.color = "#b9934a"; }}
                                   onMouseLeave={e => { e.currentTarget.style.borderColor = "#E8E0D4"; e.currentTarget.style.color = "#3b2010"; }}>
@@ -1946,6 +2026,7 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
+              </div>{/* /content padding */}
             </div>
           );
         })()}
@@ -2239,10 +2320,10 @@ export default function AdminPage() {
         {trikalaDetail && (
           <TrikalaDetailPanel
             reading={trikalaDetail}
-            onClose={() => setTrikalaDetail(null)}
+            onClose={closeTrikalaDetail}
             onStatusChange={updated => {
               setTrikalaReadings(prev => prev.map(r => r.id === updated.id ? updated : r));
-              setTrikalaDetail(null);
+              closeTrikalaDetail();
             }}
           />
         )}
