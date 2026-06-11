@@ -358,7 +358,7 @@ function StatsBar() {
           boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
           overflow: "hidden",
           width: "100%",
-          maxWidth: 500,
+          maxWidth: 728,
         }}
       >
         {items.map(({ value, label }, i) => (
@@ -421,7 +421,7 @@ function StepHeader({ phase }: { phase: Phase }) {
   const { title, sub } = STEP_META[step];
 
   return (
-    <div style={{ background: "#fff", borderRadius: "16px 16px 0 0", padding: "24px 28px 20px", borderBottom: `2px solid ${KO}` }}>
+    <div style={{ background: "linear-gradient(180deg,#FFFCF5 0%,#FFFAF0 100%)", borderRadius: "16px 16px 0 0", padding: "24px 28px 20px", borderBottom: "2.5px solid #F97316" }}>
       {/* Step circles — flex row with equal-margin connectors */}
       <div style={{ display: "flex", alignItems: "center", width: "100%", marginBottom: 18 }}>
         {([1, 2, 3, 4] as number[]).map((n, i) => {
@@ -431,15 +431,15 @@ function StepHeader({ phase }: { phase: Phase }) {
             <React.Fragment key={n}>
               <div style={{
                 width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                background: done ? KO : active ? KO : "#fff",
-                border: done ? "none" : active ? "none" : `1.5px solid rgba(200,170,130,0.55)`,
+                background: done ? KO : active ? KO : "#FDF6E8",
+                border: done ? "none" : active ? "none" : `1.5px solid rgba(210,175,125,0.60)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: active ? `0 4px 18px ${KOG}` : done ? `0 3px 10px ${KOG}` : "none",
                 transition: "all 0.3s",
               }}>
                 {done
                   ? <Ico.Check />
-                  : <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 13, fontWeight: 700, color: active ? "#fff" : "rgba(42,28,19,0.28)" }}>{n}</span>
+                  : <span style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 13, fontWeight: 700, color: active ? "#fff" : "rgba(180,130,75,0.75)" }}>{n}</span>
                 }
               </div>
               {i < 3 && (
@@ -677,6 +677,108 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
 }
 
 /* ═══════════════════════════════════════════════════════
+   PLACE OF BIRTH — autocomplete via OpenStreetMap Nominatim
+═══════════════════════════════════════════════════════ */
+function PlaceAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(-1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const skipNextFetch = useRef(false);
+
+  /* close on outside click */
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (skipNextFetch.current) { skipNextFetch.current = false; return; }
+    const q = value.trim();
+    if (q.length < 2) { setSuggestions([]); setOpen(false); return; }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        abortRef.current?.abort();
+        abortRef.current = new AbortController();
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&limit=6&q=${encodeURIComponent(q)}`,
+          { signal: abortRef.current.signal, headers: { "Accept-Language": "en" } }
+        );
+        const data: any[] = await res.json();
+        const names = Array.from(new Set(data.map(d => d.display_name as string))).slice(0, 6);
+        setSuggestions(names);
+        setOpen(names.length > 0);
+        setHighlight(-1);
+      } catch { /* aborted or network error — ignore */ }
+    }, 350);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [value]);
+
+  function pick(name: string) {
+    skipNextFetch.current = true;
+    onChange(name);
+    setOpen(false);
+    setSuggestions([]);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setHighlight(h => (h + 1) % suggestions.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight(h => (h - 1 + suggestions.length) % suggestions.length); }
+    else if (e.key === "Enter" && highlight >= 0) { e.preventDefault(); pick(suggestions[highlight]); }
+    else if (e.key === "Escape") setOpen(false);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
+      <input
+        style={{ ...iBase, fontSize: 13, width: "100%" }}
+        placeholder=""
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
+        autoComplete="off"
+      />
+      {open && (
+        <ul style={{
+          position: "absolute", left: -38, right: -14, top: "calc(100% + 14px)", zIndex: 500,
+          background: "#fff", borderRadius: 12, border: "1.5px solid rgba(200,170,130,0.50)",
+          boxShadow: "0 12px 36px rgba(42,28,19,0.16)", maxHeight: 230, overflowY: "auto",
+          padding: "6px 0", margin: 0, listStyle: "none",
+        }}>
+          {suggestions.map((s, i) => (
+            <li
+              key={s}
+              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
+              onMouseEnter={() => setHighlight(i)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 8,
+                padding: "9px 14px", cursor: "pointer", fontSize: 12.5, lineHeight: 1.45,
+                color: "#2A1C13",
+                background: highlight === i ? KOL : "transparent",
+                transition: "background 0.12s",
+              }}
+            >
+              <span style={{ color: KO, flexShrink: 0, marginTop: 1 }}><Ico.Pin /></span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
    STEP 2 — BIRTH DETAILS
 ═══════════════════════════════════════════════════════ */
 function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void; back: () => void }) {
@@ -702,7 +804,7 @@ function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
           </LabeledBox>
         </div>
         <LabeledBox label="Place of Birth *" hint="Required to map the exact planetary alignments" icon={<Ico.Pin />}>
-          <input style={{ ...iBase, fontSize: 13 }} placeholder="" value={form.pob} onChange={e => set("pob", e.target.value)} />
+          <PlaceAutocomplete value={form.pob} onChange={v => set("pob", v)} />
         </LabeledBox>
         {err && <p style={{ fontSize: 12, color: "#ef4444", textAlign: "center" }}>{err}</p>}
       </div>
@@ -927,10 +1029,10 @@ export default function KundliPage() {
               input[type="date"], input[type="time"] { cursor: pointer; }
             `}</style>
 
-            <div className="mx-auto px-4 py-10 pb-16" style={{ maxWidth: 640 }}>
+            <div className="mx-auto px-4 py-10 pb-16" style={{ maxWidth: 760 }}>
 
               {/* Main card — trust badges are OUTSIDE this card */}
-              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 8px 40px rgba(249,115,22,0.14), 0 3px 14px rgba(249,115,22,0.08)", overflow: "hidden", marginBottom: 0 }}>
+              <div style={{ background: "#fff", borderRadius: 18, border: "1px solid rgba(249,115,22,0.22)", boxShadow: "0 8px 40px rgba(249,115,22,0.14), 0 3px 14px rgba(249,115,22,0.08)", overflow: "visible", marginBottom: 0 }}>
                 <StepHeader phase={phase} />
 
                 <AnimatePresence mode="wait">
