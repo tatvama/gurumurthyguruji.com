@@ -8,6 +8,10 @@ import { initDB } from "./config/db.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import audienceRoutes from "./routes/audienceRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
+import trikalaRoutes from "./routes/trikalaRoutes.js";
+import caseNotesRoutes from "./routes/caseNotesRoutes.js";
+import caseFollowupsRoutes from "./routes/caseFollowupsRoutes.js";
+import casePadRoutes from "./routes/casePadRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,14 +30,14 @@ app.use(
       if (allowed && origin === allowed) return callback(null, true);
       callback(new Error("CORS: origin not allowed"));
     },
-    methods: ["GET", "POST", "PATCH", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     credentials: false,
   })
 );
 
-app.use(express.json({ limit: "100kb" }));
-app.use(express.urlencoded({ extended: false, limit: "100kb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
 app.use(globalLimiter);
 
@@ -44,6 +48,10 @@ app.get("/health", (req, res) => {
 app.use("/api/contacts", contactRoutes);
 app.use("/api/audience-bookings", audienceRoutes);
 app.use("/api/admin-users", adminUserRoutes);
+app.use("/api/trikala-readings", trikalaRoutes);
+app.use("/api/case-notes",      caseNotesRoutes);
+app.use("/api/case-followups",  caseFollowupsRoutes);
+app.use("/api/case-pad",        casePadRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });

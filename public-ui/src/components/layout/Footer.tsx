@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@/components/ui/locale-link";
-import { MapPin, Phone, Mail, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Mail, MessageCircle, ChevronRight } from "lucide-react";
 import { siteConfig } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import type { UiKey } from "@/lib/dictionary";
@@ -26,17 +26,17 @@ const socials = [
 ];
 
 const exploreLinks: { key: UiKey; href: string }[] = [
-  { key: "nav.about", href: "/about" },
-  { key: "nav.trikala", href: "/trikala-jnana" },
+  { key: "nav.about",      href: "/about" },
+  { key: "nav.trikala",    href: "/trikala-jnana" },
   { key: "nav.sanjeevini", href: "/sanjeevini-kriya" },
-  { key: "nav.guruvani", href: "/guruvani" },
-  { key: "nav.contact", href: "/contact" },
+  { key: "nav.guruvani",   href: "/guruvani" },
+  { key: "nav.contact",    href: "/contact" },
 ];
 
 const pathLinks: { key: UiKey; href: string }[] = [
   { key: "nav.parampara", href: "/guru-parampara" },
-  { key: "nav.ashrams", href: "/ashrams" },
-  { key: "nav.seva", href: "/seva" },
+  { key: "nav.ashrams",   href: "/ashrams" },
+  { key: "nav.seva",      href: "/seva" },
 ];
 
 export function Footer() {
@@ -44,19 +44,29 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-deep-brown px-4 pb-8 pt-16 text-pearl md:px-8">
-      <div className="mx-auto mb-12 grid max-w-7xl grid-cols-1 gap-12 border-b border-champagne/20 pb-12 md:grid-cols-12">
+    <footer className="bg-deep-brown px-4 pb-8 pt-16 md:px-8" style={{ color: "rgba(255,220,170,0.75)" }}>
+      <div className="mx-auto mb-12 grid max-w-7xl grid-cols-1 gap-12 pb-12 md:grid-cols-12">
+
         {/* Brand & mission */}
         <div className="space-y-6 md:col-span-4">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-gradient font-heading text-lg text-deep-brown">
+          <Link href="/" className="inline-flex items-center gap-3">
+            {/* Gold circle with dark OM — matching image 2 */}
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-heading text-xl text-deep-brown"
+              style={{
+                background: "linear-gradient(135deg, #B99345 0%, #D4A853 45%, #D8B76A 100%)",
+                boxShadow: "0 0 0 2px rgba(185,147,69,0.35), 0 4px 14px rgba(185,147,69,0.25)",
+              }}
+            >
               ॐ
             </span>
-            <h2 className="font-heading text-xl font-bold tracking-wide text-pearl">
-              Gurumurthy <span className="font-medium text-champagne">Guruji</span>
+            {/* Wordmark */}
+            <h2 style={{ color: "#ffffff", fontFamily: "var(--font-cinzel), serif", fontSize: "1.3rem", fontWeight: 700, letterSpacing: "0.08em" }}>
+              Gurumurthy <span style={{ color: "#D8B76A" }}>Guruji</span>
             </h2>
           </Link>
-          <p className="max-w-md text-sm leading-relaxed text-pearl/75">{t("footer.tagline")}</p>
+          <p className="max-w-md text-sm leading-relaxed" style={{ color: "rgba(255,220,170,0.75)" }}>
+            {t("footer.tagline")}
+          </p>
           <div className="flex items-center gap-3">
             {socials.map((s) => (
               <a
@@ -65,7 +75,13 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-champagne/25 text-pearl/70 transition-colors hover:border-champagne hover:text-champagne"
+                className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid #F97316",
+                  color: "#F97316",
+                  boxShadow: "0 0 6px rgba(249,115,22,0.25)",
+                }}
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-[18px] w-[18px]" aria-hidden="true">
                   <path d={s.path} />
@@ -77,12 +93,24 @@ export function Footer() {
 
         {/* Explore */}
         <div className="md:col-span-2">
-          <h3 className="mb-4 font-heading text-lg font-semibold text-champagne">{t("footer.explore")}</h3>
+          <h3 style={{ color: "#f9731699", fontFamily: "var(--font-cinzel), serif", fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(249,115,22,0.35)" }}>{t("footer.explore")}</h3>
           <ul className="space-y-3">
             {exploreLinks.map((item) => (
               <li key={item.key}>
-                <Link href={item.href} className="text-sm text-pearl/75 transition-colors hover:text-champagne">
-                  {t(item.key)}
+                <Link
+                  href={item.href}
+                  className="group flex items-center gap-2 text-sm"
+                >
+                  <ChevronRight
+                    className="h-3.5 w-3.5 shrink-0 text-[#F97316] transition-all duration-200 group-hover:translate-x-1 group-hover:!text-[#F97316]"
+                    strokeWidth={2.5}
+                  />
+                  <span
+                    className="transition-all duration-200 group-hover:translate-x-1 group-hover:!text-[#F97316]"
+                    style={{ color: "#ffdcaabf" }}
+                  >
+                    {t(item.key)}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -91,12 +119,24 @@ export function Footer() {
 
         {/* The Path */}
         <div className="md:col-span-3">
-          <h3 className="mb-4 font-heading text-lg font-semibold text-champagne">{t("nav.path")}</h3>
+          <h3 style={{ color: "#f9731699", fontFamily: "var(--font-cinzel), serif", fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(249,115,22,0.35)" }}>{t("nav.path")}</h3>
           <ul className="space-y-3">
             {pathLinks.map((item) => (
               <li key={item.key}>
-                <Link href={item.href} className="text-sm text-pearl/75 transition-colors hover:text-champagne">
-                  {t(item.key)}
+                <Link
+                  href={item.href}
+                  className="group flex items-center gap-2 text-sm"
+                >
+                  <ChevronRight
+                    className="h-3.5 w-3.5 shrink-0 text-[#F97316] transition-all duration-200 group-hover:translate-x-1 group-hover:!text-[#F97316]"
+                    strokeWidth={2.5}
+                  />
+                  <span
+                    className="transition-all duration-200 group-hover:translate-x-1 group-hover:!text-[#F97316]"
+                    style={{ color: "#ffdcaabf" }}
+                  >
+                    {t(item.key)}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -105,15 +145,15 @@ export function Footer() {
 
         {/* Connect */}
         <div className="md:col-span-3">
-          <h3 className="mb-4 font-heading text-lg font-semibold text-champagne">{t("footer.connect")}</h3>
-          <ul className="space-y-3 text-sm text-pearl/75">
+          <h3 style={{ color: "#f9731699", fontFamily: "var(--font-cinzel), serif", fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(249,115,22,0.35)" }}>{t("footer.connect")}</h3>
+          <ul className="space-y-3 text-sm" style={{ color: "#ffdcaabf" }}>
             <li className="flex items-start gap-2.5">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-champagne" />
+              <MapPin className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={2} style={{ color: "#F97316" }} />
               <span>{siteConfig.addressMain}</span>
             </li>
             <li>
-              <a href={siteConfig.phoneHref} className="flex items-center gap-2.5 hover:text-champagne">
-                <Phone className="h-4 w-4 shrink-0 text-champagne" />
+              <a href={siteConfig.phoneHref} className="flex items-center gap-2.5 hover:text-champagne" style={{ color: "#ffdcaabf" }}>
+                <Phone className="h-5 w-5 shrink-0" strokeWidth={2} style={{ color: "#F97316" }} />
                 {siteConfig.phoneDisplay}
               </a>
             </li>
@@ -123,14 +163,15 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 hover:text-champagne"
+                style={{ color: "#ffdcaabf" }}
               >
-                <MessageCircle className="h-4 w-4 shrink-0 text-champagne" />
+                <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={2} style={{ color: "#F97316" }} />
                 WhatsApp
               </a>
             </li>
             <li>
-              <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-2.5 hover:text-champagne">
-                <Mail className="h-4 w-4 shrink-0 text-champagne" />
+              <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-2.5 hover:text-champagne" style={{ color: "#ffdcaabf" }}>
+                <Mail className="h-5 w-5 shrink-0" strokeWidth={2} style={{ color: "#F97316" }} />
                 {siteConfig.email}
               </a>
             </li>
@@ -138,9 +179,13 @@ export function Footer() {
         </div>
       </div>
 
+      <div className="mx-auto mb-8 max-w-7xl border-t border-white/10" />
+
       <div className="mx-auto max-w-7xl space-y-4">
-        <p className="text-center text-[11px] leading-relaxed text-pearl/45">{t("footer.disclaimer")}</p>
-        <div className="flex flex-col items-center justify-between gap-3 text-xs text-pearl/60 md:flex-row">
+        <p className="text-center text-[11px] leading-relaxed" style={{ color: "rgba(255,220,170,0.45)" }}>
+          {t("footer.disclaimer")}
+        </p>
+        <div className="flex flex-col items-center justify-between gap-3 text-xs md:flex-row" style={{ color: "rgba(255,220,170,0.60)" }}>
           <p>© {year} {siteConfig.trust}. {t("footer.rights")}</p>
           <p className="font-heading text-sm italic text-champagne/80">{t("footer.quote")}</p>
         </div>

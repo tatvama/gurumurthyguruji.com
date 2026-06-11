@@ -597,7 +597,7 @@ function PdfRenderer() {
   }
 
   const isBooking = (typeParam ?? payload.type) === "bookings";
-  const title = isBooking ? "Audience Bookings Report" : "Contact Messages Report";
+  const title = isBooking ? "Appointment Bookings Report" : "Contact Messages Report";
 
   return (
     <>

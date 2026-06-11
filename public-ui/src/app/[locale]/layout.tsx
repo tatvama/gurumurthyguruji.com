@@ -6,6 +6,9 @@ import {
   Caveat,
   Noto_Sans_Kannada,
   Noto_Serif_Kannada,
+  Cinzel,
+  DM_Serif_Display,
+  Nunito,
 } from "next/font/google";
 import "../globals.css";
 import { siteConfig } from "@/lib/data";
@@ -30,6 +33,30 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+// Kundli hero fonts — preload: false so they only load on the kundli page
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  preload: false,
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  variable: "--font-dm-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  preload: false,
+});
+
+// Trikala reading form hint font
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
 // Kannada faces — not preloaded; load when the Kannada locale is served.
@@ -117,7 +144,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${notoKannadaSerif.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${notoKannadaSerif.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} h-full scroll-smooth antialiased`}
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col overflow-x-hidden bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
         <NavProgress />

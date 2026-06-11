@@ -3,6 +3,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   getAudienceBookings,
@@ -13,9 +14,17 @@ import {
   deleteAdminUser,
   adminSendOtp,
   adminVerifyOtp,
+  getTrikalaReadings,
+  updateTrikalaStatus,
+  getCaseNotes, addCaseNote, deleteCaseNote,
+  getCaseFollowups, addCaseFollowup, deleteCaseFollowup,
+  getCasePad, saveCasePad, clearCasePad,
   type AudienceBooking,
   type ContactMessage,
   type AdminUser,
+  type TrikalaReading,
+  type CaseNote,
+  type CaseFollowup,
 } from "@/lib/api";
 import {
   Users,
@@ -41,6 +50,7 @@ import {
   Lock,
   FileDown,
   Menu,
+  BookOpen,
 } from "lucide-react";
 
 /* ── constants ──────────────────────────────────────────────────────── */
@@ -54,7 +64,7 @@ const COSMIC =
   "radial-gradient(ellipse at right center,rgba(110,18,32,0.18) 0%,transparent 55%)," +
   "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)";
 
-type Tab = "bookings" | "contacts" | "admins";
+type Tab = "bookings" | "contacts" | "admins" | "trikala";
 
 /* ── CustomSelect ──────────────────────────────────────────────────── */
 function CustomSelect({
@@ -162,8 +172,8 @@ function downloadPdfDirect(
   const M     = 12;
   const now   = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
   const today = new Date().toLocaleDateString("en-IN", { dateStyle: "long" });
-  const title = type === "contacts" ? "Contact Messages Report" : "Audience Bookings Report";
-  const sub   = type === "contacts" ? "CONTACT MESSAGES REPORT" : "AUDIENCE BOOKINGS REPORT";
+  const title = type === "contacts" ? "Contact Messages Report" : "Appointment Bookings Report";
+  const sub   = type === "contacts" ? "CONTACT MESSAGES REPORT" : "APPOINTMENT BOOKINGS REPORT";
   const dateStr = new Date().toISOString().slice(0, 10);
 
   /* ── Header band ── */
@@ -490,7 +500,7 @@ function DetailPanel({
         <div style={{ background: COSMIC, padding: "20px 20px 18px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(245,230,200,0.45)" }}>
-              {isBooking ? "Audience Booking" : "Contact Message"}
+              {isBooking ? "Appointment Booking" : "Contact Message"}
             </span>
             <button onClick={onClose}
               style={{ background: "rgba(245,230,200,0.12)", border: "1px solid rgba(245,230,200,0.22)", borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "#f5e6c8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -730,13 +740,712 @@ function AdminPanel({
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   PRIVATE NOTES
+════════════════════════════════════════════════════════════════════ */
+function PrivateNotes({ caseId }: { caseId: string }) {
+  const [draft,   setDraft]   = useState("");
+  const [notes,   setNotes]   = useState<CaseNote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getCaseNotes(caseId)
+      .then(setNotes)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [caseId]);
+
+  async function save() {
+    if (!draft.trim()) return;
+    setSaving(true);
+    try {
+      const note = await addCaseNote(caseId, draft.trim());
+      setNotes(prev => [note, ...prev]);
+      setDraft("");
+    } catch { /* ignore */ } finally { setSaving(false); }
+  }
+
+  async function deleteNote(id: number) {
+    await deleteCaseNote(caseId, id).catch(() => {});
+    setNotes(prev => prev.filter(n => n.id !== id));
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <span style={{ color: "#b9934a" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#b9934a" stroke="#b9934a" strokeWidth="0"><path d="M19 3H5a2 2 0 0 0-2 2v16l4-4h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg>
+        </span>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#2c1810" }}>Private Notes</p>
+      </div>
+
+      {/* Input area */}
+      <div style={{ border: "1.5px solid #E8E0D4", borderRadius: 10, overflow: "hidden", marginBottom: 12, background: "#fff" }}>
+        <textarea
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          placeholder="Write your private note here…"
+          onKeyDown={e => { if (e.ctrlKey && e.key === "Enter") save(); }}
+          style={{ width: "100%", minHeight: 80, padding: "12px 14px", border: "none", outline: "none", resize: "vertical", fontSize: 13.5, color: "#2c1810", fontFamily: "inherit", lineHeight: 1.65, boxSizing: "border-box", background: "#fff" }}
+        />
+      </div>
+
+      {/* Save button */}
+      <button onClick={save} disabled={saving || !draft.trim()}
+        style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 9, border: "none", background: saving || !draft.trim() ? "#d4c4b0" : "#b9934a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving || !draft.trim() ? "default" : "pointer", marginBottom: 20, boxShadow: saving || !draft.trim() ? "none" : "0 2px 8px rgba(185,147,69,0.30)" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        {saving ? "Saving…" : "Save Note"}
+      </button>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "#E8E0D4", marginBottom: 20 }} />
+
+      {/* Notes list / empty state */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 32, color: "#9b7a5e", fontSize: 13 }}>Loading notes…</div>
+      ) : notes.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 160, gap: 12, color: "#9b7a5e", textAlign: "center" }}>
+          <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+            <rect x="10" y="6" width="36" height="46" rx="4" fill="#e8e0d4"/>
+            <rect x="10" y="6" width="36" height="46" rx="4" fill="url(#ng)" opacity="0.6"/>
+            <rect x="18" y="18" width="20" height="2.5" rx="1.2" fill="#b9934a" opacity="0.6"/>
+            <rect x="18" y="25" width="16" height="2.5" rx="1.2" fill="#b9934a" opacity="0.4"/>
+            <rect x="18" y="32" width="12" height="2.5" rx="1.2" fill="#b9934a" opacity="0.3"/>
+            <path d="M38 42l8 8" stroke="#FA580C" strokeWidth="3" strokeLinecap="round"/>
+            <circle cx="44" cy="48" r="6" fill="#FA580C" opacity="0.85"/>
+            <path d="M42 48h4M44 46v4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+            <defs><linearGradient id="ng" x1="10" y1="6" x2="46" y2="52" gradientUnits="userSpaceOnUse"><stop stopColor="#d4a946"/><stop offset="1" stopColor="#b9934a" stopOpacity="0"/></linearGradient></defs>
+          </svg>
+          <p style={{ fontSize: 13.5, color: "#9b7a5e" }}>No notes yet. Add your first note above.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {notes.map(n => (
+            <div key={n.id} style={{ background: "#fffbf4", border: "1px solid #E8E0D4", borderRadius: 10, padding: "12px 14px", position: "relative" }}>
+              <p style={{ fontSize: 13.5, color: "#2c1810", lineHeight: 1.65, whiteSpace: "pre-wrap", marginBottom: 6 }}>{n.text}</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 11, color: "#9b7a5e" }}>
+                  {new Date(n.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <button onClick={() => deleteNote(n.id)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#c4b5a0", padding: "2px 4px", borderRadius: 5, display: "flex", alignItems: "center" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#c4b5a0")}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FOLLOW-UPS & APPOINTMENTS
+════════════════════════════════════════════════════════════════════ */
+const FOLLOWUP_TYPES = [
+  { value: "phone",    label: "📞 Phone Call"         },
+  { value: "video",    label: "🎥 Video Call"          },
+  { value: "email",    label: "📧 Email"               },
+  { value: "whatsapp", label: "💬 WhatsApp"            },
+  { value: "meeting",  label: "🤝 In-person Meeting"   },
+];
+
+
+function FollowUps({ caseId }: { caseId: string }) {
+  const [type,     setType]     = useState("phone");
+  const [dateTime, setDateTime] = useState("");
+  const [notes,    setNotes]    = useState("");
+  const [items,    setItems]    = useState<CaseFollowup[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [saving,   setSaving]   = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getCaseFollowups(caseId)
+      .then(setItems)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [caseId]);
+
+  async function schedule() {
+    if (!dateTime) return;
+    setSaving(true);
+    try {
+      const item = await addCaseFollowup(caseId, { type, dateTime, notes: notes.trim() });
+      setItems(prev => [item, ...prev]);
+      setDateTime(""); setNotes("");
+    } catch { /* ignore */ } finally { setSaving(false); }
+  }
+
+  async function deleteItem(id: number) {
+    await deleteCaseFollowup(caseId, id).catch(() => {});
+    setItems(prev => prev.filter(i => i.id !== id));
+  }
+
+  function fmtDT(iso: string) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  const typeLabel = (v: string) => FOLLOWUP_TYPES.find(t => t.value === v)?.label ?? v;
+
+  const canSchedule = !!dateTime && !saving;
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
+        <span style={{ fontSize: 16 }}>📅</span>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#2c1810" }}>Follow-ups &amp; Appointments</p>
+      </div>
+
+      {/* Form card */}
+      <div style={{ border: "1px solid #E8E0D4", borderRadius: 12, padding: "18px 18px 16px", background: "#fff", marginBottom: 16 }}>
+
+        {/* Row 1 — Type + DateTime */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 6 }}>Type</p>
+            <div style={{ position: "relative" }}>
+              <select value={type} onChange={e => setType(e.target.value)}
+                style={{ width: "100%", height: 40, padding: "0 32px 0 12px", borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", fontSize: 13, color: "#2c1810", appearance: "none", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
+                {FOLLOWUP_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9b7a5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 6 }}>Date &amp; Time</p>
+            <input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)}
+              style={{ width: "100%", height: 40, padding: "0 10px", borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", fontSize: 13, color: "#2c1810", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+          </div>
+        </div>
+
+        {/* Row 2 — Notes */}
+        <div style={{ marginBottom: 14 }}>
+          <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 6 }}>Notes</p>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)}
+            placeholder="Agenda, reminders, or notes for this follow-up…"
+            style={{ width: "100%", minHeight: 72, padding: "10px 12px", borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", fontSize: 13, color: "#2c1810", resize: "vertical", outline: "none", fontFamily: "inherit", lineHeight: 1.6, boxSizing: "border-box" }} />
+        </div>
+
+        {/* Schedule button */}
+        <button onClick={schedule} disabled={!canSchedule}
+          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 9, border: "none", background: canSchedule ? "#b9934a" : "#d4c4b0", color: "#fff", fontSize: 13, fontWeight: 700, cursor: canSchedule ? "pointer" : "default", boxShadow: canSchedule ? "0 2px 8px rgba(185,147,69,0.30)" : "none" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {saving ? "Scheduling…" : "Schedule"}
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "#E8E0D4", marginBottom: 20 }} />
+
+      {/* List / empty state */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 32, color: "#9b7a5e", fontSize: 13 }}>Loading follow-ups…</div>
+      ) : items.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 140, gap: 12, textAlign: "center" }}>
+          {/* Calendar illustration */}
+          <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+            <rect x="6" y="12" width="52" height="46" rx="6" fill="#EEF4FF"/>
+            <rect x="6" y="12" width="52" height="46" rx="6" fill="url(#cg)" opacity="0.5"/>
+            <rect x="6" y="12" width="52" height="18" rx="6" fill="#6B9FED" opacity="0.85"/>
+            <rect x="6" y="24" width="52" height="6" fill="#6B9FED" opacity="0.85"/>
+            <circle cx="20" cy="9" r="4" fill="#9B5DE5"/>
+            <circle cx="44" cy="9" r="4" fill="#9B5DE5"/>
+            <rect x="14" y="36" width="8" height="8" rx="2" fill="#b9934a" opacity="0.7"/>
+            <rect x="28" y="36" width="8" height="8" rx="2" fill="#6B9FED" opacity="0.6"/>
+            <rect x="42" y="36" width="8" height="8" rx="2" fill="#9B5DE5" opacity="0.5"/>
+            <rect x="14" y="48" width="8" height="4" rx="2" fill="#E8E0D4"/>
+            <rect x="28" y="48" width="8" height="4" rx="2" fill="#E8E0D4"/>
+            <defs><linearGradient id="cg" x1="6" y1="12" x2="58" y2="58" gradientUnits="userSpaceOnUse"><stop stopColor="#b9934a"/><stop offset="1" stopColor="#6B9FED" stopOpacity="0.3"/></linearGradient></defs>
+          </svg>
+          <p style={{ fontSize: 13.5, color: "#9b7a5e" }}>No follow-ups scheduled yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {items.map(item => (
+            <div key={item.id} style={{ background: "#fffbf4", border: "1px solid #E8E0D4", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#2c1810" }}>{typeLabel(item.type)}</span>
+                    <span style={{ fontSize: 11, color: "#b9934a", fontWeight: 600, background: "#fef3e2", borderRadius: 20, padding: "2px 9px", border: "1px solid #e8d5b0" }}>
+                      {fmtDT(item.dateTime)}
+                    </span>
+                  </div>
+                  {item.notes && <p style={{ fontSize: 12.5, color: "#6b5744", lineHeight: 1.55 }}>{item.notes}</p>}
+                  <p style={{ fontSize: 10.5, color: "#c4b5a0", marginTop: 5 }}>
+                    Scheduled {new Date(item.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                <button onClick={() => deleteItem(item.id)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#c4b5a0", padding: "2px 4px", borderRadius: 5, flexShrink: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#c4b5a0")}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   WRITING PAD — canvas drawing component
+════════════════════════════════════════════════════════════════════ */
+const PAD_COLORS = ["#000000","#b9934a","#e53e3e","#3182ce","#38a169","#805ad5","#d53f8c","#ffffff"];
+const PAD_SIZES  = [
+  { value: 1,  label: "1px — Fine"   },
+  { value: 2,  label: "2px — Normal" },
+  { value: 4,  label: "4px — Medium" },
+  { value: 8,  label: "8px — Thick"  },
+  { value: 16, label: "16px — Bold"  },
+];
+
+function WritingPad({ caseId }: { caseId: string }) {
+  const canvasRef  = React.useRef<HTMLCanvasElement>(null);
+  const wrapRef    = React.useRef<HTMLDivElement>(null);
+  const drawing    = React.useRef(false);
+  const lastPos    = React.useRef<{ x: number; y: number } | null>(null);
+  const saveTimer  = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [tool,    setTool]    = useState<"pen"|"eraser">("pen");
+  const [color,   setColor]   = useState("#000000");
+  const [size,    setSize]    = useState(2);
+
+  /* init canvas: restore saved image from DB or white fill */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap   = wrapRef.current;
+    if (!canvas || !wrap) return;
+    canvas.width  = wrap.clientWidth  || 800;
+    canvas.height = 380;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    getCasePad(caseId).then(saved => {
+      if (saved) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = saved;
+      }
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function getXY(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const scaleX = canvasRef.current!.width  / rect.width;
+    const scaleY = canvasRef.current!.height / rect.height;
+    if ("touches" in e) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top)  * scaleY,
+      };
+    }
+    return {
+      x: ((e as React.MouseEvent).clientX - rect.left) * scaleX,
+      y: ((e as React.MouseEvent).clientY - rect.top)  * scaleY,
+    };
+  }
+
+  function onDown(e: React.MouseEvent<HTMLCanvasElement>) {
+    drawing.current = true;
+    const pos = getXY(e);
+    lastPos.current = pos;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, (tool === "eraser" ? size * 5 : size) / 2, 0, Math.PI * 2);
+    ctx.fillStyle = tool === "eraser" ? "#ffffff" : color;
+    ctx.fill();
+  }
+  function onMove(e: React.MouseEvent<HTMLCanvasElement>) {
+    if (!drawing.current || !lastPos.current) return;
+    const pos = getXY(e);
+    const ctx = canvasRef.current!.getContext("2d")!;
+    ctx.beginPath();
+    ctx.moveTo(lastPos.current.x, lastPos.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = tool === "eraser" ? "#ffffff" : color;
+    ctx.lineWidth   = tool === "eraser" ? size * 5 : size;
+    ctx.lineCap     = "round";
+    ctx.lineJoin    = "round";
+    ctx.stroke();
+    lastPos.current = pos;
+  }
+  function onUp() {
+    drawing.current = false; lastPos.current = null;
+    /* debounced save to DB after stroke ends */
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const data = canvasRef.current?.toDataURL("image/png");
+      if (data) saveCasePad(caseId, data).catch(() => {});
+    }, 800);
+  }
+
+  function clearCanvas() {
+    const c = canvasRef.current!;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    clearCasePad(caseId).catch(() => {});
+  }
+  function downloadPNG() {
+    const link = document.createElement("a");
+    link.download = "writing-pad.png";
+    link.href = canvasRef.current!.toDataURL("image/png");
+    link.click();
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <span style={{ color: "#b9934a" }}><TIco.Pad /></span>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#2c1810" }}>Writing Pad</p>
+      </div>
+
+      {/* Card */}
+      <div style={{ border: "1px solid #E8E0D4", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
+
+        {/* Toolbar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: "1px solid #E8E0D4", flexWrap: "wrap" }}>
+          {/* Pen */}
+          <button onClick={() => setTool("pen")}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 7, border: `1.5px solid ${tool === "pen" ? "#b9934a" : "#E8E0D4"}`, background: tool === "pen" ? "#fdf8f0" : "#fff", color: tool === "pen" ? "#b9934a" : "#6b5744", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            Pen
+          </button>
+          {/* Eraser */}
+          <button onClick={() => setTool("eraser")}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 7, border: `1.5px solid ${tool === "eraser" ? "#b9934a" : "#E8E0D4"}`, background: tool === "eraser" ? "#b9934a" : "#fff", color: tool === "eraser" ? "#fff" : "#6b5744", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l13-13 7 7-3 3"/><path d="M6.5 17.5l5-5"/></svg>
+            Eraser
+          </button>
+
+          {/* Color swatches */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            {PAD_COLORS.map(c => (
+              <button key={c} onClick={() => { setColor(c); setTool("pen"); }}
+                style={{ width: 26, height: 26, borderRadius: "50%", background: c, border: c === color && tool === "pen" ? "3px solid #b9934a" : "2px solid #d4c4b0", cursor: "pointer", flexShrink: 0, boxShadow: c === "#ffffff" ? "inset 0 0 0 1px #d4c4b0" : "none" }} />
+            ))}
+          </div>
+
+          {/* Stroke size */}
+          <select value={size} onChange={e => setSize(Number(e.target.value))}
+            style={{ height: 32, padding: "0 28px 0 10px", borderRadius: 7, border: "1.5px solid #E8E0D4", fontSize: 12.5, color: "#2c1810", background: "#fff", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
+            {PAD_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+
+        {/* Canvas */}
+        <div ref={wrapRef} style={{ lineHeight: 0 }}>
+          <canvas
+            ref={canvasRef}
+            style={{ display: "block", width: "100%", cursor: tool === "eraser" ? "cell" : "crosshair", touchAction: "none" }}
+            onMouseDown={onDown}
+            onMouseMove={onMove}
+            onMouseUp={onUp}
+            onMouseLeave={onUp}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+        <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 9, border: "none", background: "#b9934a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(185,147,69,0.30)" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 13 19.79 19.79 0 0 1 1.29 4.37 2 2 0 0 1 3.22 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Save Drawing
+        </button>
+        <button onClick={clearCanvas}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "1.5px solid #E8E0D4", background: "#fff", color: "#6b5744", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Clear
+        </button>
+        <button onClick={downloadPNG}
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "1.5px solid #E8E0D4", background: "#fff", color: "#6b5744", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PNG
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TRIKALA DETAIL — full-screen two-column view (matching image 2)
+════════════════════════════════════════════════════════════════════ */
+const TRIKALA_STATUS_CFG: Record<string, { bg: string; color: string; dot: string }> = {
+  "Submitted":    { bg: "#EEF4FF", color: "#3B82F6", dot: "#3B82F6" },
+  "AI Report":    { bg: "#F3E8FF", color: "#7C3AED", dot: "#7C3AED" },
+  "Under Review": { bg: "#FFF7E6", color: "#D97706", dot: "#D97706" },
+  "Finalized":    { bg: "#ECFDF5", color: "#059669", dot: "#059669" },
+  "Published":    { bg: "#DCFCE7", color: "#16A34A", dot: "#16A34A" },
+};
+const ALL_TRIKALA_STATUSES = ["Submitted", "AI Report", "Under Review", "Finalized", "Published"] as const;
+type DetailTab = "Analysis" | "Notes" | "AI Chat" | "Pad" | "Follow-ups";
+const DETAIL_TABS: DetailTab[] = ["Analysis", "Notes", "AI Chat", "Pad", "Follow-ups"];
+
+/* small icon helpers */
+const TIco = {
+  Phone:    () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.22 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  Mail:     () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
+  Service:  () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>,
+  Cal:      () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+  Clock:    () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
+  Pin:      () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Gender:   () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 3l-6 6M15 3h6v6"/></svg>,
+  Brief:    () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+  Submitted:() => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
+  Question: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>,
+  Status:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>,
+  Star:     () => <svg width="14" height="14" viewBox="0 0 24 24" fill="#b9934a" stroke="#b9934a" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Notes:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+  AI:       () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>,
+  Pad:      () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>,
+  Follow:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>,
+  Pencil:   () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>,
+  Back:     () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>,
+};
+
+function TrikalaDetailPanel({
+  reading,
+  onClose,
+  onStatusChange,
+}: {
+  reading: TrikalaReading;
+  onClose: () => void;
+  onStatusChange: (updated: TrikalaReading) => void;
+}) {
+  const [status,    setStatus]    = useState(reading.status);
+  const [saving,    setSaving]    = useState(false);
+  const [saveErr,   setSaveErr]   = useState("");
+  const [activeTab, setActiveTab] = useState<DetailTab>("Analysis");
+
+  async function save() {
+    if (status === reading.status) return;
+    setSaving(true); setSaveErr("");
+    try {
+      const updated = await updateTrikalaStatus(reading.id, status);
+      onStatusChange(updated);
+    } catch (e: any) {
+      setSaveErr(e?.message || "Failed to update status");
+    } finally { setSaving(false); }
+  }
+
+  const stsCfg  = TRIKALA_STATUS_CFG[reading.status] ?? TRIKALA_STATUS_CFG["Submitted"];
+  const svcLabel = reading.serviceType === "ashta_rekha" ? "Ashta Rekha" : "General Horoscope";
+
+  const infoRows: { icon: React.ReactNode; label: string; value: string }[] = [
+    { icon: <TIco.Phone />,     label: "MOBILE",        value: reading.mobile },
+    { icon: <TIco.Mail />,      label: "EMAIL",         value: reading.email },
+    { icon: <TIco.Service />,   label: "SERVICE",       value: svcLabel },
+    { icon: <TIco.Cal />,       label: "DATE OF BIRTH", value: reading.dob ? reading.dob.toString().slice(0, 10) : "—" },
+    { icon: <TIco.Clock />,     label: "TIME OF BIRTH", value: reading.tob || "—" },
+    { icon: <TIco.Pin />,       label: "PLACE OF BIRTH",value: reading.pob },
+    { icon: <TIco.Gender />,    label: "GENDER",        value: reading.gender },
+    { icon: <TIco.Brief />,     label: "OCCUPATION",    value: reading.occupation },
+    { icon: <TIco.Submitted />, label: "SUBMITTED",     value: reading.createdAt ? new Date(reading.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—" },
+  ];
+
+  const tabIcon: Record<DetailTab, React.ReactNode> = {
+    "Analysis":   <TIco.Star />,
+    "Notes":      <TIco.Notes />,
+    "AI Chat":    <TIco.AI />,
+    "Pad":        <TIco.Pad />,
+    "Follow-ups": <TIco.Follow />,
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 600,
+        background: "#F5F1EC",
+        display: "flex", flexDirection: "column",
+        fontFamily: "'Inter','Segoe UI',sans-serif",
+        overflow: "hidden",
+      }}
+    >
+      {/* ── TOP BAR ─────────────────────────────────────── */}
+      <div style={{
+        background: "#fff", borderBottom: "1px solid #E8E0D4",
+        padding: "0 20px", height: 48,
+        display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
+      }}>
+        <button onClick={onClose}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#6B5744", fontSize: 13, fontWeight: 600, padding: "5px 8px", borderRadius: 7 }}
+          onMouseEnter={e => (e.currentTarget.style.background = "#F5EFE7")}
+          onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+          <TIco.Back /> Back to list
+        </button>
+        <span style={{ color: "#D4C4B0" }}>|</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#9b7a5e", letterSpacing: "0.05em" }}>{reading.caseReference}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: stsCfg.bg, color: stsCfg.color }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: stsCfg.dot, display: "inline-block", flexShrink: 0 }} />
+          {reading.status}
+        </span>
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 12, color: "#9b7a5e", fontWeight: 600 }}>{reading.fullName}</span>
+      </div>
+
+      {/* ── BODY ────────────────────────────────────────── */}
+      {/* flex row; left panel scrolls, right panel scrolls */}
+      <div style={{
+        flex: 1, display: "flex", gap: 16, padding: "16px 20px 16px",
+        overflow: "hidden", minHeight: 0,
+      }}>
+
+        {/* ── LEFT PANEL (280 px, scrollable) ──────────── */}
+        <div style={{
+          width: 280, flexShrink: 0,
+          display: "flex", flexDirection: "column", gap: 12,
+          overflowY: "auto", paddingRight: 8, marginRight: 8, marginLeft: 12,
+        }}>
+
+          {/* Profile card */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "20px 18px 16px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <div style={{ width: 70, height: 70, borderRadius: "50%", background: "linear-gradient(135deg,#d4a946,#b9934a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 auto 10px", boxShadow: "0 3px 14px rgba(185,147,69,0.35)" }}>
+              {reading.fullName[0]?.toUpperCase()}
+            </div>
+            <p style={{ fontSize: 16, fontWeight: 800, color: "#2c1810", marginBottom: 2 }}>{reading.fullName}</p>
+            <p style={{ fontSize: 11, color: "#9b7a5e", marginBottom: 10 }}>Case # {reading.caseReference}</p>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "4px 12px", background: stsCfg.bg, color: stsCfg.color }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: stsCfg.dot, display: "inline-block" }} />
+              {reading.status}
+            </span>
+          </div>
+
+          {/* Info rows */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            {infoRows.map(({ icon, label, value }, i) => (
+              <div key={label} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 14px", borderBottom: i < infoRows.length - 1 ? "1px solid #F5EFE7" : "none" }}>
+                <span style={{ color: "#b9934a", flexShrink: 0, marginTop: 2, display: "flex" }}>{icon}</span>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#b9934a", textTransform: "uppercase", marginBottom: 1 }}>{label}</p>
+                  <p style={{ fontSize: 13, color: "#2c1810", wordBreak: "break-word", lineHeight: 1.4 }}>{value || "—"}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Devotee's Question */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+              <span style={{ color: "#b9934a" }}><TIco.Question /></span>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#6b5744" }}>Devotee&apos;s Question</p>
+            </div>
+            <p style={{ fontSize: 13, color: "#2c1810", lineHeight: 1.65, fontStyle: "italic" }}>&ldquo;{reading.guidanceQuery}&rdquo;</p>
+          </div>
+
+          {/* Update Status */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E8E0D4", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <span style={{ color: "#b9934a" }}><TIco.Status /></span>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6b5744", letterSpacing: "0.06em", textTransform: "uppercase" }}>Update Status</p>
+            </div>
+            <div style={{ position: "relative", marginBottom: 10 }}>
+              <select value={status} onChange={e => setStatus(e.target.value as typeof status)}
+                style={{ width: "100%", height: 40, padding: "0 32px 0 12px", borderRadius: 9, border: "1.5px solid #d4c4b0", background: "#fdfaf6", fontSize: 13, color: "#2c1810", appearance: "none", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
+                {ALL_TRIKALA_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9b7a5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            {saveErr && <p style={{ fontSize: 11.5, color: "#ef4444", marginBottom: 8 }}>{saveErr}</p>}
+            <button onClick={save} disabled={saving || status === reading.status}
+              style={{ width: "100%", height: 40, borderRadius: 9, border: "none", background: (saving || status === reading.status) ? "#d4c4b0" : "#b9934a", color: "#fff", fontWeight: 700, fontSize: 13, cursor: (saving || status === reading.status) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: (saving || status === reading.status) ? "none" : "0 2px 8px rgba(185,147,69,0.30)" }}>
+              {saving ? "Saving…" : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Save Status</>}
+            </button>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL (flex-1, scrollable) ─────────── */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", marginRight: 12 }}>
+
+          {/* Tab bar */}
+          <div style={{ display: "flex", background: "#fff", borderRadius: "12px 12px 0 0", border: "1px solid #E8E0D4", borderBottom: "none", flexShrink: 0, overflow: "hidden" }}>
+            {DETAIL_TABS.map((t, i) => {
+              const active = activeTab === t;
+              return (
+                <button key={t} onClick={() => setActiveTab(t)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 22px", background: active ? "#fff" : "#F9F5F0", border: "none", borderRight: i < DETAIL_TABS.length - 1 ? "1px solid #E8E0D4" : "none", borderBottom: active ? "2.5px solid #b9934a" : "2.5px solid transparent", cursor: "pointer", fontSize: 13, fontWeight: active ? 700 : 500, color: active ? "#2c1810" : "#9b7a5e", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+                  <span style={{ color: active ? "#b9934a" : "#9b7a5e" }}>{tabIcon[t]}</span>
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab content — scrollable */}
+          <div style={{ flex: 1, background: "#fff", border: "1px solid #E8E0D4", borderTop: "none", borderRadius: "0 0 12px 12px", overflowY: "auto", padding: "22px 24px" }}>
+            {activeTab === "Analysis" && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <TIco.Star />
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#2c1810" }}>Guruji&apos;s Private Analysis</p>
+                  </div>
+                  <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 9, border: "none", background: "#b9934a", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(185,147,69,0.30)" }}>
+                    <TIco.Pencil /> Regenerate
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 260, color: "#9b7a5e", textAlign: "center", gap: 14 }}>
+                  <span style={{ fontSize: 48 }}>⏳</span>
+                  <p style={{ fontSize: 13.5, color: "#9b7a5e", lineHeight: 1.7 }}>Kundli report not yet generated.<br />Wait for Make.com to process the chart first.</p>
+                </div>
+              </div>
+            )}
+            {activeTab === "Notes" && <PrivateNotes caseId={reading.caseReference} />}
+            {activeTab === "AI Chat" && (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 260, color: "#9b7a5e", textAlign: "center", gap: 12 }}>
+                <TIco.AI />
+                <p style={{ fontSize: 13.5 }}>AI Chat coming soon.</p>
+              </div>
+            )}
+            {activeTab === "Pad" && <WritingPad caseId={reading.caseReference} />}
+            {activeTab === "Follow-ups" && <FollowUps caseId={reading.caseReference} />}
+          </div>
+        </div>
+      </div>
+
+      {/* ── FOOTER ───────────────────────────────────────── */}
+      <div style={{ textAlign: "center", padding: "10px", fontSize: 11, color: "#c4b5a0", borderTop: "1px solid #E8E0D4", background: "#fff", flexShrink: 0 }}>
+        Guruji Astro · Admin Panel · {new Date().getFullYear()}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
    MAIN DASHBOARD
 ════════════════════════════════════════════════════════════════════ */
 export default function AdminPage() {
   const [authed,    setAuthed]    = useState(false);
   const [loggedName, setLoggedName] = useState("");
   const [loggedMobile, setLoggedMobile] = useState("");
-  const [tab, setTab] = useState<Tab>("bookings");
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const VALID_TABS: Tab[] = ["bookings", "contacts", "admins", "trikala"];
+  const initTab = (searchParams.get("tab") as Tab | null);
+  const [tab, setTab] = useState<Tab>(VALID_TABS.includes(initTab as Tab) ? (initTab as Tab) : "bookings");
   const [bookings, setBookings] = useState<AudienceBooking[]>([]);
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
   const [admins,   setAdmins]   = useState<AdminUser[]>([]);
@@ -750,6 +1459,12 @@ export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filterBooking, setFilterBooking] = useState("all"); // ashram filter
   const [filterContact, setFilterContact] = useState("all"); // date-period filter
+  const [trikalaReadings, setTrikalaReadings] = useState<TrikalaReading[]>([]);
+  const [trikalaLoading, setTrikalaLoading] = useState(false);
+  const [trikalaError, setTrikalaError]     = useState("");
+  const [trikalaSearch, setTrikalaSearch]   = useState("");
+  const [trikalaDetail, setTrikalaDetail]   = useState<TrikalaReading | null>(null);
+  const [trikalaFilter, setTrikalaFilter]   = useState("all");
 
   /* ── check existing session ── */
   useEffect(() => {
@@ -798,6 +1513,23 @@ export default function AdminPage() {
     await fetchData();
     setRefreshing(false);
   }
+
+  const fetchTrikala = useCallback(async () => {
+    setTrikalaLoading(true);
+    setTrikalaError("");
+    try {
+      const data = await getTrikalaReadings();
+      setTrikalaReadings(data);
+    } catch (e: any) {
+      setTrikalaError(e?.message || "Failed to load readings");
+    } finally {
+      setTrikalaLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authed && tab === "trikala") fetchTrikala();
+  }, [authed, tab, fetchTrikala]);
 
   function logout() {
     sessionStorage.removeItem("admin_key");
@@ -880,11 +1612,14 @@ export default function AdminPage() {
   const bookingCols = ["Name", "Mobile", "Profession", "Location", "Ashram", "Date"];
   const contactCols = ["Name", "Email", "Subject", "Date"];
 
-  /* close sidebar when tab changes on mobile; reset filters */
+  /* close sidebar when tab changes on mobile; reset filters; sync URL */
   const tabChange = (t: Tab) => {
     setTab(t); setPage(1); setSearch("");
     setFilterBooking("all"); setFilterContact("all");
     setSidebarOpen(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", t);
+    router.replace(`?${params.toString()}`, { scroll: false });
   };
 
   return (
@@ -924,7 +1659,7 @@ export default function AdminPage() {
             Submissions
           </p>
           {([
-            { key: "bookings", label: "Audience Bookings", icon: Users },
+            { key: "bookings", label: "Appointment Bookings", icon: Users },
             { key: "contacts", label: "Contact Messages",  icon: Mail  },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => tabChange(key)}
@@ -933,6 +1668,13 @@ export default function AdminPage() {
               <span style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#f5e6c8" : "rgba(245,230,200,0.55)" }}>{label}</span>
             </button>
           ))}
+          <button onClick={() => tabChange("trikala")}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "trikala" ? "rgba(250,88,12,0.18)" : "transparent", borderLeft: tab === "trikala" ? "2.5px solid #FA580C" : "2.5px solid transparent", transition: "all 0.15s" }}>
+            <BookOpen size={16} color={tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.45)"} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "trikala" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.55)" }}>Trikala Readings</span>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", background: "rgba(250,88,12,0.18)", color: "#FA580C", borderRadius: 20, padding: "2px 7px", flexShrink: 0 }}>NEW</span>
+          </button>
+
           <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,230,200,0.35)", padding: "0 8px", marginTop: 20, marginBottom: 8 }}>
             Configuration
           </p>
@@ -1009,8 +1751,207 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ── Trikala Readings: Devotee Requests UI ────────────────────── */}
+        {tab === "trikala" && (() => {
+          const SVC_LABELS: Record<string, string> = {
+            horoscope:   "General Horoscope",
+            ashta_rekha: "Ashta Rekha",
+          };
+          const SVC_COLORS: Record<string, { bg: string; color: string; dot: string }> = {
+            horoscope:   { bg: "#F3E8FF", color: "#7C3AED", dot: "#7C3AED" },
+            ashta_rekha: { bg: "#FFF1E6", color: "#C2410C", dot: "#F97316" },
+          };
+          const STATUS_CFG: Record<string, { bg: string; color: string; dot: string }> = {
+            "Submitted":    { bg: "#EEF4FF", color: "#3B82F6", dot: "#3B82F6" },
+            "AI Report":    { bg: "#F3E8FF", color: "#7C3AED", dot: "#7C3AED" },
+            "Under Review": { bg: "#FFF7E6", color: "#D97706", dot: "#D97706" },
+            "Finalized":    { bg: "#ECFDF5", color: "#059669", dot: "#059669" },
+            "Published":    { bg: "#DCFCE7", color: "#16A34A", dot: "#16A34A" },
+          };
+          const FILTER_PILLS = [
+            { key: "all",           label: "All Cases",     dot: null },
+            { key: "Submitted",     label: "Submitted",     dot: "#3B82F6" },
+            { key: "Horoscope",     label: "Horoscope",     dot: "#7C3AED" },
+            { key: "AI Report",     label: "AI Report",     dot: "#7C3AED" },
+            { key: "Under Review",  label: "Under Review",  dot: "#D97706" },
+            { key: "Finalized",     label: "Finalized",     dot: "#059669" },
+            { key: "Published",     label: "Published",     dot: "#16A34A" },
+          ];
+          const q = trikalaSearch.toLowerCase();
+          const filtered = trikalaReadings.filter(r => {
+            const matchSearch = !q || r.fullName.toLowerCase().includes(q) || r.caseReference.toLowerCase().includes(q) || r.mobile.includes(q) || r.email.toLowerCase().includes(q);
+            const matchFilter = trikalaFilter === "all" ? true
+              : trikalaFilter === "Horoscope" ? r.serviceType === "horoscope"
+              : r.status === trikalaFilter;
+            return matchSearch && matchFilter;
+          });
+
+          const total       = trikalaReadings.length;
+          const awaiting    = trikalaReadings.filter(r => r.status === "Submitted").length;
+          const inProgress  = trikalaReadings.filter(r => r.status === "AI Report" || r.status === "Under Review").length;
+          const published   = trikalaReadings.filter(r => r.status === "Published").length;
+
+          const activeLabel = FILTER_PILLS.find(p => p.key === trikalaFilter)?.label ?? "All Cases";
+
+          return (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: "28px 28px 32px", gap: 0, background: "#F5F1EC", minHeight: 0 }}>
+
+              {/* Mobile hamburger + Page header */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 24 }}>
+                <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)} style={{ marginTop: 4 }}>
+                  <Menu size={20} />
+                </button>
+                <div>
+                  <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1a0e07", letterSpacing: "-0.01em", margin: 0 }}>Devotee Requests</h1>
+                  <p style={{ fontSize: 12.5, color: "#9b7a5e", marginTop: 3 }}>Manage all incoming spiritual consultation requests</p>
+                </div>
+                <button onClick={fetchTrikala} style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1px solid #E8E0D4", background: "#fff", color: "#6b5744", fontSize: 12.5, cursor: "pointer", fontWeight: 600 }}>
+                  <RefreshCw size={13} style={trikalaLoading ? { animation: "spin 1s linear infinite" } : {}} />
+                  Refresh
+                </button>
+              </div>
+
+              {/* Stat cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 22 }}>
+                {[
+                  { icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="#FFF1E6"/><path d="M2 8h20" stroke="#F97316" strokeWidth="1.8"/><circle cx="6" cy="14" r="1.5" fill="#F97316"/><circle cx="12" cy="14" r="1.5" fill="#F97316"/><circle cx="18" cy="14" r="1.5" fill="#F97316"/></svg>
+                  ), label: "Total Requests", value: total, color: "#F97316" },
+                  { icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="12" fill="#EEF4FF"/><path d="M12 6v6l3 3" stroke="#3B82F6" strokeWidth="1.8" strokeLinecap="round"/><circle cx="12" cy="12" r="8" stroke="#3B82F6" strokeWidth="1.5" fill="none"/></svg>
+                  ), label: "Awaiting Review", value: awaiting, color: "#3B82F6" },
+                  { icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#FFF7E6"/><path d="M12 7v5l3.5 2" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  ), label: "In Progress", value: inProgress, color: "#D97706" },
+                  { icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DCFCE7"/><path d="M7.5 12.5l3 3 5.5-6" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  ), label: "Published", value: published, color: "#16A34A" },
+                ].map(card => (
+                  <div key={card.label} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #F0E8D8", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                    <div style={{ flexShrink: 0 }}>{card.icon}</div>
+                    <div>
+                      <p style={{ fontSize: 26, fontWeight: 800, color: "#1a0e07", lineHeight: 1 }}>{card.value}</p>
+                      <p style={{ fontSize: 11.5, color: "#9b7a5e", marginTop: 4, fontWeight: 500 }}>{card.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filter pills + search */}
+              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+                {FILTER_PILLS.map(pill => {
+                  const active = trikalaFilter === pill.key;
+                  return (
+                    <button key={pill.key} onClick={() => setTrikalaFilter(pill.key)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #1a0e07" : "1.5px solid #E8E0D4", background: active ? "#1a0e07" : "#fff", color: active ? "#fff" : "#6b5744", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                      {pill.dot && <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? "#fff" : pill.dot, flexShrink: 0 }} />}
+                      {pill.label}
+                    </button>
+                  );
+                })}
+                {/* Search */}
+                <div style={{ marginLeft: "auto", position: "relative" }}>
+                  <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#b9934a", pointerEvents: "none" }} />
+                  <input type="text" placeholder="Search name, case ID, mobile…" value={trikalaSearch} onChange={e => setTrikalaSearch(e.target.value)}
+                    style={{ paddingLeft: 30, paddingRight: 12, height: 34, borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", fontSize: 12.5, color: "#2c1810", outline: "none", width: 230 }} />
+                </div>
+              </div>
+
+              {/* Table card */}
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #F0E8D8", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                {/* Table header row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 14px", borderBottom: "1px solid #F0E8D8" }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#1a0e07" }}>{activeLabel}</p>
+                  <p style={{ fontSize: 12, color: "#9b7a5e" }}>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</p>
+                </div>
+
+                {trikalaLoading ? (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#9b7a5e", fontSize: 14, gap: 10 }}>
+                    <RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> Loading…
+                  </div>
+                ) : trikalaError ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 160, gap: 10 }}>
+                    <AlertCircle size={28} color="#dc2626" />
+                    <p style={{ fontSize: 13.5, color: "#dc2626", fontWeight: 600 }}>{trikalaError}</p>
+                    <button onClick={fetchTrikala} style={{ padding: "7px 18px", borderRadius: 8, border: "1px solid #dc2626", background: "#fff", color: "#dc2626", cursor: "pointer", fontSize: 12.5, fontWeight: 600 }}>Retry</button>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid #F0E8D8" }}>
+                          {["CASE ID", "DEVOTEE", "MOBILE", "SERVICE", "STATUS", "SUBMITTED", ""].map(h => (
+                            <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#b9934a", textTransform: "uppercase", whiteSpace: "nowrap", background: "#FDFAF6" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.length === 0 ? (
+                          <tr><td colSpan={7} style={{ padding: "52px 20px", textAlign: "center", color: "#b9934a", fontSize: 14 }}>No records found</td></tr>
+                        ) : filtered.map((r, i) => {
+                          const sts = STATUS_CFG[r.status] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                          const svc = SVC_COLORS[r.serviceType] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                          const isEven = i % 2 === 0;
+                          return (
+                            <tr key={r.id}
+                              style={{ background: isEven ? "#fff" : "#FDFAF6", borderBottom: "1px solid #F5EFE5", transition: "background 0.1s" }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "#FEF9F0")}
+                              onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#FDFAF6")}>
+                              {/* Case ID */}
+                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                <span style={{ background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#92710a", letterSpacing: "0.02em" }}>
+                                  {r.caseReference}
+                                </span>
+                              </td>
+                              {/* Devotee */}
+                              <td style={{ padding: "13px 16px" }}>
+                                <p style={{ fontSize: 13, fontWeight: 600, color: "#1a0e07", marginBottom: 2 }}>{r.fullName}</p>
+                                <p style={{ fontSize: 11.5, color: "#9b7a5e" }}>{r.email}</p>
+                              </td>
+                              {/* Mobile */}
+                              <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{r.mobile}</td>
+                              {/* Service */}
+                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: svc.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: svc.color }}>
+                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: svc.dot, flexShrink: 0 }} />
+                                  {SVC_LABELS[r.serviceType] ?? r.serviceType}
+                                </span>
+                              </td>
+                              {/* Status */}
+                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: sts.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: sts.color }}>
+                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: sts.dot, flexShrink: 0 }} />
+                                  {r.status}
+                                </span>
+                              </td>
+                              {/* Submitted date */}
+                              <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b5744", whiteSpace: "nowrap" }}>
+                                {r.createdAt ? new Date(r.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                              </td>
+                              {/* Open button */}
+                              <td style={{ padding: "13px 16px" }}>
+                                <button onClick={() => setTrikalaDetail(r)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", color: "#3b2010", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#b9934a"; e.currentTarget.style.color = "#b9934a"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#E8E0D4"; e.currentTarget.style.color = "#3b2010"; }}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                  Open
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
-        {tab !== "admins" && (
+        {tab !== "admins" && tab !== "trikala" && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
 
@@ -1025,10 +1966,10 @@ export default function AdminPage() {
                 <div className="adm-hero-text">
                   <p className="adm-hero-eyebrow">Submissions</p>
                   <h1 className="adm-hero-h1">
-                    {tab === "bookings" ? "Audience Bookings" : "Contact Messages"}
+                    {tab === "bookings" ? "Appointment Bookings" : "Contact Messages"}
                   </h1>
                   <p className="adm-hero-desc">
-                    {tab === "bookings" ? "Manage audience booking submissions" : "Manage incoming contact messages"}
+                    {tab === "bookings" ? "Manage appointment booking submissions" : "Manage incoming contact messages"}
                   </p>
                 </div>
               </div>
@@ -1066,8 +2007,9 @@ export default function AdminPage() {
           </div>
         )}
 
+
         {/* Search + filter bar */}
-        {tab !== "admins" && (
+        {tab !== "admins" && tab !== "trikala" && (
           <div className="adm-searchbar">
             {/* Search input */}
             <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -1175,7 +2117,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Bookings / Contacts Table ── */}
-        {tab !== "admins" && (
+        {tab !== "admins" && tab !== "trikala" && (
           <div className="adm-content">
             {loading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "#9b7a5e", fontSize: 14, gap: 10 }}>
@@ -1259,7 +2201,7 @@ export default function AdminPage() {
         )}
 
         {/* Pagination */}
-        {tab !== "admins" && !loading && !error && filtered.length > PAGE_SIZE && (
+        {tab !== "admins" && tab !== "trikala" && !loading && !error && filtered.length > PAGE_SIZE && (
           <footer className="adm-pagination">
             <p style={{ fontSize: 12, color: "#9b7a5e" }}>
               Page {safePage} of {totalPages} · {filtered.length} total
@@ -1290,6 +2232,20 @@ export default function AdminPage() {
       {/* Detail Panel */}
       <AnimatePresence>
         {detail && <DetailPanel item={detail} tab={tab} onClose={() => setDetail(null)} />}
+      </AnimatePresence>
+
+      {/* Trikala Detail Panel */}
+      <AnimatePresence>
+        {trikalaDetail && (
+          <TrikalaDetailPanel
+            reading={trikalaDetail}
+            onClose={() => setTrikalaDetail(null)}
+            onStatusChange={updated => {
+              setTrikalaReadings(prev => prev.map(r => r.id === updated.id ? updated : r));
+              setTrikalaDetail(null);
+            }}
+          />
+        )}
       </AnimatePresence>
 
       {/* Admin User Panel */}

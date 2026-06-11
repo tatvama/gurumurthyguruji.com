@@ -288,11 +288,26 @@ export function Header() {
               })}
             </nav>
 
-            {/* Bottom: language + book CTA */}
+            {/* Bottom: language + CTAs */}
             <div className="relative z-10 shrink-0 space-y-3 border-t border-antique-gold/15 px-5 pb-8 pt-5">
               <div className="flex justify-center">
                 <LanguageToggle tone="light" />
               </div>
+              {/* GET Trikala Reading — orange CTA */}
+              <Link
+                href="/trikala-reading"
+                onClick={closeDrawer}
+                className="flex w-full items-center justify-center gap-1.5 rounded-full font-semibold transition-all duration-200 hover:opacity-90"
+                style={{
+                  padding: "12px 20px",
+                  background: "linear-gradient(135deg, #E07318 0%, #C95F08 100%)",
+                  color: "#fff",
+                  fontSize: 14,
+                  boxShadow: "0 4px 20px rgba(224,115,24,0.40)",
+                }}
+              >
+                ✦ GET Trikala Reading
+              </Link>
               <Link
                 href="/meet-guruji"
                 onClick={closeDrawer}
@@ -326,27 +341,58 @@ export function Header() {
             "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)",
         }}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+        {/*
+          CSS Grid 3-column: [1fr · auto · 1fr]
+          ─ Left  1fr  → logo  (justify-self-start)
+          ─ Center auto → nav  (natural width, grid guarantees no overlap)
+          ─ Right  1fr  → buttons (justify-self-end)
+          Both 1fr columns are equal, so the nav sits in the true geometric
+          center of the container. Columns are strict — nav can NEVER bleed
+          into the button column regardless of viewport width.
+        */}
+        {/* Mobile: flex justify-between (logo ← → hamburger)
+            Desktop ≥1240px: grid [1fr auto 1fr] (logo | nav | buttons) */}
+        <div className="mx-auto flex max-w-7xl items-center justify-between min-[1240px]:grid min-[1240px]:grid-cols-[1fr_auto_1fr]">
 
-          {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-champagne/30 bg-champagne/10 font-heading text-sm leading-none text-champagne transition-all duration-300 sm:h-9 sm:w-9 sm:text-base">
-              ॐ
+          {/* ── Col 1 · Logo ─────────────────────────────────────────────── */}
+          <Link href="/" className="group flex items-center gap-2.5 justify-self-start">
+            {/* OM medallion */}
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+              <span className="absolute inset-0 rounded-full border border-champagne/15 transition-all duration-500 group-hover:scale-110 group-hover:border-champagne/40" />
+              <span className="relative flex h-8 w-8 items-center justify-center rounded-full border border-champagne/30 bg-gradient-to-br from-champagne/18 to-transparent font-heading text-[15px] leading-none text-champagne shadow-[inset_0_1px_0_rgba(210,180,140,0.2),0_0_14px_rgba(210,180,140,0.15)] transition-all duration-300 group-hover:shadow-[inset_0_1px_0_rgba(210,180,140,0.3),0_0_22px_rgba(210,180,140,0.30)]">
+                ॐ
+              </span>
             </span>
-            <span
-              className="whitespace-nowrap font-heading font-bold tracking-wide text-pearl/90"
-              style={{ fontSize: "clamp(11px, 1.4vw, 15px)" }}
-            >
-              Pujya Sri Gurumurthy{" "}
-              <span className="text-champagne">Guruji</span>
-            </span>
+            {/* Wordmark */}
+            <div className="flex flex-col leading-tight">
+              <span
+                className="whitespace-nowrap font-heading font-bold tracking-wide text-pearl/90 transition-colors duration-200 group-hover:text-pearl"
+                style={{ fontSize: "clamp(11.5px, 1.15vw, 14.5px)" }}
+              >
+                Pujya Sri Gurumurthy{" "}
+                <span className="text-champagne">Guruji</span>
+              </span>
+              <span
+                className="whitespace-nowrap font-sans font-semibold uppercase tracking-[0.2em] text-champagne/35"
+                style={{ fontSize: "clamp(6.5px, 0.55vw, 8px)" }}
+              >
+                {t("nav.trust")}
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop center nav — shows from 1100 px */}
-          <nav className="hidden items-center min-[1100px]:flex" style={{ gap: "clamp(0px, 0.3vw, 4px)" }}>
+          {/* ── Col 2 · Desktop nav (hidden → hamburger below 1240 px) ───── */}
+          <nav
+            className="hidden items-center min-[1240px]:flex"
+            style={{ gap: "clamp(2px, 0.2vw, 4px)" }}
+          >
             {navItems.map((item) => {
               const active = isGroupActive(item);
               const isOpen = activeDropdown === item.key;
+              const itemStyle = {
+                fontSize: "clamp(11.5px, 0.92vw, 13px)",
+                padding: "8px clamp(10px, 0.75vw, 14px)",
+              };
 
               if (item.href) {
                 return (
@@ -354,17 +400,19 @@ export function Header() {
                     key={item.key}
                     href={item.href}
                     className={cn(
-                      "relative rounded-lg py-2 font-medium transition-all duration-200 whitespace-nowrap",
-                      linkCn(active),
+                      "group relative rounded-md font-medium whitespace-nowrap transition-colors duration-200",
+                      active ? "text-champagne" : "text-pearl/58 hover:text-pearl",
                     )}
-                    style={{ fontSize: "clamp(11.5px, 1.05vw, 13.5px)", padding: "8px clamp(8px, 0.9vw, 14px)" }}
+                    style={itemStyle}
                   >
-                    {t(item.key)}
+                    {/* frosted pill on hover */}
+                    <span className="absolute inset-0 rounded-md bg-white/0 transition-colors duration-200 group-hover:bg-white/[0.06]" />
+                    <span className="relative">{t(item.key)}</span>
                     {active && (
                       <motion.span
                         layoutId="nav-underline"
-                        className="absolute -bottom-0.5 left-3 right-3 h-[1.5px] rounded-full bg-champagne/70"
-                        transition={{ type: "spring", stiffness: 400, damping: 34 }}
+                        className="absolute bottom-0.5 left-[10px] right-[10px] h-px rounded-full bg-gradient-to-r from-transparent via-champagne/75 to-transparent"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     )}
                   </Link>
@@ -382,16 +430,17 @@ export function Header() {
                     onClick={() => setActiveDropdown(isOpen ? null : item.key)}
                     aria-expanded={isOpen}
                     className={cn(
-                      "flex items-center gap-1 rounded-lg py-2 font-medium transition-all duration-200 whitespace-nowrap",
-                      linkCn(active),
+                      "group relative flex items-center gap-0.5 rounded-md font-medium whitespace-nowrap transition-colors duration-200",
+                      active ? "text-champagne" : "text-pearl/58 hover:text-pearl",
                     )}
-                    style={{ fontSize: "clamp(11.5px, 1.05vw, 13.5px)", padding: "8px clamp(8px, 0.9vw, 14px)" }}
+                    style={itemStyle}
                   >
-                    {t(item.key)}
+                    <span className="absolute inset-0 rounded-md bg-white/0 transition-colors duration-200 group-hover:bg-white/[0.06]" />
+                    <span className="relative">{t(item.key)}</span>
                     <ChevronDown
                       className={cn(
-                        "h-3.5 w-3.5 transition-transform duration-200",
-                        isOpen && "rotate-180",
+                        "relative h-3 w-3 shrink-0 opacity-40 transition-transform duration-200",
+                        isOpen ? "rotate-180 opacity-70" : "group-hover:opacity-65",
                       )}
                     />
                   </button>
@@ -400,10 +449,10 @@ export function Header() {
                     {isOpen && (
                       <motion.div
                         key={item.key + "-dropdown"}
-                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={{ duration: 0.17, ease: [0.22, 1, 0.36, 1] }}
                         className="absolute left-0 top-full w-72 pt-2"
                         onMouseEnter={() => openDropdown(item.key)}
                         onMouseLeave={scheduleClose}
@@ -435,9 +484,7 @@ export function Header() {
                                   <div className="min-w-0">
                                     <p className={cn(
                                       "font-heading text-[15px] font-semibold leading-tight transition-colors",
-                                      childActive
-                                        ? "text-antique-gold"
-                                        : "text-deep-brown group-hover:text-antique-gold",
+                                      childActive ? "text-antique-gold" : "text-deep-brown group-hover:text-antique-gold",
                                     )}>
                                       {t(child.key)}
                                     </p>
@@ -463,33 +510,60 @@ export function Header() {
             })}
           </nav>
 
-          {/* Right side */}
-          <div className="flex shrink-0 items-center gap-2">
-            {/* Desktop: language toggle + CTA */}
-            <div className="hidden min-[1100px]:flex items-center gap-2 min-[1300px]:gap-3">
+          {/* ── Col 3 · Right actions ─────────────────────────────────────── */}
+          <div className="flex items-center justify-end gap-2 justify-self-end">
+
+            {/* Desktop: language + 2 CTAs (hidden below 1240 px) */}
+            <div className="hidden min-[1240px]:flex items-center gap-2">
+
+              {/* Thin champagne rule */}
+              <span className="mx-1 h-4 w-px shrink-0 bg-gradient-to-b from-transparent via-champagne/25 to-transparent" />
+
               <LanguageToggle tone="light" />
+
+              {/* GET Trikala Reading */}
+              <Link
+                href="/trikala-reading"
+                className="group relative inline-flex shrink-0 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full font-semibold transition-all duration-300 hover:-translate-y-px hover:shadow-[0_6px_22px_rgba(224,115,24,0.55)] active:translate-y-0"
+                style={{
+                  fontSize: "clamp(10.5px, 0.88vw, 12.5px)",
+                  padding: "7px clamp(12px, 0.95vw, 17px)",
+                  background: "linear-gradient(135deg,#EE8030 0%,#C95F08 100%)",
+                  color: "#fff",
+                  boxShadow: "0 3px 14px rgba(224,115,24,0.38)",
+                }}
+              >
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/18 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+                <span className="relative">✦ GET Trikala Reading</span>
+              </Link>
+
+              {/* Book Free Appointment */}
               <Link
                 href="/meet-guruji"
-                className="btn-outline-pill-dark inline-flex items-center gap-2 whitespace-nowrap"
-                style={{ fontSize: "clamp(11px, 1vw, 13px)" }}
+                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-champagne/28 font-semibold text-pearl/75 transition-all duration-300 hover:-translate-y-px hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl active:translate-y-0"
+                style={{
+                  fontSize: "clamp(10.5px, 0.88vw, 12.5px)",
+                  padding: "7px clamp(12px, 0.95vw, 17px)",
+                }}
               >
                 {t("cta.bookShort")}
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-champagne opacity-70" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-champagne" />
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-champagne opacity-55" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-champagne" />
                 </span>
               </Link>
             </div>
 
-            {/* Hamburger — visible below 1100 px */}
+            {/* Hamburger (visible below 1240 px) */}
             <button
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation menu"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-pearl/80 transition-colors hover:bg-white/10 hover:text-pearl min-[1100px]:hidden"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-champagne/15 text-pearl/65 transition-all duration-200 hover:border-champagne/38 hover:bg-white/[0.08] hover:text-pearl min-[1240px]:hidden"
             >
-              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              <Menu className="h-5 w-5" />
             </button>
           </div>
+
         </div>
       </header>
 

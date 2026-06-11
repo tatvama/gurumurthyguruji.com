@@ -62,6 +62,55 @@ export const initDB = async () => {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trikala_readings (
+        id              SERIAL PRIMARY KEY,
+        case_reference  VARCHAR(20)  NOT NULL UNIQUE,
+        full_name       VARCHAR(120) NOT NULL,
+        mobile          VARCHAR(20)  NOT NULL,
+        email           VARCHAR(200) NOT NULL,
+        gender          VARCHAR(20)  NOT NULL,
+        occupation      VARCHAR(120) NOT NULL,
+        dob             DATE         NOT NULL,
+        tob             TIME,
+        pob             VARCHAR(255) NOT NULL,
+        service_type    VARCHAR(50)  NOT NULL,
+        guidance_query  TEXT         NOT NULL,
+        status          VARCHAR(30)  NOT NULL DEFAULT 'Submitted',
+        created_at      TIMESTAMPTZ  DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS case_notes (
+        id             SERIAL PRIMARY KEY,
+        case_reference VARCHAR(20)  NOT NULL,
+        text           TEXT         NOT NULL,
+        created_at     TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS case_followups (
+        id             SERIAL PRIMARY KEY,
+        case_reference VARCHAR(20)  NOT NULL,
+        type           VARCHAR(30)  NOT NULL,
+        date_time      TIMESTAMPTZ  NOT NULL,
+        notes          TEXT         DEFAULT '',
+        created_at     TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS case_pad (
+        id             SERIAL PRIMARY KEY,
+        case_reference VARCHAR(20)  NOT NULL UNIQUE,
+        image_data     TEXT         NOT NULL,
+        updated_at     TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+
     /* Seed the default super admin if not exists */
     await client.query(`
       INSERT INTO admin_users (name, mobile, role, password, sections_count, status)

@@ -27,8 +27,8 @@ export const ui = {
     "nav.trust": "Sadhguru Sai Samsthana Trust",
 
     // ── Calls to action ─────────────────────────────────────────
-    "cta.book": "Book a Free Audience",
-    "cta.bookShort": "Book Free Audience",
+    "cta.book": "Book a Free Appointment",
+    "cta.bookShort": "Book Free Appointment",
     "cta.seekGuidance": "Seek Guruji's Guidance — Free",
     "cta.discoverTrikala": "Discover Trikāla Jñāna",
     "cta.learnTrikala": "Learn About Trikāla Jñāna",
