@@ -90,12 +90,24 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start rounded-3xl border border-champagne/30 bg-gradient-to-br from-white/70 to-saffron-accent/[0.06] p-8 shadow-sm backdrop-blur-sm"
+              className="grid grid-cols-1 md:grid-cols-12 items-stretch rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
-              <div className="md:col-span-4 font-heading text-2xl font-bold text-deep-brown border-b md:border-b-0 md:border-r border-champagne/30 pb-4 md:pb-0 md:pr-6 md:h-full flex items-center">
-                <span className="text-saffron-accent mr-3">V.</span> {t("aboutpage.s5.title")}
+              {/* Left panel — background image with overlay */}
+              <div
+                className="md:col-span-4 relative flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px]"
+                style={{
+                  backgroundImage: "url('/images/guruji-meditating.png')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center top",
+                }}
+              >
+                <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(255,248,235,0.82) 0%, rgba(255,240,210,0.78) 100%)", backdropFilter: "blur(1px)" }} />
+                <div className="relative z-10 p-8 font-heading text-2xl font-bold text-deep-brown">
+                  <span className="text-saffron-accent mr-3">V.</span> {t("aboutpage.s5.title")}
+                </div>
               </div>
-              <div className="md:col-span-8 space-y-6 md:pl-4">
+              {/* Right panel — no background image */}
+              <div className="md:col-span-8 space-y-6 p-8">
                 <p>{t("aboutpage.s5.p1")}</p>
                 <p>{t("aboutpage.s5.p2")}</p>
                 <p className="border-l-2 border-antique-gold/50 pl-4 text-[16px] italic text-deep-brown/70">
@@ -134,12 +146,26 @@ function SectionBlock({ num, title, paras }: { num: string; title: string; paras
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
-      className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-champagne/20 shadow-sm"
+      className="grid grid-cols-1 md:grid-cols-12 items-stretch bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
     >
-      <div className="md:col-span-4 font-heading text-2xl font-bold text-deep-brown border-b md:border-b-0 md:border-r border-champagne/30 pb-4 md:pb-0 md:pr-6 md:h-full flex items-center">
-        <span className="text-saffron-accent mr-3">{num}</span> {title}
+      {/* Left panel — background image with overlay, text on top */}
+      <div
+        className="md:col-span-4 relative flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px]"
+        style={{
+          backgroundImage: "url('/images/guruji-meditating.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+        }}
+      >
+        {/* Warm cream overlay so text stays readable */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(255,248,235,0.82) 0%, rgba(255,240,210,0.78) 100%)", backdropFilter: "blur(1px)" }} />
+        <div className="relative z-10 p-8 font-heading text-2xl font-bold text-deep-brown">
+          <span className="text-saffron-accent mr-3">{num}</span> {title}
+        </div>
       </div>
-      <div className="md:col-span-8 space-y-6 md:pl-4">
+
+      {/* Right panel — no background image */}
+      <div className="md:col-span-8 space-y-6 p-8">
         {paras.map((p, i) => (
           <p key={i}>{p}</p>
         ))}

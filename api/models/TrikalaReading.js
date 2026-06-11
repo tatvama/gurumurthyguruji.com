@@ -1,13 +1,13 @@
 import { pool } from "../config/db.js";
 
 const TrikalaReading = {
-  async create({ case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query }) {
+  async create({ case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image }) {
     const { rows } = await pool.query(
       `INSERT INTO trikala_readings
-         (case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         (case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [case_reference, full_name, mobile, email, gender, occupation, dob, tob || null, pob, service_type, guidance_query]
+      [case_reference, full_name, mobile, email, gender, occupation, dob, tob || null, pob, service_type, guidance_query, palm_image || null]
     );
     return rows[0];
   },

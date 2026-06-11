@@ -241,14 +241,23 @@ export async function postTrikalaReading(payload: {
   pob: string;
   serviceType: string;
   guidanceQuery: string;
+  palmImage?: string;
 }): Promise<{ caseReference: string; status: string }> {
   const res = await fetch(`${BASE}/api/trikala-readings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  let data: any = {};
+  try { data = await res.json(); } catch (_e) { /* non-JSON body */ }
+  if (!res.ok) {
+    const fieldMsg = Array.isArray(data?.errors) ? data.errors.map((e: any) => e.message).join(". ") : "";
+    const msg = fieldMsg || data?.message || ("Server error " + res.status);
+    const err: any = new Error(msg);
+    err.errors = data?.errors;
+    err.status  = res.status;
+    throw err;
+  }
   return data.data;
 }
 

@@ -38,8 +38,17 @@ const KOG = "rgba(250,88,12,0.38)";
    HELPERS
 ═══════════════════════════════════════════════════════ */
 function mkRef() {
-  const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return "GURUJI-" + Array.from({ length: 7 }, () => c[Math.floor(Math.random() * c.length)]).join("");
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits  = "0123456789";
+  const parts = [
+    ...Array.from({ length: 3 }, () => digits[Math.floor(Math.random() * digits.length)]),
+    ...Array.from({ length: 4 }, () => letters[Math.floor(Math.random() * letters.length)]),
+  ];
+  for (let i = parts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [parts[i], parts[j]] = [parts[j], parts[i]];
+  }
+  return parts.join("");
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -238,7 +247,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             </div>
           </motion.div>
 
-          {/* Right: portrait column — no motion, bigger size */}
+          {/* Right: portrait column */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -246,64 +255,36 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             className="relative mx-auto w-full"
             style={{ maxWidth: 430 }}
           >
-            <div className="relative">
-              {/* Aura glows */}
+            <div className="relative flex flex-col items-center">
+              {/* Golden radial glow behind image */}
               <div
-                className="pointer-events-none absolute -inset-8 z-0 rounded-full blur-[70px]"
-                style={{ background: "rgba(216,183,106,0.17)" }}
-              />
-              <div className="golden-aura animate-mandala-glow pointer-events-none absolute -inset-4 z-0" />
-
-              {/* Arch frame with red portrait background */}
-              <div
-                className="relative z-10 overflow-hidden"
+                className="pointer-events-none absolute inset-0 z-0"
                 style={{
-                  borderRadius: "50% 50% 14% 14% / 42% 42% 12% 12%",
-                  border: "1px solid rgba(216,183,106,0.55)",
-                  boxShadow: "0 40px 80px -36px rgba(122,79,30,0.55)",
-                  aspectRatio: "3 / 4",
-                  width: "100%",
+                  background: "radial-gradient(ellipse at 50% 40%, rgba(216,183,106,0.38) 0%, rgba(216,150,60,0.18) 45%, transparent 75%)",
+                  filter: "blur(28px)",
                 }}
-              >
-                {/* Red radial background */}
-                <div
-                  className="absolute inset-0 z-0"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse at 50% 20%, #9B1200 0%, #620000 50%, #2E0000 100%)",
-                  }}
-                />
+              />
 
-                {/* Portrait */}
-                <Image
-                  src="/images/guruji-portrait.png"
-                  alt="Pujya Sri Gurumurthy Guruji"
-                  fill
-                  sizes="(max-width: 768px) 90vw, 430px"
-                  className="relative z-10 object-cover object-top"
-                  priority
-                />
+              {/* Plain image — no clip, no frame */}
+              <Image
+                src="/images/Guruji-Head-Image.png"
+                alt="Pujya Sri Gurumurthy Guruji"
+                width={430}
+                height={500}
+                sizes="(max-width: 768px) 90vw, 430px"
+                className="relative z-10 w-full h-auto object-contain"
+                priority
+              />
 
-                {/* Bottom name overlay */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 z-20 text-center"
-                  style={{
-                    background:
-                      "linear-gradient(0deg, rgba(12,4,0,0.92) 0%, rgba(12,4,0,0.45) 65%, transparent 100%)",
-                    padding: "36px 16px 18px",
-                  }}
-                >
-                  <p
-                    className="font-heading"
-                    style={{ color: "#FEFCF7", fontWeight: 700, letterSpacing: "0.18em", fontSize: 13.5, marginBottom: 3, textTransform: "uppercase" }}
-                  >
-                    Guruji
-                  </p>
-                  <p style={{ color: "rgba(255,210,155,0.62)", fontSize: 10.5, fontStyle: "italic" }}>
-                    Vedic Astrologer &amp; Spiritual Guide · 12+ Years
-                  </p>
-                </div>
-              </div>
+              {/* Name text below */}
+              {/* <div className="relative z-10 text-center mt-3">
+                <p className="font-heading" style={{ color: "#FEFCF7", fontWeight: 700, letterSpacing: "0.18em", fontSize: 13.5, marginBottom: 3, textTransform: "uppercase" }}>
+                  Guruji
+                </p>
+                <p style={{ color: "rgba(255,210,155,0.62)", fontSize: 10.5, fontStyle: "italic" }}>
+                  Vedic Astrologer &amp; Spiritual Guide · 12+ Years
+                </p>
+              </div> */}
             </div>
           </motion.div>
 
@@ -742,11 +723,12 @@ const SERVICES = [
 ] as const;
 
 function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void; back: () => void }) {
-  const ready = !!form.service && form.guidance.trim().length > 0;
+  const ready = !!form.service && form.guidance.trim().length >= 5;
   const [err, setErr] = useState("");
 
   function go() {
-    if (!ready) { setErr("Please select a service and describe your query"); return; }
+    if (!form.service) { setErr("Please select a service type"); return; }
+    if (form.guidance.trim().length < 5) { setErr("Please describe your query in at least 5 characters"); return; }
     setErr(""); next();
   }
 
@@ -792,7 +774,7 @@ function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
 /* ═══════════════════════════════════════════════════════
    STEP 4 — ENHANCE YOUR READING (Palm Upload)
 ═══════════════════════════════════════════════════════ */
-function Step4({ back, next, skip, loading, submitErr }: { back: () => void; next: () => void; skip: () => void; loading?: boolean; submitErr?: string }) {
+function Step4({ back, next, skip, loading, submitErr, onImage }: { back: () => void; next: () => void; skip: () => void; loading?: boolean; submitErr?: string; onImage: (b64: string | null) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -802,6 +784,9 @@ function Step4({ back, next, skip, loading, submitErr }: { back: () => void; nex
     if (!file) return;
     setFileName(file.name);
     setPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => onImage(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -877,6 +862,7 @@ export default function KundliPage() {
   const [caseRef, setCaseRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitErr, setSubmitErr] = useState("");
+  const [palmImage, setPalmImage] = useState<string | null>(null);
 
   function set(k: keyof FormData, v: string) { setForm(prev => ({ ...prev, [k]: v })); }
 
@@ -899,18 +885,23 @@ export default function KundliPage() {
         pob:          form.pob,
         serviceType:  form.service,
         guidanceQuery: form.guidance,
+        palmImage:    palmImage || undefined,
       });
       setCaseRef(result.caseReference);
       setPhase("done");
     } catch (err: any) {
-      const msg = err?.message || (err?.errors?.[0]?.message) || "Submission failed. Please try again.";
+      console.error("Submit error:", err);
+      const fieldErrors = Array.isArray(err?.errors)
+        ? err.errors.map((e: any) => e.message).join(". ")
+        : null;
+      const msg = fieldErrors || err?.message || "Submission failed. Please try again.";
       setSubmitErr(msg);
     } finally {
       setLoading(false);
     }
   }
 
-  function reset() { setForm(BLANK); setCaseRef(""); setPhase(1); setSubmitErr(""); }
+  function reset() { setForm(BLANK); setCaseRef(""); setPhase(1); setSubmitErr(""); setPalmImage(null); }
 
   return (
     <>
@@ -953,7 +944,7 @@ export default function KundliPage() {
                     {phase === 1      && <Step1 form={form} set={set} next={() => setPhase(2)} />}
                     {phase === 2      && <Step2 form={form} set={set} next={() => setPhase(3)} back={() => setPhase(1)} />}
                     {phase === 3      && <Step3 form={form} set={set} next={() => setPhase(4)} back={() => setPhase(2)} />}
-                    {phase === 4      && <Step4 back={() => setPhase(3)} next={submit} skip={submit} loading={loading} submitErr={submitErr} />}
+                    {phase === 4      && <Step4 back={() => setPhase(3)} next={submit} skip={submit} loading={loading} submitErr={submitErr} onImage={setPalmImage} />}
                     {phase === "done" && <SuccessScreen caseRef={caseRef} reset={reset} />}
                   </motion.div>
                 </AnimatePresence>

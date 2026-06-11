@@ -111,6 +111,12 @@ export const initDB = async () => {
       );
     `);
 
+    /* Add palm_image column to existing trikala_readings if not present */
+    await client.query(`
+      ALTER TABLE trikala_readings
+        ADD COLUMN IF NOT EXISTS palm_image TEXT;
+    `);
+
     /* Seed the default super admin if not exists */
     await client.query(`
       INSERT INTO admin_users (name, mobile, role, password, sections_count, status)

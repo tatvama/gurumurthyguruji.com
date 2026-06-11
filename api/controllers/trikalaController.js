@@ -2,15 +2,23 @@ import TrikalaReading from "../models/TrikalaReading.js";
 
 /* ── Generate unique GURUJI-XXXXXXX case reference ─────────────── */
 function generateCaseRef() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const rand = Array.from({ length: 7 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `GURUJI-${rand}`;
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits  = "0123456789";
+  const parts = [
+    ...Array.from({ length: 3 }, () => digits[Math.floor(Math.random() * digits.length)]),
+    ...Array.from({ length: 4 }, () => letters[Math.floor(Math.random() * letters.length)]),
+  ];
+  for (let i = parts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [parts[i], parts[j]] = [parts[j], parts[i]];
+  }
+  return parts.join("");
 }
 
 /* POST /api/trikala-readings — public form submission */
 export const submitReading = async (req, res, next) => {
   try {
-    const { fullName, mobile, email, gender, occupation, dob, tob, pob, serviceType, guidanceQuery } = req.body;
+    const { fullName, mobile, email, gender, occupation, dob, tob, pob, serviceType, guidanceQuery, palmImage } = req.body;
 
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
@@ -32,6 +40,7 @@ export const submitReading = async (req, res, next) => {
       pob,
       service_type:   serviceType,
       guidance_query: guidanceQuery,
+      palm_image:     palmImage || null,
     });
 
     res.status(201).json({

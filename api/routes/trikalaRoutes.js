@@ -20,8 +20,9 @@ const readingRules = [
   body("dob").trim().notEmpty().withMessage("Date of birth is required"),
   body("pob").trim().notEmpty().withMessage("Place of birth is required").isLength({ min: 2, max: 255 }),
   body("serviceType").trim().notEmpty().withMessage("Service type is required").isIn(["horoscope", "ashta_rekha"]).withMessage("Invalid service type"),
-  body("guidanceQuery").trim().notEmpty().withMessage("Guidance query is required").isLength({ min: 5, max: 2000 }),
+  body("guidanceQuery").trim().notEmpty().withMessage("Guidance query is required").isLength({ min: 5, max: 2000 }).withMessage("Please describe your query in at least 5 characters"),
   body("tob").optional({ checkFalsy: true }).trim(),
+  body("palmImage").optional({ checkFalsy: true }).isString(),
 ];
 
 /* Public — form submission */
