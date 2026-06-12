@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -52,6 +54,7 @@ import {
   Menu,
   BookOpen,
   Star,
+  BookUser,
 } from "lucide-react";
 
 /* ── constants ──────────────────────────────────────────────────────── */
@@ -65,7 +68,7 @@ const COSMIC =
   "radial-gradient(ellipse at right center,rgba(110,18,32,0.18) 0%,transparent 55%)," +
   "linear-gradient(135deg,#4b0d13 0%,#5b1118 25%,#65161c 50%,#571116 75%,#430a10 100%)";
 
-type Tab = "bookings" | "contacts" | "admins" | "trikala";
+type Tab = "bookings" | "contacts" | "admins" | "trikala" | "devotees";
 
 /* ── CustomSelect ──────────────────────────────────────────────────── */
 function CustomSelect({
@@ -968,7 +971,7 @@ function FollowUps({ caseId }: { caseId: string }) {
             <rect x="14" y="36" width="8" height="8" rx="2" fill="#b9934a" opacity="0.7"/>
             <rect x="28" y="36" width="8" height="8" rx="2" fill="#6B9FED" opacity="0.6"/>
             <rect x="42" y="36" width="8" height="8" rx="2" fill="#9B5DE5" opacity="0.5"/>
-            <rect x="14" y="48" width="8" height="4" rx="2" fill="#E8E0D4"/>
+            <rect x="14" y="48" width="8" height="4" rx="2" fill="#E8E0D4"/> 
             <rect x="28" y="48" width="8" height="4" rx="2" fill="#E8E0D4"/>
             <defs><linearGradient id="cg" x1="6" y1="12" x2="58" y2="58" gradientUnits="userSpaceOnUse"><stop stopColor="#b9934a"/><stop offset="1" stopColor="#6B9FED" stopOpacity="0.3"/></linearGradient></defs>
           </svg>
@@ -1471,7 +1474,7 @@ export default function AdminPage() {
   const [loggedMobile, setLoggedMobile] = useState("");
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const VALID_TABS: Tab[] = ["bookings", "contacts", "admins", "trikala"];
+  const VALID_TABS: Tab[] = ["bookings", "contacts", "admins", "trikala", "devotees"];
   const initTab = (searchParams.get("tab") as Tab | null);
   const [tab, setTab] = useState<Tab>(VALID_TABS.includes(initTab as Tab) ? (initTab as Tab) : "bookings");
   const [bookings, setBookings] = useState<AudienceBooking[]>([]);
@@ -1727,6 +1730,11 @@ export default function AdminPage() {
             <BookOpen size={16} color={tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.45)"} />
             <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "trikala" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.55)" }}>Trikala Readings</span>
             <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", background: "rgba(250,88,12,0.18)", color: "#FA580C", borderRadius: 20, padding: "2px 7px", flexShrink: 0 }}>NEW</span>
+          </button>
+          <button onClick={() => tabChange("devotees")}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "devotees" ? "rgba(185,147,69,0.18)" : "transparent", borderLeft: tab === "devotees" ? "2.5px solid #b9934a" : "2.5px solid transparent", transition: "all 0.15s" }}>
+            <BookUser size={16} color={tab === "devotees" ? "#b9934a" : "rgba(245,230,200,0.45)"} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "devotees" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "devotees" ? "#b9934a" : "rgba(245,230,200,0.55)" }}>Devotee Contacts</span>
           </button>
 
           <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,230,200,0.35)", padding: "0 8px", marginTop: 20, marginBottom: 8 }}>
@@ -2031,8 +2039,111 @@ export default function AdminPage() {
           );
         })()}
 
+        {/* ── Devotee Contacts ─────────────────────────────────────────── */}
+        {tab === "devotees" && (() => {
+          const devSearch = (bookings as AudienceBooking[]).filter(b =>
+            [b.fullName, b.mobile, b.profession, b.location, b.nearestAshram]
+              .some(v => v?.toLowerCase().includes(trikalaSearch.toLowerCase()))
+          );
+          const rows = trikalaSearch.trim() ? devSearch : (bookings as AudienceBooking[]);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+              {/* Hero card */}
+              <div className="adm-hero-card">
+                <div className="adm-hero-row">
+                  <div className="adm-hero-left">
+                    <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
+                    <div className="adm-hero-icon-wrap"><BookUser size={22} color="#f5e6c8" /></div>
+                    <div className="adm-hero-text">
+                      <p className="adm-hero-eyebrow">Submissions</p>
+                      <h1 className="adm-hero-h1">Devotee Contacts</h1>
+                      <p className="adm-hero-desc">All devotee contact details from appointment bookings</p>
+                    </div>
+                  </div>
+                  <div className="adm-hero-right">
+                    <div className="adm-hero-count">
+                      <span className="adm-hero-count-num">{rows.length}</span>
+                      <span className="adm-hero-count-lbl">Devotees</span>
+                    </div>
+                    <div className="adm-hero-sep" />
+                    <button onClick={fetchData} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(185,147,69,0.3)", background: "transparent", color: "#f5e6c8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      <RefreshCw size={13} /> Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search bar */}
+              <div style={{ padding: "16px 24px 0" }}>
+                <div style={{ position: "relative", maxWidth: 360 }}>
+                  <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b9934a" }} />
+                  <input
+                    value={trikalaSearch}
+                    onChange={e => setTrikalaSearch(e.target.value)}
+                    placeholder="Search by name, phone, location…"
+                    style={{ width: "100%", padding: "9px 12px 9px 34px", borderRadius: 9, border: "1.5px solid #e8dccb", background: "#FDFAF6", fontSize: 13, color: "#2a1c13", outline: "none" }}
+                  />
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="adm-content" style={{ flex: 1, overflowY: "auto" }}>
+                {refreshing ? (
+                  <div style={{ textAlign: "center", padding: 48, color: "#b9934a" }}>Loading…</div>
+                ) : rows.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: 48, color: "#b9934a" }}>No devotees found.</div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: "#FDFAF6", borderBottom: "1.5px solid #ede6d6" }}>
+                          {["#", "Name", "Phone", "Profession", "Location", "Nearest Ashram", "How Known", "Date"].map(h => (
+                            <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#b9934a", whiteSpace: "nowrap" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((b, i) => (
+                          <tr key={b.id} style={{ borderBottom: "1px solid #f0e8d8", background: i % 2 === 0 ? "#fff" : "#FDFAF6" }}>
+                            <td style={{ padding: "11px 14px", color: "#b9934a", fontWeight: 700, fontSize: 12 }}>{i + 1}</td>
+                            <td style={{ padding: "11px 14px", fontWeight: 600, color: "#2a1c13", whiteSpace: "nowrap" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#c9822b,#b9934a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                                  {(b.fullName || "?")[0].toUpperCase()}
+                                </div>
+                                {b.fullName || "—"}
+                              </div>
+                            </td>
+                            <td style={{ padding: "11px 14px", color: "#2a1c13" }}>
+                              <a href={`tel:${b.mobile}`} style={{ display: "flex", alignItems: "center", gap: 5, color: "#b9934a", textDecoration: "none", fontWeight: 600 }}>
+                                <Phone size={12} />{b.mobile || "—"}
+                              </a>
+                            </td>
+                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.profession || "—"}</td>
+                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.location || "—"}</td>
+                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.nearestAshram || "—"}</td>
+                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.howKnown || "—"}</td>
+                            <td style={{ padding: "11px 14px", color: "#9b7a5e", whiteSpace: "nowrap", fontSize: 12 }}>
+                              {b.createdAt ? (
+                                <div>
+                                  <div>{new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</div>
+                                  <div style={{ fontSize: 11, color: "#b9934a", marginTop: 2 }}>{new Date(b.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}</div>
+                                </div>
+                              ) : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
-        {tab !== "admins" && tab !== "trikala" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
 
@@ -2090,7 +2201,7 @@ export default function AdminPage() {
 
 
         {/* Search + filter bar */}
-        {tab !== "admins" && tab !== "trikala" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && (
           <div className="adm-searchbar">
             {/* Search input */}
             <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -2198,7 +2309,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Bookings / Contacts Table ── */}
-        {tab !== "admins" && tab !== "trikala" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && (
           <div className="adm-content">
             {loading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "#9b7a5e", fontSize: 14, gap: 10 }}>
@@ -2282,7 +2393,7 @@ export default function AdminPage() {
         )}
 
         {/* Pagination */}
-        {tab !== "admins" && tab !== "trikala" && !loading && !error && filtered.length > PAGE_SIZE && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && !loading && !error && filtered.length > PAGE_SIZE && (
           <footer className="adm-pagination">
             <p style={{ fontSize: 12, color: "#9b7a5e" }}>
               Page {safePage} of {totalPages} · {filtered.length} total

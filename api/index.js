@@ -25,6 +25,8 @@ app.use(
       if (!origin) return callback(null, true);
       // Allow any localhost port in development
       if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+      // Allow LAN IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+      if (/^http:\/\/(192\.168|10\.\d+|172\.(1[6-9]|2\d|3[01]))\.\d+\.\d+(:\d+)?$/.test(origin)) return callback(null, true);
       // Allow configured production URL
       const allowed = process.env.CLIENT_URL;
       if (allowed && origin === allowed) return callback(null, true);

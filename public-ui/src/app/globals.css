@@ -147,6 +147,85 @@ body {
   animation: spin-slow 20s linear infinite;
 }
 
+/* ── Hero bottom animated border ──────────────────────────────────────────
+   Exact same conic-gradient rotation as the reference CSS — gold palette.
+   --c1 = bright gold peak   --c2 = transparent gold
+   ──────────────────────────────────────────────────────────────────────── */
+@property --hero-border-angle {
+  syntax: '<angle>';
+  initial-value: 90deg;
+  inherits: true;
+}
+
+@keyframes heroBorderSpin {
+  100% { --hero-border-angle: 450deg; }
+}
+
+/* crisp rotating border line — matches reference exactly */
+.hero-bottom-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 5px solid;
+  border-image: conic-gradient(
+    from var(--hero-border-angle),
+    rgba(216, 183, 106, 0.08),
+    rgba(255, 200, 60,  1)    0.1turn,
+    rgba(255, 248, 180, 1)    0.15turn,
+    rgba(255, 200, 60,  1)    0.2turn,
+    rgba(216, 183, 106, 0.08) 0.25turn
+  ) 30;
+  animation: heroBorderSpin 2500ms linear infinite forwards;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* glow halo beneath the line */
+.hero-bottom-border::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -5%;
+  right: -5%;
+  height: 260px;
+  background: conic-gradient(
+    from var(--hero-border-angle),
+    rgba(216, 183, 106, 0.0),
+    rgba(255, 160, 20,  0.55)  0.1turn,
+    rgba(255, 230, 100, 0.9)   0.15turn,
+    rgba(255, 160, 20,  0.55)  0.2turn,
+    rgba(216, 183, 106, 0.0)   0.25turn
+  );
+  filter: blur(52px);
+  animation: heroBorderSpin 2500ms linear infinite forwards;
+  transform: scaleY(-1);
+  pointer-events: none;
+}
+
+/* tight bright core hug */
+.hero-bottom-border::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: conic-gradient(
+    from var(--hero-border-angle),
+    rgba(216, 183, 106, 0.0),
+    rgba(255, 210, 70,  1)    0.1turn,
+    rgba(255, 255, 200, 1)    0.15turn,
+    rgba(255, 210, 70,  1)    0.2turn,
+    rgba(216, 183, 106, 0.0)  0.25turn
+  );
+  filter: blur(12px);
+  animation: heroBorderSpin 2500ms linear infinite forwards;
+  transform: scaleY(-1);
+  pointer-events: none;
+}
+
 /* ───────────────────────────────────────────────────────────────────────
    PREMIUM ELEVATION — refinements for a luxury, light, editorial feel
    ─────────────────────────────────────────────────────────────────────── */

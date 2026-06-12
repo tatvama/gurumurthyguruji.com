@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -360,7 +362,7 @@ function StatsBar() {
     /* light section bg + orange top divider — card floats centered on it */
     <div
       style={{
-        background: "linear-gradient(180deg,#FFFDF8 0%,#FFF7EE 100%)",
+        background: "linear-gradient(180deg,#F0E6D8 0%,#EAD9C5 100%)",
         padding: "0 16px 0",
         display: "flex",
         justifyContent: "center",

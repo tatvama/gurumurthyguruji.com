@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import { Link } from "@/components/ui/locale-link";
 import { History, Eye, Sunrise, Sparkles, ShieldCheck, Check } from "lucide-react";

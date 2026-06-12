@@ -57,12 +57,7 @@ export function HeroSection() {
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
 
           {/* Left: text */}
-          <motion.div
-            initial={{ opacity: 0, y: 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.05, ease: "easeOut" }}
-            className="text-center lg:text-left"
-          >
+          <div className="text-center lg:text-left">
             {/* Frosted dark badge */}
             <div className="badge-dark mx-auto mb-7 w-fit lg:mx-0">
               <Sparkles className="h-3.5 w-3.5" />
@@ -114,15 +109,10 @@ export function HeroSection() {
                 </span>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Right: portrait */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.93 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.3, ease: "easeOut", delay: 0.15 }}
-            className="relative mx-auto aspect-[3/4] w-full max-w-sm lg:max-w-[420px]"
-          >
+          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm lg:max-w-[420px]">
             <motion.div
               animate={{ y: [0, -14, 0] }}
               transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
@@ -155,12 +145,15 @@ export function HeroSection() {
                 {t("hero.chip")}
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Bottom fade into next section */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-20 bg-gradient-to-t from-pearl/8 to-transparent" />
+
+      {/* Animated bottom border — rotating conic-gradient gold */}
+      <div className="hero-bottom-border" />
 
       {/* Scroll indicator */}
       <div className="scroll-indicator absolute bottom-8 left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-1.5 text-pearl/35">

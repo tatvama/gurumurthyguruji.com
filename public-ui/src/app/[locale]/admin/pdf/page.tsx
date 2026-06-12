@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import type { AudienceBooking, ContactMessage } from "@/lib/api";

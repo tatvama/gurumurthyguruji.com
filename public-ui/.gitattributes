@@ -1,0 +1,6 @@
+# Force LF for all text files — prevents Tailwind v4 CRLF parse errors on Windows
+* text=auto eol=lf
+*.json eol=lf
+*.ts eol=lf
+*.tsx eol=lf
+*.css eol=lf
