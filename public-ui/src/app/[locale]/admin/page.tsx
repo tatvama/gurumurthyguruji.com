@@ -2214,12 +2214,12 @@ export default function AdminPage() {
               <div className="adm-table-wrap">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#2c1810" }}>
-                      <th style={{ ...th, color: "rgba(245,230,200,0.6)", width: 44 }}>#</th>
+                    <tr style={{ background: "#FDFAF6", borderBottom: "1.5px solid #ede6d6" }}>
+                      <th style={{ ...th, color: "#b9934a", width: 44 }}>#</th>
                       {(tab === "bookings" ? bookingCols : contactCols).map((col) => (
-                        <th key={col} style={{ ...th, color: "rgba(245,230,200,0.6)" }}>{col}</th>
+                        <th key={col} style={{ ...th, color: "#b9934a" }}>{col}</th>
                       ))}
-                      <th style={{ ...th, color: "rgba(245,230,200,0.6)", width: 60 }}>View</th>
+                      <th style={{ ...th, color: "#b9934a", width: 60 }}>View</th>
                     </tr>
                   </thead>
                   <tbody>
