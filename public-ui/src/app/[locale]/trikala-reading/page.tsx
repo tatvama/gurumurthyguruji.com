@@ -130,7 +130,34 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 z-10"
         style={{ height: 2.5, background: `linear-gradient(90deg, transparent 0%, ${GOLD} 20%, ${GOLD} 80%, transparent 100%)` }}
-      />
+      >
+        {/* Sunlight glow drifting right → left; masked so it peaks mid-span and softens toward both corners */}
+        <div
+          className="absolute inset-0"
+          style={{
+            WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
+            maskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
+          }}
+        >
+          <motion.div
+            className="absolute"
+            style={{
+              top: "50%",
+              y: "-50%",
+              height: 84,
+              width: "86%",
+              borderRadius: 9999,
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,178,72,0.55) 25%, rgba(255,214,122,1) 45%, rgba(255,244,210,1) 50%, rgba(255,214,122,1) 55%, rgba(255,178,72,0.55) 75%, transparent 100%)",
+              boxShadow:
+                "0 0 52px 24px rgba(255,184,80,0.85), 0 0 110px 40px rgba(255,160,50,0.50)",
+              filter: "blur(5px)",
+            }}
+            animate={{ left: ["110%", "-66%"] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+      </div>
 
       {/* ── Main content ─────────────────────────────────── */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-14">
@@ -199,17 +226,12 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               Guruji studies your celestial blueprint and reveals the sacred wisdom written in the cosmos — just for you.
             </p>
 
-            {/* Trust pills — proper case, frosted glass, all on ONE line (no wrap) */}
+            {/* Trust pills — proper case, frosted glass, wraps & centers on small screens */}
             <div
               style={{
                 display: "flex",
-                flexWrap: "nowrap",
+                flexWrap: "wrap",
                 gap: "8px",
-                justifyContent: "flex-start",
-                overflowX: "auto",
-                WebkitOverflowScrolling: "touch" as unknown as undefined,
-                scrollbarWidth: "none" as const,
-                msOverflowStyle: "none" as const,
               }}
               className="justify-center lg:justify-start"
             >
