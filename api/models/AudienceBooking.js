@@ -1,13 +1,14 @@
 import { pool } from "../config/db.js";
 
 const AudienceBooking = {
-  async create({ full_name, mobile, profession, location, how_known, nearest_ashram, message }) {
+  async create({ full_name, mobile, email, profession, city, district, state, location, how_known, nearest_ashram, message, photo }) {
     const { rows } = await pool.query(
       `INSERT INTO audience_bookings
-         (full_name, mobile, profession, location, how_known, nearest_ashram, message)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+         (full_name, mobile, email, profession, city, district, state, location, how_known, nearest_ashram, message, photo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [full_name, mobile, profession, location, how_known, nearest_ashram, message || null]
+      [full_name, mobile, email || null, profession, city || null, district || null, state || null,
+       location || null, how_known, nearest_ashram, message || null, photo || null]
     );
     return rows[0];
   },

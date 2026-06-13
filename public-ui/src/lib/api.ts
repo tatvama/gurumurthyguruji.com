@@ -91,11 +91,16 @@ export interface AudienceBooking {
   id: string;
   fullName: string;
   mobile: string;
+  email?: string;
   profession: string;
+  city?: string;
+  district?: string;
+  state?: string;
   location: string;
   howKnown: string;
   nearestAshram: string;
   message?: string;
+  photo?: string;
   status?: string;
   createdAt?: string;
 }
@@ -115,11 +120,16 @@ function mapBooking(r: Record<string, any>): AudienceBooking {
     id:            r.id ?? r._id,
     fullName:      r.full_name   ?? r.fullName,
     mobile:        r.mobile,
+    email:         r.email,
     profession:    r.profession,
+    city:          r.city,
+    district:      r.district,
+    state:         r.state,
     location:      r.location,
     howKnown:      r.how_known   ?? r.howKnown,
     nearestAshram: r.nearest_ashram ?? r.nearestAshram,
     message:       r.message,
+    photo:         r.photo,
     status:        r.status,
     createdAt:     r.created_at  ?? r.createdAt,
   };
@@ -172,11 +182,15 @@ export async function postContact(payload: {
 export async function postAudienceBooking(payload: {
   fullName: string;
   mobile: string;
+  email?: string;
   profession: string;
-  location: string;
+  city?: string;
+  district?: string;
+  state?: string;
   howKnown: string;
   nearestAshram: string;
   message?: string;
+  photo?: string;
 }) {
   const res = await fetch(`${BASE}/api/audience-bookings`, {
     method: "POST",

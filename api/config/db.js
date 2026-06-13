@@ -117,6 +117,13 @@ export const initDB = async () => {
         ADD COLUMN IF NOT EXISTS palm_image TEXT;
     `);
 
+    /* Add new columns to audience_bookings if not present */
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS email VARCHAR(200);`);
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS city VARCHAR(120);`);
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS photo TEXT;`);
+
     /* Seed the default super admin if not exists */
     await client.query(`
       INSERT INTO admin_users (name, mobile, role, password, sections_count, status)

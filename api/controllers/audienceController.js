@@ -2,15 +2,20 @@ import AudienceBooking from "../models/AudienceBooking.js";
 
 export const submitBooking = async (req, res, next) => {
   try {
-    const { fullName, mobile, profession, location, howKnown, nearestAshram, message } = req.body;
+    const { fullName, mobile, email, profession, city, district, state, location, howKnown, nearestAshram, message, photo } = req.body;
     const record = await AudienceBooking.create({
       full_name: fullName,
       mobile,
+      email,
       profession,
-      location,
+      city,
+      district,
+      state,
+      location: location || [city, district, state].filter(Boolean).join(", "),
       how_known: howKnown,
       nearest_ashram: nearestAshram,
       message,
+      photo,
     });
     res.status(201).json({
       success: true,

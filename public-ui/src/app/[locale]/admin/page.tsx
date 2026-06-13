@@ -314,8 +314,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
   const [err,     setErr]     = useState("");
   const [loading, setLoading] = useState(false);
   const [adminName, setAdminName] = useState("");
-
-  const FIXED_OTP = "123456";
+  const [serverOtp, setServerOtp] = useState("");
 
   const field: React.CSSProperties = {
     display: "block", width: "100%", height: 48,
@@ -332,7 +331,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
     setLoading(true);
     try {
       const res = await adminSendOtp(mobile);
-      setAdminName(res.otp); // we reuse the response to get the name later via verify
+      setServerOtp(res.otp);
       setStep("otp");
     } catch (ex: any) {
       setErr(ex?.message || "Mobile not registered as admin");
@@ -343,7 +342,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
     e.preventDefault();
     setErr("");
     if (!otp) { setErr("Enter the OTP"); return; }
-    if (otp !== FIXED_OTP) { setErr("Incorrect OTP. Please try again"); return; }
+    if (otp !== serverOtp) { setErr("Incorrect OTP. Please try again"); return; }
     setLoading(true);
     try {
       const user = await adminVerifyOtp(mobile, otp);
@@ -1496,6 +1495,7 @@ export default function AdminPage() {
   const [trikalaSearch, setTrikalaSearch]   = useState("");
   const [trikalaDetail, setTrikalaDetail]   = useState<TrikalaReading | null>(null);
   const [trikalaFilter, setTrikalaFilter]   = useState("all");
+  const [devoteeFilter, setDevoteeFilter]   = useState("all");
 
   /* ── check existing session ── */
   useEffect(() => {
@@ -1720,30 +1720,29 @@ export default function AdminPage() {
             { key: "contacts", label: "Contact Messages",  icon: Mail  },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => tabChange(key)}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === key ? "rgba(245,230,200,0.13)" : "transparent", borderLeft: tab === key ? "2.5px solid #c9822b" : "2.5px solid transparent", transition: "all 0.15s" }}>
-              <Icon size={16} color={tab === key ? "#f5e6c8" : "rgba(245,230,200,0.45)"} />
-              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#f5e6c8" : "rgba(245,230,200,0.55)" }}>{label}</span>
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === key ? "linear-gradient(90deg,rgba(212,175,88,0.22),rgba(212,175,88,0.08))" : "transparent", borderLeft: tab === key ? "2.5px solid #D4AF58" : "2.5px solid transparent", boxShadow: tab === key ? "inset 0 0 0 1px rgba(212,175,88,0.12)" : "none", transition: "all 0.15s" }}>
+              <Icon size={16} color={tab === key ? "#D4AF58" : "rgba(245,230,200,0.45)"} />
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#f0d990" : "rgba(245,230,200,0.55)" }}>{label}</span>
             </button>
           ))}
           <button onClick={() => tabChange("trikala")}
-            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "trikala" ? "rgba(250,88,12,0.18)" : "transparent", borderLeft: tab === "trikala" ? "2.5px solid #FA580C" : "2.5px solid transparent", transition: "all 0.15s" }}>
-            <BookOpen size={16} color={tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.45)"} />
-            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "trikala" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "trikala" ? "#FA580C" : "rgba(245,230,200,0.55)" }}>Trikala Readings</span>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", background: "rgba(250,88,12,0.18)", color: "#FA580C", borderRadius: 20, padding: "2px 7px", flexShrink: 0 }}>NEW</span>
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "trikala" ? "linear-gradient(90deg,rgba(212,175,88,0.22),rgba(212,175,88,0.08))" : "transparent", borderLeft: tab === "trikala" ? "2.5px solid #D4AF58" : "2.5px solid transparent", boxShadow: tab === "trikala" ? "inset 0 0 0 1px rgba(212,175,88,0.12)" : "none", transition: "all 0.15s" }}>
+            <BookOpen size={16} color={tab === "trikala" ? "#D4AF58" : "rgba(245,230,200,0.45)"} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "trikala" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "trikala" ? "#f0d990" : "rgba(245,230,200,0.55)" }}>Trikala Readings</span>
           </button>
           <button onClick={() => tabChange("devotees")}
-            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "devotees" ? "rgba(185,147,69,0.18)" : "transparent", borderLeft: tab === "devotees" ? "2.5px solid #b9934a" : "2.5px solid transparent", transition: "all 0.15s" }}>
-            <BookUser size={16} color={tab === "devotees" ? "#b9934a" : "rgba(245,230,200,0.45)"} />
-            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "devotees" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "devotees" ? "#b9934a" : "rgba(245,230,200,0.55)" }}>Devotee Contacts</span>
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "devotees" ? "linear-gradient(90deg,rgba(212,175,88,0.22),rgba(212,175,88,0.08))" : "transparent", borderLeft: tab === "devotees" ? "2.5px solid #D4AF58" : "2.5px solid transparent", boxShadow: tab === "devotees" ? "inset 0 0 0 1px rgba(212,175,88,0.12)" : "none", transition: "all 0.15s" }}>
+            <BookUser size={16} color={tab === "devotees" ? "#D4AF58" : "rgba(245,230,200,0.45)"} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "devotees" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "devotees" ? "#f0d990" : "rgba(245,230,200,0.55)" }}>Devotee Contacts</span>
           </button>
 
           <p style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,230,200,0.35)", padding: "0 8px", marginTop: 20, marginBottom: 8 }}>
             Configuration
           </p>
           <button onClick={() => tabChange("admins")}
-            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "admins" ? "rgba(245,230,200,0.13)" : "transparent", borderLeft: tab === "admins" ? "2.5px solid #c9822b" : "2.5px solid transparent", transition: "all 0.15s" }}>
-            <ShieldCheck size={16} color={tab === "admins" ? "#f5e6c8" : "rgba(245,230,200,0.45)"} />
-            <span style={{ flex: 1, fontSize: 12, fontWeight: 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "admins" ? "#f5e6c8" : "rgba(245,230,200,0.55)" }}>Admin Users</span>
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 4, background: tab === "admins" ? "linear-gradient(90deg,rgba(212,175,88,0.22),rgba(212,175,88,0.08))" : "transparent", borderLeft: tab === "admins" ? "2.5px solid #D4AF58" : "2.5px solid transparent", boxShadow: tab === "admins" ? "inset 0 0 0 1px rgba(212,175,88,0.12)" : "none", transition: "all 0.15s" }}>
+            <ShieldCheck size={16} color={tab === "admins" ? "#D4AF58" : "rgba(245,230,200,0.45)"} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: tab === "admins" ? 700 : 600, textAlign: "left", whiteSpace: "nowrap", color: tab === "admins" ? "#f0d990" : "rgba(245,230,200,0.55)" }}>Admin Users</span>
           </button>
         </nav>
 
@@ -2041,14 +2040,51 @@ export default function AdminPage() {
 
         {/* ── Devotee Contacts ─────────────────────────────────────────── */}
         {tab === "devotees" && (() => {
-          const devSearch = (bookings as AudienceBooking[]).filter(b =>
-            [b.fullName, b.mobile, b.profession, b.location, b.nearestAshram]
-              .some(v => v?.toLowerCase().includes(trikalaSearch.toLowerCase()))
-          );
-          const rows = trikalaSearch.trim() ? devSearch : (bookings as AudienceBooking[]);
+          const q = trikalaSearch.toLowerCase();
+          const allDevotees = bookings as AudienceBooking[];
+          const now = new Date();
+          const startOfDay   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const startOfWeek  = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const rows = allDevotees.filter(b => {
+            const matchSearch = !q || [b.fullName, b.mobile, b.email, b.profession, b.city, b.district, b.state, b.location]
+              .some(v => v?.toLowerCase().includes(q));
+            if (!matchSearch) return false;
+            if (devoteeFilter === "all") return true;
+            if (!b.createdAt) return false;
+            const d = new Date(b.createdAt);
+            if (devoteeFilter === "today")      return d >= startOfDay;
+            if (devoteeFilter === "this_week")  return d >= startOfWeek;
+            if (devoteeFilter === "this_month") return d >= startOfMonth;
+            return true;
+          });
+          const DATE_PILLS = [
+            { key: "all",        label: "All" },
+            { key: "today",      label: "Today" },
+            { key: "this_week",  label: "This Week" },
+            { key: "this_month", label: "This Month" },
+          ];
+          const totalDev    = allDevotees.length;
+          const withEmail   = allDevotees.filter(b => b.email).length;
+          const withPhoto   = allDevotees.filter(b => b.photo).length;
+          const thisMonth   = allDevotees.filter(b => {
+            if (!b.createdAt) return false;
+            const d = new Date(b.createdAt);
+            const now = new Date();
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          }).length;
+          const AVATAR_GRADIENTS = [
+            "linear-gradient(135deg,#6B121C,#9B3B44)",
+            "linear-gradient(135deg,#92600a,#C8902A)",
+            "linear-gradient(135deg,#1a5276,#2E86C1)",
+            "linear-gradient(135deg,#145a32,#1E8449)",
+            "linear-gradient(135deg,#4a235a,#7D3C98)",
+            "linear-gradient(135deg,#784212,#BA6010)",
+          ];
           return (
-            <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-              {/* Hero card */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", background: "#F5F1EC", minHeight: 0 }}>
+
+              {/* Dark maroon hero header */}
               <div className="adm-hero-card">
                 <div className="adm-hero-row">
                   <div className="adm-hero-left">
@@ -2062,82 +2098,167 @@ export default function AdminPage() {
                   </div>
                   <div className="adm-hero-right">
                     <div className="adm-hero-count">
-                      <span className="adm-hero-count-num">{rows.length}</span>
+                      <span className="adm-hero-count-num">{totalDev}</span>
                       <span className="adm-hero-count-lbl">Devotees</span>
                     </div>
                     <div className="adm-hero-sep" />
-                    <button onClick={fetchData} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(185,147,69,0.3)", background: "transparent", color: "#f5e6c8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                      <RefreshCw size={13} /> Refresh
-                    </button>
+                    <div className="adm-hero-actions">
+                      <button className="adm-hero-btn-out" onClick={fetchData}>
+                        <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                        <span className="adm-hero-btn-txt">Refresh</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Search bar */}
-              <div style={{ padding: "16px 24px 0" }}>
-                <div style={{ position: "relative", maxWidth: 360 }}>
-                  <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#b9934a" }} />
-                  <input
-                    value={trikalaSearch}
-                    onChange={e => setTrikalaSearch(e.target.value)}
-                    placeholder="Search by name, phone, location…"
-                    style={{ width: "100%", padding: "9px 12px 9px 34px", borderRadius: 9, border: "1.5px solid #e8dccb", background: "#FDFAF6", fontSize: 13, color: "#2a1c13", outline: "none" }}
-                  />
-                </div>
-              </div>
+              {/* Content area */}
+              <div style={{ padding: "24px 28px 32px" }}>
 
-              {/* Table */}
-              <div className="adm-content" style={{ flex: 1, overflowY: "auto" }}>
-                {refreshing ? (
-                  <div style={{ textAlign: "center", padding: 48, color: "#b9934a" }}>Loading…</div>
-                ) : rows.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: 48, color: "#b9934a" }}>No devotees found.</div>
-                ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ background: "#FDFAF6", borderBottom: "1.5px solid #ede6d6" }}>
-                          {["#", "Name", "Phone", "Profession", "Location", "Nearest Ashram", "How Known", "Date"].map(h => (
-                            <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#b9934a", whiteSpace: "nowrap" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((b, i) => (
-                          <tr key={b.id} style={{ borderBottom: "1px solid #f0e8d8", background: i % 2 === 0 ? "#fff" : "#FDFAF6" }}>
-                            <td style={{ padding: "11px 14px", color: "#b9934a", fontWeight: 700, fontSize: 12 }}>{i + 1}</td>
-                            <td style={{ padding: "11px 14px", fontWeight: 600, color: "#2a1c13", whiteSpace: "nowrap" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#c9822b,#b9934a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                                  {(b.fullName || "?")[0].toUpperCase()}
-                                </div>
-                                {b.fullName || "—"}
-                              </div>
-                            </td>
-                            <td style={{ padding: "11px 14px", color: "#2a1c13" }}>
-                              <a href={`tel:${b.mobile}`} style={{ display: "flex", alignItems: "center", gap: 5, color: "#b9934a", textDecoration: "none", fontWeight: 600 }}>
-                                <Phone size={12} />{b.mobile || "—"}
-                              </a>
-                            </td>
-                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.profession || "—"}</td>
-                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.location || "—"}</td>
-                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.nearestAshram || "—"}</td>
-                            <td style={{ padding: "11px 14px", color: "#5a3e2b" }}>{b.howKnown || "—"}</td>
-                            <td style={{ padding: "11px 14px", color: "#9b7a5e", whiteSpace: "nowrap", fontSize: 12 }}>
-                              {b.createdAt ? (
-                                <div>
-                                  <div>{new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</div>
-                                  <div style={{ fontSize: 11, color: "#b9934a", marginTop: 2 }}>{new Date(b.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}</div>
-                                </div>
-                              ) : "—"}
-                            </td>
+                {/* Stat cards — 4 cards identical to Trikala style */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, marginBottom: 22 }}>
+                  {[
+                    { icon: (
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="#FFF1E6"/><circle cx="12" cy="10" r="3" fill="#F97316"/><path d="M6 20c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#F97316" strokeWidth="1.6" strokeLinecap="round" fill="none"/></svg>
+                    ), label: "Total Devotees", value: totalDev, color: "#F97316" },
+                    { icon: (
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DCFCE7"/><path d="M7.5 12.5l3 3 5.5-6" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    ), label: "This Month", value: thisMonth, color: "#16A34A" },
+                  ].map(card => (
+                    <div key={card.label} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #F0E8D8", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                      <div style={{ flexShrink: 0 }}>{card.icon}</div>
+                      <div>
+                        <p style={{ fontSize: 26, fontWeight: 800, color: "#1a0e07", lineHeight: 1 }}>{card.value}</p>
+                        <p style={{ fontSize: 11.5, color: "#9b7a5e", marginTop: 4, fontWeight: 500 }}>{card.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Filter pills + search */}
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+                  {DATE_PILLS.map(pill => {
+                    const active = devoteeFilter === pill.key;
+                    return (
+                      <button key={pill.key} onClick={() => setDevoteeFilter(pill.key)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #1a0e07" : "1.5px solid #E8E0D4", background: active ? "#1a0e07" : "#fff", color: active ? "#fff" : "#6b5744", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                        {pill.label}
+                      </button>
+                    );
+                  })}
+                  <div style={{ marginLeft: "auto", position: "relative" }}>
+                    <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#b9934a", pointerEvents: "none" }} />
+                    <input type="text" placeholder="Search name, phone, location…" value={trikalaSearch} onChange={e => setTrikalaSearch(e.target.value)}
+                      style={{ paddingLeft: 30, paddingRight: 12, height: 34, borderRadius: 8, border: "1.5px solid #E8E0D4", background: "#fff", fontSize: 12.5, color: "#2c1810", outline: "none", width: 230 }} />
+                  </div>
+                </div>
+
+                {/* Table card */}
+                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #F0E8D8", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                  {/* Table header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 14px", borderBottom: "1px solid #F0E8D8" }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#1a0e07" }}>All Devotees</p>
+                    <p style={{ fontSize: 12, color: "#9b7a5e" }}>{rows.length} record{rows.length !== 1 ? "s" : ""}</p>
+                  </div>
+
+                  {refreshing ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#9b7a5e", fontSize: 14, gap: 10 }}>
+                      <RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> Loading…
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid #F0E8D8" }}>
+                            {["DEVOTEE", "MOBILE", "EMAIL", "PROFESSION", "ADDRESS", "JOINED"].map(h => (
+                              <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#b9934a", textTransform: "uppercase", whiteSpace: "nowrap", background: "#FDFAF6" }}>{h}</th>
+                            ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+                        </thead>
+                        <tbody>
+                          {rows.length === 0 ? (
+                            <tr><td colSpan={6} style={{ padding: "52px 20px", textAlign: "center", color: "#b9934a", fontSize: 14 }}>No devotees found</td></tr>
+                          ) : rows.map((b, i) => {
+                            const city    = b.city || "";
+                            const subAddr = [b.district, b.state].filter(Boolean).join(", ");
+                            const fallback = b.location || "—";
+                            const avatarBg = AVATAR_GRADIENTS[b.fullName.charCodeAt(0) % AVATAR_GRADIENTS.length];
+                            const isEven  = i % 2 === 0;
+                            return (
+                              <tr key={b.id}
+                                style={{ background: isEven ? "#fff" : "#FDFAF6", borderBottom: "1px solid #F5EFE5", transition: "background 0.1s" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "#FEF9F0")}
+                                onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#FDFAF6")}>
+
+                                {/* Devotee */}
+                                <td style={{ padding: "13px 16px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                    {b.photo ? (
+                                      <img src={b.photo} alt={b.fullName} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #E8D0B0" }} />
+                                    ) : (
+                                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                                        {(b.fullName || "?")[0].toUpperCase()}
+                                      </div>
+                                    )}
+                                    <div>
+                                      <p style={{ fontSize: 13, fontWeight: 600, color: "#1a0e07", marginBottom: 2 }}>{b.fullName || "—"}</p>
+                                      {b.nearestAshram && <p style={{ fontSize: 11.5, color: "#9b7a5e" }}>{b.nearestAshram}</p>}
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Mobile */}
+                                <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{b.mobile || "—"}</td>
+
+                                {/* Email */}
+                                <td style={{ padding: "13px 16px", fontSize: 12.5, whiteSpace: "nowrap" }}>
+                                  {b.email
+                                    ? <a href={`mailto:${b.email}`} style={{ color: "#b9934a", textDecoration: "none", fontWeight: 500 }}>{b.email}</a>
+                                    : <span style={{ color: "#c9b8a4" }}>—</span>}
+                                </td>
+
+                                {/* Profession */}
+                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                  {b.profession ? (
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#FFF3E0", borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: "#7a4f0a" }}>
+                                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#b9934a", flexShrink: 0 }} />
+                                      {b.profession}
+                                    </span>
+                                  ) : <span style={{ color: "#c9b8a4" }}>—</span>}
+                                </td>
+
+                                {/* Address */}
+                                <td style={{ padding: "13px 16px" }}>
+                                  {city ? (
+                                    <>
+                                      <p style={{ fontSize: 13, fontWeight: 500, color: "#1a0e07", marginBottom: 2 }}>{city}</p>
+                                      {subAddr && <p style={{ fontSize: 11.5, color: "#9b7a5e" }}>{subAddr}</p>}
+                                    </>
+                                  ) : <span style={{ fontSize: 12.5, color: "#6b5744" }}>{fallback}</span>}
+                                </td>
+
+                                {/* Joined */}
+                                <td style={{ padding: "13px 16px" }}>
+                                  {b.createdAt ? (
+                                    <>
+                                      <p style={{ fontSize: 12.5, fontWeight: 500, color: "#1a0e07", whiteSpace: "nowrap", marginBottom: 2 }}>
+                                        {new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                                      </p>
+                                      <p style={{ fontSize: 11.5, color: "#b9934a", whiteSpace: "nowrap" }}>
+                                        {new Date(b.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                                      </p>
+                                    </>
+                                  ) : <span style={{ color: "#c9b8a4" }}>—</span>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>{/* /content padding */}
             </div>
           );
         })()}

@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { postAudienceBooking } from "@/lib/api";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -37,8 +37,11 @@ const trustPoints = [
 const formSchema = z.object({
   fullName:      z.string().min(2, "Name must be at least 2 characters"),
   mobile:        z.string().min(10, "Please enter a valid mobile number"),
+  email:         z.string().email("Enter a valid email address"),
   profession:    z.string().min(2, "Profession is required"),
-  location:      z.string().min(5, "Please enter Area, City, Taluk, District"),
+  city:          z.string().min(2, "City is required"),
+  district:      z.string().min(2, "District is required"),
+  state:         z.string().min(2, "State is required"),
   howKnown:      z.string().min(2, "This field is required"),
   nearestAshram: z.string().min(1, "Please select an ashram"),
   message:       z.string().optional(),
@@ -156,6 +159,18 @@ export default function MeetGurujiPage() {
   const { t } = useLanguage();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => setPhotoBase64(reader.result as string);
+    reader.readAsDataURL(file);
+  }
 
   const {
     register,
@@ -171,7 +186,7 @@ export default function MeetGurujiPage() {
   const onSubmit = async (data: FormValues) => {
     setServerError("");
     try {
-      await postAudienceBooking(data);
+      await postAudienceBooking({ ...data, photo: photoBase64 || undefined });
       setIsSubmitted(true);
     } catch (err: any) {
       setServerError(err?.message || "Something went wrong. Please try again.");
@@ -277,6 +292,30 @@ export default function MeetGurujiPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+                    {/* Photo upload */}
+                    <div className="flex flex-col items-center gap-3">
+                      <div
+                        onClick={() => photoInputRef.current?.click()}
+                        className="relative cursor-pointer"
+                        style={{ width: 88, height: 88 }}
+                      >
+                        {photoPreview ? (
+                          <img src={photoPreview} alt="Photo" style={{ width: 88, height: 88, borderRadius: "50%", objectFit: "cover", border: "2.5px solid #b9934a" }} />
+                        ) : (
+                          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "#fdf8f0", border: "2px dashed #b9934a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b9934a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <span style={{ fontSize: 9, color: "#b9934a", fontWeight: 600, letterSpacing: "0.05em" }}>PHOTO</span>
+                          </div>
+                        )}
+                        <div style={{ position: "absolute", bottom: 2, right: 2, width: 22, height: 22, borderRadius: "50%", background: "#b9934a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-deep-brown/40">Optional — tap to upload your photo</p>
+                      <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={handlePhotoChange} />
+                    </div>
+
                     {/* Row 1: Name + Mobile */}
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                       <FieldWrap id="fullName" label={t("meet.f.name")} error={errors.fullName?.message}>
@@ -297,8 +336,17 @@ export default function MeetGurujiPage() {
                       </FieldWrap>
                     </div>
 
-                    {/* Row 2: Profession + Place */}
+                    {/* Row 2: Email + Profession */}
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <FieldWrap id="email" label="Email Address *" error={(errors as any).email?.message}>
+                        <Input
+                          id="email"
+                          type="email"
+                          {...register("email")}
+                          placeholder="your@email.com"
+                          className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
+                        />
+                      </FieldWrap>
                       <FieldWrap id="profession" label={t("meet.f.profession")} error={errors.profession?.message}>
                         <Input
                           id="profession"
@@ -307,11 +355,31 @@ export default function MeetGurujiPage() {
                           className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
                         />
                       </FieldWrap>
-                      <FieldWrap id="location" label={t("meet.f.place")} error={errors.location?.message}>
+                    </div>
+
+                    {/* Row 3: City + District + State */}
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                      <FieldWrap id="city" label="City / Town *" error={(errors as any).city?.message}>
                         <Input
-                          id="location"
-                          {...register("location")}
-                          placeholder={t("meet.f.place.ph")}
+                          id="city"
+                          {...register("city")}
+                          placeholder="City or Town"
+                          className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
+                        />
+                      </FieldWrap>
+                      <FieldWrap id="district" label="District *" error={(errors as any).district?.message}>
+                        <Input
+                          id="district"
+                          {...register("district")}
+                          placeholder="District"
+                          className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
+                        />
+                      </FieldWrap>
+                      <FieldWrap id="state" label="State *" error={(errors as any).state?.message}>
+                        <Input
+                          id="state"
+                          {...register("state")}
+                          placeholder="State"
                           className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
                         />
                       </FieldWrap>

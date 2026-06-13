@@ -152,9 +152,6 @@ export function HeroSection() {
       {/* Bottom fade into next section */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-20 bg-gradient-to-t from-pearl/8 to-transparent" />
 
-      {/* Animated bottom border — rotating conic-gradient gold */}
-      <div className="hero-bottom-border" />
-
       {/* Scroll indicator */}
       <div className="scroll-indicator absolute bottom-8 left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-1.5 text-pearl/35">
         <span className="text-[8.5px] font-bold uppercase tracking-[0.22em]">Scroll</span>
