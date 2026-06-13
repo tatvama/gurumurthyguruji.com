@@ -7,6 +7,8 @@ import {
   getAllReadings,
   getReadingById,
   updateReadingStatus,
+  updateReadingFields,
+  updateGurujiVakya,
 } from "../controllers/trikalaController.js";
 
 const router = Router();
@@ -38,5 +40,11 @@ router.patch(
   validate([body("status").notEmpty().withMessage("Status is required")]),
   updateReadingStatus
 );
+
+/* Admin — Guruji Vakya / guidance (PRD §3 Stage 3) */
+router.patch("/:id/vakya", updateGurujiVakya);
+
+/* Admin — case field updates (category, priority, devotee link, assignment) */
+router.patch("/:id", updateReadingFields);
 
 export default router;

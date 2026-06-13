@@ -12,6 +12,14 @@ import trikalaRoutes from "./routes/trikalaRoutes.js";
 import caseNotesRoutes from "./routes/caseNotesRoutes.js";
 import caseFollowupsRoutes from "./routes/caseFollowupsRoutes.js";
 import casePadRoutes from "./routes/casePadRoutes.js";
+import devoteeRoutes from "./routes/devoteeRoutes.js";
+import remedyRoutes from "./routes/remedyRoutes.js";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
+import aiReportRoutes from "./routes/aiReportRoutes.js";
+import auditRoutes from "./routes/auditRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
+import whatsappRoutes from "./routes/whatsappRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,6 +62,14 @@ app.use("/api/trikala-readings", trikalaRoutes);
 app.use("/api/case-notes",      caseNotesRoutes);
 app.use("/api/case-followups",  caseFollowupsRoutes);
 app.use("/api/case-pad",        casePadRoutes);
+app.use("/api/devotees",        devoteeRoutes);
+app.use("/api/remedies",        remedyRoutes);
+app.use("/api/appointments",    appointmentRoutes);
+app.use("/api/ai-reports",      aiReportRoutes);
+app.use("/api/audit-logs",      auditRoutes);
+app.use("/api/dashboard",       dashboardRoutes);
+app.use("/api/chat",            chatRoutes);
+app.use("/api/whatsapp",        whatsappRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });

@@ -1,13 +1,14 @@
 import { pool } from "../config/db.js";
 
 const TrikalaReading = {
-  async create({ case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image }) {
+  async create({ case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id }) {
     const { rows } = await pool.query(
       `INSERT INTO trikala_readings
-         (case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         (case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING *`,
-      [case_reference, full_name, mobile, email, gender, occupation, dob, tob || null, pob, service_type, guidance_query, palm_image || null]
+      [case_reference, full_name, mobile, email, gender, occupation, dob, tob || null, pob, service_type, guidance_query, palm_image || null,
+       problem_category || null, priority || "Normal", preferred_language || null, devotee_id || null]
     );
     return rows[0];
   },
@@ -47,6 +48,29 @@ const TrikalaReading = {
     const { rows } = await pool.query(
       `UPDATE trikala_readings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, id]
+    );
+    return rows[0] || null;
+  },
+
+  /* Generic whitelisted update — case fields + Guruji Vakya (PRD §3 Stage 3) */
+  async update(id, d) {
+    const allowed = [
+      "problem_category", "priority", "preferred_language", "assigned_admin_id",
+      "devotee_id", "status",
+      "guruji_observation", "karmic_indication", "divine_remedy", "remedy_duration",
+      "remedy_place", "mantra_japa", "seva_daana", "followup_required", "closure_note",
+      "guruji_reviewed_by", "guruji_reviewed_at",
+    ];
+    const fields = [];
+    const params = [];
+    const set = (c, v) => { params.push(v); fields.push(`${c} = $${params.length}`); };
+    for (const k of allowed) if (k in d) set(k, d[k]);
+    if (!fields.length) return this.findById(id);
+    params.push(id);
+    const { rows } = await pool.query(
+      `UPDATE trikala_readings SET ${fields.join(", ")}, updated_at = NOW()
+       WHERE id = $${params.length} RETURNING *`,
+      params
     );
     return rows[0] || null;
   },

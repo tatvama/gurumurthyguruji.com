@@ -79,6 +79,8 @@ export function ImpactStats() {
 
   return (
     <section className="section-gold-band py-16 sm:py-20">
+      <div className="gold-band-border top" />
+      <div className="gold-band-border bottom" />
       <div
         ref={ref}
         className="relative z-10 mx-auto grid max-w-5xl grid-cols-2 gap-4 px-6 lg:grid-cols-4 lg:gap-5"

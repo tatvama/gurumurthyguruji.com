@@ -1,4 +1,15 @@
 import TrikalaReading from "../models/TrikalaReading.js";
+import Devotee from "../models/Devotee.js";
+import { pool } from "../config/db.js";
+
+/* The 12 PRD case statuses (§5) */
+export const TRIKALA_STATUSES = [
+  "Submitted", "Incomplete", "Ready for AI Analysis", "AI Draft Generated",
+  "Awaiting Guruji Review", "Under Review", "Remedy Assigned", "Follow-up Scheduled",
+  "Finalized", "Published / Shared", "Closed", "Reopened",
+  // legacy values kept valid for existing rows
+  "AI Report",
+];
 
 /* ── Generate unique GURUJI-XXXXXXX case reference ─────────────── */
 function generateCaseRef() {
@@ -18,7 +29,7 @@ function generateCaseRef() {
 /* POST /api/trikala-readings — public form submission */
 export const submitReading = async (req, res, next) => {
   try {
-    const { fullName, mobile, email, gender, occupation, dob, tob, pob, serviceType, guidanceQuery, palmImage } = req.body;
+    const { fullName, mobile, email, gender, occupation, dob, tob, pob, serviceType, guidanceQuery, palmImage, problemCategory, priority, preferredLanguage, city, state } = req.body;
 
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
@@ -27,6 +38,15 @@ export const submitReading = async (req, res, next) => {
       const existing = await TrikalaReading.findByCaseRef(caseReference);
       if (!existing) break;
     }
+
+    /* PRD §15 automation: find-or-create the Devotee 360 profile and link it */
+    let devoteeId = null;
+    try {
+      const { devotee } = await Devotee.findOrCreateFrom({
+        name: fullName, phone: mobile, email, city, state, language: preferredLanguage,
+      });
+      devoteeId = devotee.id;
+    } catch (_e) { /* devotee linking is best-effort, never blocks intake */ }
 
     const record = await TrikalaReading.create({
       case_reference: caseReference,
@@ -41,7 +61,20 @@ export const submitReading = async (req, res, next) => {
       service_type:   serviceType,
       guidance_query: guidanceQuery,
       palm_image:     palmImage || null,
+      problem_category:   problemCategory || null,
+      priority:           priority || "Normal",
+      preferred_language: preferredLanguage || null,
+      devotee_id:         devoteeId,
     });
+
+    if (devoteeId) {
+      await Devotee.addTimeline(devoteeId, {
+        event_type: "case_opened",
+        title: `Trikala case opened: ${caseReference}`,
+        description: (guidanceQuery || "").slice(0, 160),
+        related_entity_type: "trikala_case", related_entity_id: caseReference, icon: "⭕",
+      });
+    }
 
     res.status(201).json({
       success:  true,
@@ -82,16 +115,91 @@ export const getReadingById = async (req, res, next) => {
   }
 };
 
-/* PATCH /api/trikala-readings/:id/status — admin status update */
+/* PATCH /api/trikala-readings/:id/status — admin status update (12 PRD statuses) */
 export const updateReadingStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const ALLOWED = ["Submitted", "AI Report", "Under Review", "Finalized", "Published"];
-    if (!ALLOWED.includes(status)) {
-      return res.status(422).json({ success: false, message: `Status must be one of: ${ALLOWED.join(", ")}.` });
+    if (!TRIKALA_STATUSES.includes(status)) {
+      return res.status(422).json({ success: false, message: `Status must be one of: ${TRIKALA_STATUSES.join(", ")}.` });
     }
     const record = await TrikalaReading.updateStatus(req.params.id, status);
     if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
+
+    /* Mirror milestone onto the devotee timeline */
+    if (record.devotee_id && ["Published / Shared", "Closed", "Finalized"].includes(status)) {
+      await Devotee.addTimeline(record.devotee_id, {
+        event_type: "case_status",
+        title: `Case ${record.case_reference}: ${status}`,
+        related_entity_type: "trikala_case", related_entity_id: record.case_reference,
+        icon: status === "Closed" ? "🔒" : "📄",
+      });
+    }
+    res.json({ success: true, data: record });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* PATCH /api/trikala-readings/:id — update case fields (category, priority, devotee, assignment) */
+export const updateReadingFields = async (req, res, next) => {
+  try {
+    const record = await TrikalaReading.update(req.params.id, req.body);
+    if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
+    res.json({ success: true, data: record });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* PATCH /api/trikala-readings/:id/vakya — save Guruji Vakya / guidance (PRD §3 Stage 3) */
+export const updateGurujiVakya = async (req, res, next) => {
+  try {
+    const {
+      guruji_observation, karmic_indication, divine_remedy, remedy_duration,
+      remedy_place, mantra_japa, seva_daana, followup_required, closure_note,
+      guruji_reviewed_by, advanceStatus,
+    } = req.body;
+
+    const patch = {
+      guruji_observation, karmic_indication, divine_remedy, remedy_duration,
+      remedy_place, mantra_japa, seva_daana, followup_required, closure_note,
+      guruji_reviewed_by, guruji_reviewed_at: new Date().toISOString(),
+    };
+    // When Guruji's guidance is saved, advance the case to "Remedy Assigned" by default
+    if (advanceStatus !== false) patch.status = "Remedy Assigned";
+
+    const record = await TrikalaReading.update(req.params.id, patch);
+    if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
+
+    // Mirror to devotee timeline
+    if (record.devotee_id) {
+      await Devotee.addTimeline(record.devotee_id, {
+        event_type: "guruji_guidance",
+        title: "Guruji guidance added",
+        description: divine_remedy || guruji_observation || "",
+        related_entity_type: "trikala_case", related_entity_id: record.case_reference, icon: "🪔",
+      });
+    }
+
+    /* PRD §8 — auto-assign remedy row when divine_remedy text is saved (best-effort) */
+    if (divine_remedy && divine_remedy.trim() && record.case_reference) {
+      try {
+        const name = divine_remedy.trim().slice(0, 160);
+        const { rows: dup } = await pool.query(
+          `SELECT id FROM case_remedies WHERE case_reference = $1 AND remedy_name = $2 LIMIT 1`,
+          [record.case_reference, name]
+        );
+        if (!dup.length) {
+          const instruction = [remedy_duration, remedy_place ? `at ${remedy_place}` : "", mantra_japa ? `Mantra: ${mantra_japa}` : "", seva_daana ? `Seva: ${seva_daana}` : ""].filter(Boolean).join(" · ");
+          await pool.query(
+            `INSERT INTO case_remedies (case_reference, devotee_id, remedy_name, custom_instruction, start_date, status)
+             VALUES ($1, $2, $3, $4, CURRENT_DATE, 'Assigned')`,
+            [record.case_reference, record.devotee_id || null, name, instruction || null]
+          );
+        }
+      } catch (_e) { /* auto-remedy is best-effort */ }
+    }
+
     res.json({ success: true, data: record });
   } catch (err) {
     next(err);
