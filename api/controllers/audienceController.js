@@ -1,4 +1,5 @@
 import AudienceBooking from "../models/AudienceBooking.js";
+import { logAudit } from "../utils/auditLog.js";
 
 export const submitBooking = async (req, res, next) => {
   try {
@@ -58,6 +59,7 @@ export const updateBookingStatus = async (req, res, next) => {
     }
     const record = await AudienceBooking.updateStatus(req.params.id, status);
     if (!record) return res.status(404).json({ success: false, message: "Not found." });
+    await logAudit({ action: "UPDATE_BOOKING_STATUS", entityType: "audience_booking", entityId: String(record.id), newValue: status });
     res.json({ success: true, data: record });
   } catch (err) {
     next(err);

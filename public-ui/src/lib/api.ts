@@ -286,15 +286,25 @@ function mapReading(r: Record<string, any>): TrikalaReading {
 export async function postTrikalaReading(payload: {
   fullName: string;
   mobile: string;
+  whatsapp?: string;
   email: string;
   gender: string;
   occupation: string;
+  city?: string;
+  preferredLanguage?: string;
   dob: string;
   tob?: string;
+  birthTimeAccuracy?: string;
   pob: string;
+  fatherName?: string;
+  motherName?: string;
+  spouseName?: string;
+  childrenDetails?: string;
   serviceType: string;
+  problemCategory?: string;
   guidanceQuery: string;
   palmImage?: string;
+  consent?: boolean;
 }): Promise<{ caseReference: string; status: string }> {
   const res = await fetch(`${BASE}/api/trikala-readings`, {
     method: "POST",
@@ -811,4 +821,102 @@ export async function getAuditLogs(limit = 50): Promise<AuditLog[]> {
     id: r.id, userName: r.user_name, action: r.action, entityType: r.entity_type,
     entityId: r.entity_id, oldValue: r.old_value, newValue: r.new_value, createdAt: r.created_at,
   }));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   APP SETTINGS (PRD §2, §10) — backend-persisted key-value store
+══════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   CONTACT → DEVOTEE conversion (PRD §8)
+══════════════════════════════════════════════════════════════════ */
+export async function convertContactToDevotee(
+  contactId: number | string,
+  phone?: string
+): Promise<{ devotee: Devotee; created: boolean }> {
+  const json = await sendJson(`/api/contacts/${contactId}/convert-to-devotee`, "POST", phone ? { phone } : {});
+  return { devotee: mapDevotee(json.data.devotee), created: json.data.created };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DOCUMENTS (PRD §9) — track generated PDF records
+══════════════════════════════════════════════════════════════════ */
+export interface Document {
+  id: number; relatedType?: string; relatedId?: string; documentType: string;
+  title?: string; fileUrl?: string; watermark?: string; status: string;
+  createdBy?: string; createdAt: string;
+}
+export async function getDocuments(relatedType?: string, relatedId?: string): Promise<Document[]> {
+  const params = new URLSearchParams();
+  if (relatedType) params.set("related_type", relatedType);
+  if (relatedId)   params.set("related_id", relatedId);
+  const json = await getJson(`/api/documents?${params}`);
+  return (json.data ?? []).map((r: Record<string, any>) => ({
+    id: r.id, relatedType: r.related_type, relatedId: r.related_id,
+    documentType: r.document_type, title: r.title, fileUrl: r.file_url,
+    watermark: r.watermark, status: r.status, createdBy: r.created_by, createdAt: r.created_at,
+  }));
+}
+export async function createDocument(payload: Partial<Document>): Promise<Document> {
+  const json = await sendJson("/api/documents", "POST", {
+    related_type: payload.relatedType, related_id: payload.relatedId,
+    document_type: payload.documentType, title: payload.title,
+    file_url: payload.fileUrl, watermark: payload.watermark,
+    status: payload.status, created_by: payload.createdBy,
+  });
+  const r = json.data;
+  return { id: r.id, relatedType: r.related_type, relatedId: r.related_id,
+    documentType: r.document_type, title: r.title, fileUrl: r.file_url,
+    watermark: r.watermark, status: r.status, createdBy: r.created_by, createdAt: r.created_at };
+}
+
+export async function getAppSettings(): Promise<Record<string, any>> {
+  try {
+    const json = await getJson("/api/settings");
+    return json.data ?? {};
+  } catch { return {}; }
+}
+
+export async function saveAppSettings(settings: Record<string, any>): Promise<void> {
+  await sendJson("/api/settings", "PATCH", settings);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   REAL-TIME NOTIFICATIONS — SSE stream + recent log (PRD §10)
+══════════════════════════════════════════════════════════════════ */
+export interface NotificationEvent {
+  id: number;
+  type: string;
+  template: string;
+  name: string;
+  phone: string;
+  message: string;
+  waUrl: string;
+  case_reference: string | null;
+  created_at: string;
+}
+
+export function subscribeNotifications(
+  onEvent: (evt: NotificationEvent) => void,
+  onError?: (e: Event) => void
+): () => void {
+  const es = new EventSource(`${BASE}/api/notifications/stream`);
+  es.addEventListener("notification", (e: MessageEvent) => {
+    try { onEvent(JSON.parse(e.data)); } catch (_) {}
+  });
+  if (onError) es.onerror = onError;
+  return () => es.close();
+}
+
+export async function getRecentNotifications(): Promise<NotificationEvent[]> {
+  try {
+    const json = await getJson("/api/notifications/recent");
+    return json.data ?? [];
+  } catch { return []; }
+}
+
+export async function getWaLogs(limit = 50): Promise<any[]> {
+  try {
+    const json = await getJson(`/api/notifications/wa-logs?limit=${limit}`);
+    return json.data ?? [];
+  } catch { return []; }
 }

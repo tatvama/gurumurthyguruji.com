@@ -1,6 +1,8 @@
 import TrikalaReading from "../models/TrikalaReading.js";
 import Devotee from "../models/Devotee.js";
 import { pool } from "../config/db.js";
+import { logAudit } from "../utils/auditLog.js";
+import { autoNotify } from "../utils/notifyWhatsApp.js";
 
 /* The 12 PRD case statuses (§5) */
 export const TRIKALA_STATUSES = [
@@ -29,7 +31,7 @@ function generateCaseRef() {
 /* POST /api/trikala-readings — public form submission */
 export const submitReading = async (req, res, next) => {
   try {
-    const { fullName, mobile, email, gender, occupation, dob, tob, pob, serviceType, guidanceQuery, palmImage, problemCategory, priority, preferredLanguage, city, state } = req.body;
+    const { fullName, mobile, whatsapp, email, gender, occupation, city, state, preferredLanguage, dob, tob, birthTimeAccuracy, pob, fatherName, motherName, spouseName, childrenDetails, serviceType, guidanceQuery, palmImage, problemCategory, priority, consent } = req.body;
 
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
@@ -49,22 +51,30 @@ export const submitReading = async (req, res, next) => {
     } catch (_e) { /* devotee linking is best-effort, never blocks intake */ }
 
     const record = await TrikalaReading.create({
-      case_reference: caseReference,
-      full_name:      fullName,
+      case_reference:     caseReference,
+      full_name:          fullName,
       mobile,
+      whatsapp:           whatsapp || null,
       email,
       gender,
       occupation,
+      city:               city || null,
       dob,
-      tob:            tob || null,
+      tob:                tob || null,
+      birth_time_accuracy: birthTimeAccuracy || null,
       pob,
-      service_type:   serviceType,
-      guidance_query: guidanceQuery,
-      palm_image:     palmImage || null,
+      father_name:        fatherName || null,
+      mother_name:        motherName || null,
+      spouse_name:        spouseName || null,
+      children_details:   childrenDetails || null,
+      service_type:       serviceType,
+      guidance_query:     guidanceQuery,
+      palm_image:         palmImage || null,
       problem_category:   problemCategory || null,
       priority:           priority || "Normal",
       preferred_language: preferredLanguage || null,
       devotee_id:         devoteeId,
+      consent:            consent || false,
     });
 
     if (devoteeId) {
@@ -75,6 +85,18 @@ export const submitReading = async (req, res, next) => {
         related_entity_type: "trikala_case", related_entity_id: caseReference, icon: "⭕",
       });
     }
+
+    await logAudit({ action: "CREATE_TRIKALA_CASE", entityType: "trikala_case", entityId: caseReference, newValue: { fullName, serviceType, priority } });
+
+    /* Auto-notify devotee on WhatsApp (best-effort, non-blocking) */
+    autoNotify({
+      template: "case_submitted",
+      phone: mobile,
+      name: fullName,
+      data: { caseRef: caseReference, serviceType },
+      devotee_id: devoteeId,
+      case_reference: caseReference,
+    }).catch(() => {});
 
     res.status(201).json({
       success:  true,
@@ -125,6 +147,8 @@ export const updateReadingStatus = async (req, res, next) => {
     const record = await TrikalaReading.updateStatus(req.params.id, status);
     if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
 
+    await logAudit({ action: "UPDATE_STATUS", entityType: "trikala_case", entityId: record.case_reference, newValue: status });
+
     /* Mirror milestone onto the devotee timeline */
     if (record.devotee_id && ["Published / Shared", "Closed", "Finalized"].includes(status)) {
       await Devotee.addTimeline(record.devotee_id, {
@@ -145,6 +169,7 @@ export const updateReadingFields = async (req, res, next) => {
   try {
     const record = await TrikalaReading.update(req.params.id, req.body);
     if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
+    await logAudit({ action: "UPDATE_FIELDS", entityType: "trikala_case", entityId: record.case_reference, newValue: Object.keys(req.body) });
     res.json({ success: true, data: record });
   } catch (err) {
     next(err);
@@ -170,6 +195,8 @@ export const updateGurujiVakya = async (req, res, next) => {
 
     const record = await TrikalaReading.update(req.params.id, patch);
     if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
+
+    await logAudit({ action: "GURUJI_VAKYA_SAVED", entityType: "trikala_case", entityId: record.case_reference, newValue: { divine_remedy, guruji_reviewed_by } });
 
     // Mirror to devotee timeline
     if (record.devotee_id) {

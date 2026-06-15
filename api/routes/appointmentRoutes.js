@@ -8,6 +8,19 @@ import { pool } from "../config/db.js";
 
 const router = Router();
 
+/* PRD §6 — 11 appointment types */
+export const APPOINTMENT_TYPES = [
+  "Trikala Consultation", "General Audience", "Phone Call", "Video Call",
+  "Temple Meeting", "Event Invitation", "VIP Meeting", "Follow-up",
+  "Internal Meeting", "Travel Block", "Rest / Personal Time",
+];
+
+/* PRD §6 — 10 appointment statuses */
+export const APPOINTMENT_STATUSES = [
+  "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
+  "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+];
+
 router.get("/", getAppointments);
 router.get("/:id", getAppointment);
 router.post("/", createAppointment);

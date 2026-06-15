@@ -1,14 +1,19 @@
 import { pool } from "../config/db.js";
 
 const TrikalaReading = {
-  async create({ case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id }) {
+  async create({ case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, dob, tob, birth_time_accuracy, pob, father_name, mother_name, spouse_name, children_details, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id, consent }) {
     const { rows } = await pool.query(
       `INSERT INTO trikala_readings
-         (case_reference, full_name, mobile, email, gender, occupation, dob, tob, pob, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+         (case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, dob, tob, birth_time_accuracy, pob,
+          father_name, mother_name, spouse_name, children_details,
+          service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id, consent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
        RETURNING *`,
-      [case_reference, full_name, mobile, email, gender, occupation, dob, tob || null, pob, service_type, guidance_query, palm_image || null,
-       problem_category || null, priority || "Normal", preferred_language || null, devotee_id || null]
+      [case_reference, full_name, mobile, whatsapp || null, email, gender, occupation, city || null,
+       dob, tob || null, birth_time_accuracy || null, pob,
+       father_name || null, mother_name || null, spouse_name || null, children_details || null,
+       service_type, guidance_query, palm_image || null,
+       problem_category || null, priority || "Normal", preferred_language || null, devotee_id || null, consent || false]
     );
     return rows[0];
   },

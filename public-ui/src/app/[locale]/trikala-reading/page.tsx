@@ -16,17 +16,21 @@ type Phase = 1 | 2 | 3 | 4 | "done";
 type ServiceType = "horoscope" | "ashta_rekha" | "";
 
 interface FormData {
-  fullName: string; mobile: string; email: string;
-  gender: string; occupation: string;
-  dob: string; tob: string; pob: string;
-  service: ServiceType; guidance: string;
+  fullName: string; mobile: string; whatsapp: string; email: string;
+  gender: string; occupation: string; city: string;
+  preferredLanguage: string;
+  dob: string; tob: string; pob: string; birthTimeAccuracy: string;
+  fatherName: string; motherName: string; spouseName: string; childrenDetails: string;
+  service: ServiceType; problemCategory: string; guidance: string;
 }
 
 const BLANK: FormData = {
-  fullName: "", mobile: "", email: "",
-  gender: "", occupation: "",
-  dob: "", tob: "", pob: "",
-  service: "", guidance: "",
+  fullName: "", mobile: "", whatsapp: "", email: "",
+  gender: "", occupation: "", city: "",
+  preferredLanguage: "",
+  dob: "", tob: "", pob: "", birthTimeAccuracy: "unknown",
+  fatherName: "", motherName: "", spouseName: "", childrenDetails: "",
+  service: "", problemCategory: "", guidance: "",
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -643,6 +647,9 @@ const orangeBtnDisabled: React.CSSProperties = { ...orangeBtn, background: "rgba
 /* ═══════════════════════════════════════════════════════
    STEP 1 — IDENTITY
 ═══════════════════════════════════════════════════════ */
+const LANGUAGES = ["Kannada", "English", "Hindi", "Telugu", "Tamil", "Malayalam", "Marathi", "Bengali", "Other"];
+const PROBLEM_CATEGORIES = ["Health", "Marriage", "Career", "Business", "Finance", "Legal", "Spiritual", "Family", "Unknown / General"];
+
 function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void }) {
   const [errs, setErrs] = useState<Partial<Record<keyof FormData, string>>>({});
 
@@ -670,11 +677,15 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
             <span style={{ color: KO }}><Ico.Phone /></span>
             <input style={iBase} placeholder="Mobile Number *" inputMode="numeric" maxLength={10} value={form.mobile} onChange={e => set("mobile", e.target.value.replace(/\D/g, ""))} />
           </FieldBox>
-          <FieldBox hint="For backup access to your spiritual report" error={errs.email}>
-            <span style={{ color: KO }}><Ico.Mail /></span>
-            <input style={iBase} type="email" placeholder="Email Address *" value={form.email} onChange={e => set("email", e.target.value)} />
+          <FieldBox hint="For WhatsApp delivery of your report">
+            <span style={{ color: KO, fontSize: 16 }}>💬</span>
+            <input style={iBase} placeholder="WhatsApp Number (if different)" inputMode="numeric" maxLength={10} value={form.whatsapp} onChange={e => set("whatsapp", e.target.value.replace(/\D/g, ""))} />
           </FieldBox>
         </div>
+        <FieldBox hint="For backup access to your spiritual report" error={errs.email}>
+          <span style={{ color: KO }}><Ico.Mail /></span>
+          <input style={iBase} type="email" placeholder="Email Address *" value={form.email} onChange={e => set("email", e.target.value)} />
+        </FieldBox>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
           <FieldBox hint="Astrological calculations vary by gender paths" error={errs.gender}>
             <span style={{ color: KO }}><Ico.Gender /></span>
@@ -689,6 +700,32 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
             <span style={{ color: KO }}><Ico.Brief /></span>
             <input style={iBase} placeholder="Occupation *" value={form.occupation} onChange={e => set("occupation", e.target.value)} />
           </FieldBox>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
+          <FieldBox hint="City where you currently reside">
+            <span style={{ color: KO }}><Ico.Pin /></span>
+            <input style={iBase} placeholder="City" value={form.city} onChange={e => set("city", e.target.value)} />
+          </FieldBox>
+          <FieldBox hint="Language you prefer for guidance">
+            <span style={{ color: KO, fontSize: 14 }}>🗣️</span>
+            <select style={{ ...iBase, cursor: "pointer" }} value={form.preferredLanguage} onChange={e => set("preferredLanguage", e.target.value)}>
+              <option value="">Preferred Language</option>
+              {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </FieldBox>
+        </div>
+
+        {/* Family Details — optional */}
+        <div style={{ border: "1.5px solid rgba(200,170,130,0.35)", borderRadius: 12, padding: "14px 16px", background: "#FFFDF8" }}>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: KO, marginBottom: 12 }}>
+            Family Details <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "rgba(42,28,19,0.38)" }}>(optional)</span>
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
+            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👨</span><input style={iBase} placeholder="Father's Name" value={form.fatherName} onChange={e => set("fatherName", e.target.value)} /></FieldBox>
+            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👩</span><input style={iBase} placeholder="Mother's Name" value={form.motherName} onChange={e => set("motherName", e.target.value)} /></FieldBox>
+            <FieldBox><span style={{ color: KO, fontSize: 14 }}>💑</span><input style={iBase} placeholder="Spouse's Name" value={form.spouseName} onChange={e => set("spouseName", e.target.value)} /></FieldBox>
+            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👶</span><input style={iBase} placeholder="Children (names / ages)" value={form.childrenDetails} onChange={e => set("childrenDetails", e.target.value)} /></FieldBox>
+          </div>
         </div>
       </div>
       <button onClick={() => validate() && next()} style={{ ...orangeBtn, width: "100%", marginTop: 26, padding: "15px", flex: "none" }}>
@@ -828,6 +865,23 @@ function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
         <LabeledBox label="Place of Birth *" hint="Required to map the exact planetary alignments" icon={<Ico.Pin />}>
           <PlaceAutocomplete value={form.pob} onChange={v => set("pob", v)} />
         </LabeledBox>
+        {/* Birth time accuracy */}
+        <div>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase", color: KO, marginBottom: 8 }}>Birth Time Accuracy</p>
+          <div style={{ display: "flex", gap: 10 }}>
+            {(["exact", "approximate", "unknown"] as const).map(opt => {
+              const labels = { exact: "Exact", approximate: "Approximate", unknown: "Unknown" };
+              const sel = form.birthTimeAccuracy === opt;
+              return (
+                <button key={opt} type="button" onClick={() => set("birthTimeAccuracy", opt)}
+                  style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: `1.5px solid ${sel ? KO : "rgba(200,170,130,0.40)"}`, background: sel ? KOL : "#fff", color: sel ? KO : "rgba(42,28,19,0.55)", fontSize: 12.5, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                  {labels[opt]}
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: 11, color: "rgba(42,28,19,0.38)", marginTop: 5, paddingLeft: 2 }}>Helps Guruji calibrate lagna and planetary positions accurately</p>
+        </div>
         {err && <p style={{ fontSize: 12, color: "#ef4444", textAlign: "center" }}>{err}</p>}
       </div>
       <div className="flex gap-3 mt-7">
@@ -860,6 +914,23 @@ function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>🕉️</StepIcon>
       <StepTitle title="Choose Your Path" sub="Select your heavenly reading and specify your sacred query" />
+
+      {/* Problem Category */}
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: KO, marginBottom: 8 }}>Problem Category <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "rgba(42,28,19,0.40)" }}>(optional)</span></p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {PROBLEM_CATEGORIES.map(cat => {
+            const sel = form.problemCategory === cat;
+            return (
+              <button key={cat} type="button" onClick={() => set("problemCategory", sel ? "" : cat)}
+                style={{ padding: "7px 13px", borderRadius: 20, border: `1.5px solid ${sel ? KO : "rgba(200,170,130,0.40)"}`, background: sel ? KOL : "#fff", color: sel ? KO : "rgba(42,28,19,0.55)", fontSize: 12, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mb-4 kundli-card-grid">
         {SERVICES.map(s => {
           const sel = form.service === s.id;
@@ -898,10 +969,14 @@ function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
 /* ═══════════════════════════════════════════════════════
    STEP 4 — ENHANCE YOUR READING (Palm Upload)
 ═══════════════════════════════════════════════════════ */
-function Step4({ back, next, skip, loading, submitErr, onImage }: { back: () => void; next: () => void; skip: () => void; loading?: boolean; submitErr?: string; onImage: (b64: string | null) => void }) {
+function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConsent }: {
+  back: () => void; next: () => void; skip: () => void; loading?: boolean; submitErr?: string;
+  onImage: (b64: string | null) => void; consent: boolean; onConsent: (v: boolean) => void;
+}) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [consentErr, setConsentErr] = useState(false);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -911,6 +986,15 @@ function Step4({ back, next, skip, loading, submitErr, onImage }: { back: () => 
     const reader = new FileReader();
     reader.onload = () => onImage(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  function attemptSubmit() {
+    if (!consent) { setConsentErr(true); return; }
+    setConsentErr(false); next();
+  }
+  function attemptSkip() {
+    if (!consent) { setConsentErr(true); return; }
+    setConsentErr(false); skip();
   }
 
   return (
@@ -936,12 +1020,25 @@ function Step4({ back, next, skip, loading, submitErr, onImage }: { back: () => 
         )}
       </div>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={handleFile} />
+
+      {/* Consent checkbox — required */}
+      <div onClick={() => { onConsent(!consent); setConsentErr(false); }}
+        style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${consentErr ? "#fca5a5" : consent ? KO : "rgba(200,170,130,0.45)"}`, background: consent ? KOL : "#fff", cursor: "pointer", marginBottom: 14, transition: "all 0.15s", userSelect: "none" }}>
+        <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${consent ? KO : "rgba(200,170,130,0.60)"}`, background: consent ? KO : "#fff", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+          {consent && <Ico.Check />}
+        </div>
+        <p style={{ fontSize: 12.5, color: "rgba(42,28,19,0.72)", lineHeight: 1.65, margin: 0 }}>
+          I consent to the processing of my personal and family details for the purpose of spiritual guidance by Guruji. My information will be kept strictly confidential and not shared with any third party. <span style={{ color: KO, fontWeight: 700 }}>*</span>
+        </p>
+      </div>
+      {consentErr && <p style={{ fontSize: 12, color: "#ef4444", marginBottom: 10 }}>Please provide your consent to continue</p>}
+
       {submitErr && <p style={{ fontSize: 12.5, color: "#ef4444", textAlign: "center", marginBottom: 10, padding: "9px 14px", background: "#fef2f2", borderRadius: 8, border: "1px solid #fecaca" }}>{submitErr}</p>}
       <div className="flex gap-3">
         <BackBtn onClick={back} />
-        <SkipBtn onClick={skip} />
-        <button onClick={next} disabled={loading} style={{ ...orangeBtn, opacity: loading ? 0.7 : 1 }}>
-          {loading ? "Submitting…" : <><span>Upload &amp; Continue</span><span style={{ fontSize: 18 }}>→</span></>}
+        <SkipBtn onClick={attemptSkip} />
+        <button onClick={attemptSubmit} disabled={loading} style={{ ...orangeBtn, opacity: loading ? 0.7 : 1 }}>
+          {loading ? "Submitting…" : <><span>Submit</span><span style={{ fontSize: 18 }}>→</span></>}
         </button>
       </div>
     </div>
@@ -987,6 +1084,7 @@ export default function KundliPage() {
   const [loading, setLoading] = useState(false);
   const [submitErr, setSubmitErr] = useState("");
   const [palmImage, setPalmImage] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
 
   function set(k: keyof FormData, v: string) { setForm(prev => ({ ...prev, [k]: v })); }
 
@@ -999,17 +1097,27 @@ export default function KundliPage() {
     setSubmitErr("");
     try {
       const result = await postTrikalaReading({
-        fullName:     form.fullName,
-        mobile:       form.mobile,
-        email:        form.email,
-        gender:       form.gender,
-        occupation:   form.occupation,
-        dob:          form.dob,
-        tob:          form.tob || undefined,
-        pob:          form.pob,
-        serviceType:  form.service,
-        guidanceQuery: form.guidance,
-        palmImage:    palmImage || undefined,
+        fullName:         form.fullName,
+        mobile:           form.mobile,
+        whatsapp:         form.whatsapp || undefined,
+        email:            form.email,
+        gender:           form.gender,
+        occupation:       form.occupation,
+        city:             form.city || undefined,
+        preferredLanguage: form.preferredLanguage || undefined,
+        dob:              form.dob,
+        tob:              form.tob || undefined,
+        birthTimeAccuracy: form.birthTimeAccuracy || undefined,
+        pob:              form.pob,
+        fatherName:       form.fatherName || undefined,
+        motherName:       form.motherName || undefined,
+        spouseName:       form.spouseName || undefined,
+        childrenDetails:  form.childrenDetails || undefined,
+        serviceType:      form.service,
+        problemCategory:  form.problemCategory || undefined,
+        guidanceQuery:    form.guidance,
+        palmImage:        palmImage || undefined,
+        consent:          consent,
       });
       setCaseRef(result.caseReference);
       setPhase("done");
@@ -1025,7 +1133,7 @@ export default function KundliPage() {
     }
   }
 
-  function reset() { setForm(BLANK); setCaseRef(""); setPhase(1); setSubmitErr(""); setPalmImage(null); }
+  function reset() { setForm(BLANK); setCaseRef(""); setPhase(1); setSubmitErr(""); setPalmImage(null); setConsent(false); }
 
   return (
     <>
@@ -1068,7 +1176,7 @@ export default function KundliPage() {
                     {phase === 1      && <Step1 form={form} set={set} next={() => setPhase(2)} />}
                     {phase === 2      && <Step2 form={form} set={set} next={() => setPhase(3)} back={() => setPhase(1)} />}
                     {phase === 3      && <Step3 form={form} set={set} next={() => setPhase(4)} back={() => setPhase(2)} />}
-                    {phase === 4      && <Step4 back={() => setPhase(3)} next={submit} skip={submit} loading={loading} submitErr={submitErr} onImage={setPalmImage} />}
+                    {phase === 4      && <Step4 back={() => setPhase(3)} next={submit} skip={submit} loading={loading} submitErr={submitErr} onImage={setPalmImage} consent={consent} onConsent={setConsent} />}
                     {phase === "done" && <SuccessScreen caseRef={caseRef} reset={reset} />}
                   </motion.div>
                 </AnimatePresence>

@@ -20,6 +20,9 @@ import auditRoutes from "./routes/auditRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,6 +73,9 @@ app.use("/api/audit-logs",      auditRoutes);
 app.use("/api/dashboard",       dashboardRoutes);
 app.use("/api/chat",            chatRoutes);
 app.use("/api/whatsapp",        whatsappRoutes);
+app.use("/api/settings",        settingsRoutes);
+app.use("/api/documents",       documentRoutes);
+app.use("/api/notifications",   notificationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });

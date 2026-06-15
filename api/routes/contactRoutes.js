@@ -2,7 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import validate from "../middleware/validate.js";
 import { formLimiter } from "../middleware/rateLimiter.js";
-import { submitContact, getAllContacts, getContactById } from "../controllers/contactController.js";
+import { submitContact, getAllContacts, getContactById, convertToDevotee } from "../controllers/contactController.js";
 
 const router = Router();
 
@@ -16,5 +16,6 @@ const contactRules = [
 router.post("/", formLimiter, validate(contactRules), submitContact);
 router.get("/", getAllContacts);
 router.get("/:id", getContactById);
+router.post("/:id/convert-to-devotee", convertToDevotee);
 
 export default router;

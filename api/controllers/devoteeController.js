@@ -1,5 +1,6 @@
 import Devotee from "../models/Devotee.js";
 import { pool } from "../config/db.js";
+import { logAudit } from "../utils/auditLog.js";
 
 /* GET /api/devotees — directory list (search + relationship filter) */
 export const getDevotees = async (req, res, next) => {
@@ -87,6 +88,7 @@ export const createDevotee = async (req, res, next) => {
       event_type: "profile_created", title: "Devotee profile created",
       description: `${d.name} added to Devotee 360 directory`, icon: "🙏",
     });
+    await logAudit({ action: "CREATE_DEVOTEE", entityType: "devotee", entityId: d.devotee_ref || String(d.id), newValue: { name: d.name, phone: d.phone } });
     res.status(201).json({ success: true, data: d });
   } catch (err) { next(err); }
 };
@@ -96,6 +98,7 @@ export const updateDevotee = async (req, res, next) => {
   try {
     const d = await Devotee.update(req.params.id, req.body);
     if (!d) return res.status(404).json({ success: false, message: "Devotee not found." });
+    await logAudit({ action: "UPDATE_DEVOTEE", entityType: "devotee", entityId: d.devotee_ref || String(d.id), newValue: Object.keys(req.body) });
     res.json({ success: true, data: d });
   } catch (err) { next(err); }
 };

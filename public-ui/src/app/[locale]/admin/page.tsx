@@ -34,6 +34,12 @@ import {
   generateWhatsAppMessage, logWhatsAppSent,
   convertBookingToAppointment,
   getAuditLogs,
+  getAppSettings,
+  saveAppSettings,
+  convertContactToDevotee,
+  subscribeNotifications,
+  getRecentNotifications,
+  type NotificationEvent,
   TRIKALA_STATUSES, REMEDY_CATEGORIES, REMEDY_STATUSES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES,
   WHATSAPP_TEMPLATES, ADMIN_ROLES,
   type AudienceBooking,
@@ -80,6 +86,10 @@ import {
   BookOpen,
   Star,
   BookUser,
+  Bell,
+  BellRing,
+  MessageCircle,
+  ExternalLink,
 } from "lucide-react";
 
 /* ── constants ──────────────────────────────────────────────────────── */
@@ -1029,6 +1039,8 @@ function DetailPanel({
   const isBooking = tab === "bookings";
   const [converting, setConverting] = useState(false);
   const [convertMsg, setConvertMsg] = useState<{ type: "ok" | "warn" | "err"; text: string } | null>(null);
+  const [convertingDevotee, setConvertingDevotee] = useState(false);
+  const [convertDevoteeMsg, setConvertDevoteeMsg] = useState<{ type: "ok" | "warn" | "err"; text: string } | null>(null);
 
   async function convertToAppt() {
     if (!isBooking) return;
@@ -1043,6 +1055,22 @@ function DetailPanel({
         setConvertMsg({ type: "err", text: e?.message || "Conversion failed." });
       }
     } finally { setConverting(false); }
+  }
+
+  async function convertToDevoteeProfile() {
+    if (isBooking) return;
+    setConvertingDevotee(true); setConvertDevoteeMsg(null);
+    try {
+      const { devotee, created } = await convertContactToDevotee((item as ContactMessage).id);
+      setConvertDevoteeMsg({
+        type: "ok",
+        text: created
+          ? `Devotee profile created: ${devotee.devoteeRef}. Open Devotees tab to view.`
+          : `Linked to existing devotee: ${devotee.devoteeRef}.`,
+      });
+    } catch (e: any) {
+      setConvertDevoteeMsg({ type: "err", text: e?.message || "Conversion failed." });
+    } finally { setConvertingDevotee(false); }
   }
   const name    = isBooking ? (item as AudienceBooking).fullName  : (item as ContactMessage).name;
   const initial = (name || "?")[0].toUpperCase();
@@ -1165,13 +1193,33 @@ function DetailPanel({
           {isBooking && (
             <div style={{ marginTop: 4 }}>
               <button onClick={convertToAppt} disabled={converting}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: converting ? "#d1fae5" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#1f2937", fontSize: 13.5, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: converting ? "#d1fae5" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>📅</span>
                 {converting ? "Creating appointment…" : "Convert to Appointment"}
               </button>
               {convertMsg && (
                 <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 500, background: convertMsg.type === "ok" ? "#f0fdf4" : convertMsg.type === "warn" ? "#fefce8" : "#fef2f2", color: convertMsg.type === "ok" ? "#15803d" : convertMsg.type === "warn" ? "#92400e" : "#b91c1c", border: `1px solid ${convertMsg.type === "ok" ? "#bbf7d0" : convertMsg.type === "warn" ? "#fde68a" : "#fecaca"}` }}>
                   {convertMsg.text}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Convert to Devotee Profile — PRD §8 */}
+          {!isBooking && (
+            <div style={{ marginTop: 4 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 10 }}>Quick Actions</p>
+              <button onClick={convertToDevoteeProfile} disabled={convertingDevotee}
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: convertingDevotee ? "#d1fae5" : "linear-gradient(135deg,#7c3aed,#8b5cf6)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: convertingDevotee ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>🙏</span>
+                {convertingDevotee ? "Creating profile…" : "Convert to Devotee Profile"}
+              </button>
+              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>
+                Creates or links a Devotee 360 profile from this contact
+              </p>
+              {convertDevoteeMsg && (
+                <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 500, background: convertDevoteeMsg.type === "ok" ? "#f0fdf4" : "#fef2f2", color: convertDevoteeMsg.type === "ok" ? "#15803d" : "#b91c1c", border: `1px solid ${convertDevoteeMsg.type === "ok" ? "#bbf7d0" : "#fecaca"}` }}>
+                  {convertDevoteeMsg.text}
                 </div>
               )}
             </div>
@@ -1850,11 +1898,12 @@ const TIco = {
 /* ══════════════════════════════════════════════════════════════════
    AI PRE-ANALYSIS tab (PRD §3 Stage 2) — generate the Guruji Review Sheet
 ══════════════════════════════════════════════════════════════════ */
-function AiAnalysisTab({ reading }: { reading: TrikalaReading }) {
+function AiAnalysisTab({ reading, onStatusChange }: { reading: TrikalaReading; onStatusChange: (r: TrikalaReading) => void }) {
   const [report, setReport] = useState<AiReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [actionBusy, setActionBusy] = useState<string | null>(null);
 
   useEffect(() => {
     let on = true;
@@ -1867,6 +1916,13 @@ function AiAnalysisTab({ reading }: { reading: TrikalaReading }) {
     try { setReport(await generateAiReport(reading.caseReference)); }
     catch (e: any) { setErr(e?.message || "Failed to generate analysis"); }
     finally { setBusy(false); }
+  }
+
+  async function setStatus(status: string) {
+    setActionBusy(status);
+    try { const updated = await updateTrikalaStatus(reading.id, status); onStatusChange(updated); }
+    catch (e: any) { setErr(e?.message || "Status update failed"); }
+    finally { setActionBusy(null); }
   }
 
   const Block = ({ title, body, mono }: { title: string; body?: string; mono?: boolean }) => (
@@ -1915,6 +1971,22 @@ function AiAnalysisTab({ reading }: { reading: TrikalaReading }) {
             <p style={{ fontSize: 11, color: "#9aa0ab", marginTop: 14 }}>Generated {fmt(report.createdAt)} · {fmtTime(report.createdAt)}</p>
           </>
         )}
+      </div>
+
+      {/* PRD §4-A action buttons — advance or flag the case */}
+      <div style={{ borderTop: "1px solid #F2F3F5", padding: "14px 22px", display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setStatus("Incomplete")}
+          disabled={!!actionBusy || reading.status === "Incomplete"}
+          style={{ flex: 1, minWidth: 140, padding: "9px 16px", borderRadius: 9, border: "1.5px solid #fca5a5", background: actionBusy === "Incomplete" ? "#fef2f2" : "#fff", color: "#dc2626", fontSize: 12.5, fontWeight: 700, cursor: actionBusy || reading.status === "Incomplete" ? "default" : "pointer", opacity: reading.status === "Incomplete" ? 0.5 : 1 }}>
+          {actionBusy === "Incomplete" ? "Marking…" : "⚠ Mark Missing Information"}
+        </button>
+        <button
+          onClick={() => setStatus("Awaiting Guruji Review")}
+          disabled={!!actionBusy || reading.status === "Awaiting Guruji Review"}
+          style={{ flex: 1, minWidth: 160, padding: "9px 16px", borderRadius: 9, border: "1.5px solid #0d9488", background: actionBusy === "Awaiting Guruji Review" ? "#f0fdfa" : "#fff", color: "#0d9488", fontSize: 12.5, fontWeight: 700, cursor: actionBusy || reading.status === "Awaiting Guruji Review" ? "default" : "pointer", opacity: reading.status === "Awaiting Guruji Review" ? 0.5 : 1 }}>
+          {actionBusy === "Awaiting Guruji Review" ? "Sending…" : "✅ Send for Guruji Review"}
+        </button>
       </div>
     </div>
   );
@@ -2101,6 +2173,135 @@ const DAY_NAMES   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 /* ══════════════════════════════════════════════════════════════════
    SETTINGS TAB — audit log + system summary (PRD §11)
 ══════════════════════════════════════════════════════════════════ */
+/* ── WhatsApp Template Viewer (PRD §10) ─────────────────────────── */
+function WhatsAppTemplateViewer() {
+  const TEMPLATE_NAMES: string[] = [
+    "appointment_reminder", "case_submitted", "case_ready", "remedy_assigned",
+    "followup_reminder", "welcome", "intake_incomplete", "no_show_followup",
+  ];
+  const [selected, setSelected] = useState(TEMPLATE_NAMES[0]);
+  const [preview, setPreview] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function loadPreview(tpl: string) {
+    setSelected(tpl); setLoading(true); setCopied(false);
+    try {
+      const result = await generateWhatsAppMessage(tpl as any, { name: "Devotee", caseRef: "GURUJI-SAMPLE", date: "15 Jun 2026", time: "10:00 AM", remedy: "Rudrabhisheka", duration: "3 days" });
+      setPreview(result.message);
+    } catch { setPreview("Preview unavailable."); }
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadPreview(TEMPLATE_NAMES[0]); }, []);
+
+  function copyToClipboard() {
+    navigator.clipboard.writeText(preview).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  }
+
+  const labelMap: Record<string, string> = {
+    appointment_reminder: "Appointment Reminder", case_submitted: "Case Submitted",
+    case_ready: "Case Ready", remedy_assigned: "Remedy Assigned",
+    followup_reminder: "Follow-up Reminder", welcome: "Welcome", intake_incomplete: "Incomplete Intake", no_show_followup: "No-Show Follow-up",
+  };
+
+  return (
+    <div>
+      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>WhatsApp Message Templates</p>
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", gap: 0, flexWrap: "wrap", borderBottom: "1px solid #EDE8DD", padding: "12px 16px 0" }}>
+          {TEMPLATE_NAMES.map(t => (
+            <button key={t} onClick={() => loadPreview(t)}
+              style={{ padding: "7px 14px", marginRight: 4, marginBottom: 8, borderRadius: "8px 8px 0 0", border: `1.5px solid ${selected === t ? "#0d9488" : "#e5e7eb"}`, borderBottom: selected === t ? "2px solid #fff" : "1.5px solid #e5e7eb", background: selected === t ? "#fff" : "#f9fafb", color: selected === t ? "#0d9488" : "#6b7280", fontSize: 11.5, fontWeight: selected === t ? 700 : 500, cursor: "pointer" }}>
+              {labelMap[t] || t}
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: "16px 20px" }}>
+          {loading ? (
+            <p style={{ color: "#6b7280", fontSize: 13, textAlign: "center", padding: 16 }}>Loading preview…</p>
+          ) : (
+            <>
+              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, color: "#1f2937", lineHeight: 1.7, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", margin: 0 }}>{preview}</pre>
+              <button onClick={copyToClipboard} style={{ marginTop: 10, padding: "7px 18px", borderRadius: 8, border: "1px solid #0d9488", background: copied ? "#0d9488" : "#fff", color: copied ? "#fff" : "#0d9488", fontSize: 12.5, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+                {copied ? "✓ Copied!" : "Copy Template"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Notification Settings (PRD §10) ────────────────────────────── */
+const NOTIF_KEY = "guruji_notif_settings";
+function NotificationSettings() {
+  const defaults = { whatsapp: true, sms: false, email: true, remind24h: true, remind2h: true, remind15min: false };
+  const [settings, setSettings] = useState(() => {
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem(NOTIF_KEY) || "{}") }; } catch { return defaults; }
+  });
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  /* Load from backend on mount, fall back to localStorage */
+  useEffect(() => {
+    getAppSettings().then(remote => {
+      if (remote.notification_settings) {
+        const merged = { ...defaults, ...remote.notification_settings };
+        setSettings(merged);
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(merged));
+      }
+    }).catch(() => {});
+  }, []);
+
+  function toggle(k: string) { setSettings((p: any) => ({ ...p, [k]: !p[k] })); setSaved(false); }
+  async function save() {
+    setSaving(true);
+    try {
+      await saveAppSettings({ notification_settings: settings });
+      localStorage.setItem(NOTIF_KEY, JSON.stringify(settings));
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    } catch { localStorage.setItem(NOTIF_KEY, JSON.stringify(settings)); setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    finally { setSaving(false); }
+  }
+
+  const Row = ({ label, k }: { label: string; k: string }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid #e5e7eb" }}>
+      <p style={{ fontSize: 13, color: "#1f2937", fontWeight: 500 }}>{label}</p>
+      <button onClick={() => toggle(k)}
+        style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: (settings as any)[k] ? "#0d9488" : "#d1d5db", cursor: "pointer", position: "relative", transition: "background 0.15s" }}>
+        <span style={{ position: "absolute", top: 3, left: (settings as any)[k] ? 22 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+      </button>
+    </div>
+  );
+
+  return (
+    <div>
+      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Notification Settings</p>
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div style={{ padding: "10px 16px 4px", background: "#F8F2EA", borderBottom: "1px solid #EDE8DD" }}>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Channels</p>
+        </div>
+        <Row label="WhatsApp Notifications" k="whatsapp" />
+        <Row label="SMS Notifications" k="sms" />
+        <Row label="Email Notifications" k="email" />
+        <div style={{ padding: "10px 16px 4px", background: "#F8F2EA", borderBottom: "1px solid #EDE8DD", marginTop: 4 }}>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Appointment Reminders</p>
+        </div>
+        <Row label="24 hours before" k="remind24h" />
+        <Row label="2 hours before" k="remind2h" />
+        <Row label="15 minutes before" k="remind15min" />
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb" }}>
+          <button onClick={save} disabled={saving} style={{ padding: "8px 22px", borderRadius: 9, border: "none", background: saved ? "#059669" : "#0d9488", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving…" : saved ? "✓ Saved" : "Save Settings"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab({
   todayStats, trikalaCount, devoteeCount, appointmentCount, remedyCount, adminCount, onSidebarToggle,
 }: {
@@ -2194,6 +2395,12 @@ function SettingsTab({
             ))}
           </div>
         </div>
+
+        {/* WhatsApp Template Viewer — PRD §10 */}
+        <WhatsAppTemplateViewer />
+
+        {/* Notification Settings — PRD §10 */}
+        <NotificationSettings />
 
         {/* Audit Log */}
         <div>
@@ -2743,8 +2950,10 @@ function TrikalaDetailPanel({
   onStatusChange: (updated: TrikalaReading) => void;
 }) {
   const [status,    setStatus]    = useState(reading.status);
+  const [priority,  setPriority]  = useState(reading.priority || "Normal");
   const [saving,    setSaving]    = useState(false);
   const [saveErr,   setSaveErr]   = useState("");
+  const [savingPri, setSavingPri] = useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>("Analysis");
 
   async function save() {
@@ -2756,6 +2965,15 @@ function TrikalaDetailPanel({
     } catch (e: any) {
       setSaveErr(e?.message || "Failed to update status");
     } finally { setSaving(false); }
+  }
+
+  async function savePriority() {
+    if (priority === (reading.priority || "Normal")) return;
+    setSavingPri(true);
+    try {
+      const updated = await updateTrikalaFields(reading.id, { priority });
+      onStatusChange(updated);
+    } catch { /* silent */ } finally { setSavingPri(false); }
   }
 
   const stsCfg  = TRIKALA_STATUS_CFG[reading.status] ?? TRIKALA_STATUS_CFG["Submitted"];
@@ -2908,6 +3126,36 @@ function TrikalaDetailPanel({
               {saving ? "Saving…" : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Save Status</>}
             </button>
           </div>
+
+          {/* Priority */}
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDEDEF", padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+              <span style={{ fontSize: 14 }}>⚡</span>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#3a3f48", letterSpacing: "0.06em", textTransform: "uppercase" }}>Priority</p>
+            </div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              {(["Normal", "High", "Urgent", "Emergency"] as const).map(p => {
+                const cfg: Record<string, { bg: string; color: string; border: string }> = {
+                  Normal:    { bg: "#f9fafb", color: "#6b7280", border: "#e5e7eb" },
+                  High:      { bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+                  Urgent:    { bg: "#fff7ed", color: "#ea580c", border: "#fed7aa" },
+                  Emergency: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
+                };
+                const sel = priority === p;
+                const c = cfg[p];
+                return (
+                  <button key={p} onClick={() => setPriority(p)}
+                    style={{ flex: 1, padding: "7px 4px", borderRadius: 8, border: `1.5px solid ${sel ? c.border : "#e5e7eb"}`, background: sel ? c.bg : "#f9fafb", color: sel ? c.color : "#9ca3af", fontSize: 10.5, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={savePriority} disabled={savingPri || priority === (reading.priority || "Normal")}
+              style={{ width: "100%", height: 36, borderRadius: 9, border: "none", background: (savingPri || priority === (reading.priority || "Normal")) ? "#f3f4f6" : "#1f2937", color: (savingPri || priority === (reading.priority || "Normal")) ? "#9ca3af" : "#fff", fontWeight: 700, fontSize: 12.5, cursor: (savingPri || priority === (reading.priority || "Normal")) ? "default" : "pointer" }}>
+              {savingPri ? "Saving…" : "Save Priority"}
+            </button>
+          </div>
         </div>
 
         {/* ── RIGHT PANEL (flex-1, scrollable) ─────────── */}
@@ -2936,7 +3184,7 @@ function TrikalaDetailPanel({
 
           {/* Tab content — floating white card, scrollable */}
           <div className="tdp-content" style={{ flex: 1, background: "#fff", border: "1px solid #EDEDEF", borderRadius: 14, overflowY: "auto", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            {activeTab === "Analysis" && <AiAnalysisTab reading={reading} />}
+            {activeTab === "Analysis" && <AiAnalysisTab reading={reading} onStatusChange={onStatusChange} />}
             {activeTab === "Guruji Vakya" && <GurujiVakyaTab reading={reading} onSaved={onStatusChange} />}
             {activeTab === "Remedies" && <CaseRemediesTab reading={reading} />}
             {activeTab === "Notes" && <div style={{ padding: "22px 24px" }}><PrivateNotes caseId={reading.caseReference} /></div>}
@@ -2952,6 +3200,94 @@ function TrikalaDetailPanel({
         Guruji Astro · Admin Panel · {new Date().getFullYear()}
       </div>
     </motion.div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   NOTIFICATION BELL — real-time WhatsApp notification alerts
+════════════════════════════════════════════════════════════════════ */
+function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEvent[]; unread: number; onClear: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        title="Notifications"
+        style={{
+          position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
+          width: 36, height: 36, borderRadius: 10, border: "1.5px solid #e5e7eb",
+          background: unread > 0 ? "linear-gradient(135deg,#fef3c7,#fffbeb)" : "#f9fafb",
+          cursor: "pointer", transition: "all 0.15s",
+        }}
+      >
+        {unread > 0 ? <BellRing size={16} color="#d97706" /> : <Bell size={16} color="#6b7280" />}
+        {unread > 0 && (
+          <span style={{
+            position: "absolute", top: -4, right: -4, minWidth: 16, height: 16,
+            background: "#ef4444", color: "#fff", borderRadius: 8, fontSize: 9,
+            fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 3px", border: "1.5px solid #fff",
+          }}>{unread > 9 ? "9+" : unread}</span>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0, width: 340, maxHeight: 420,
+          background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+          border: "1.5px solid #e5e7eb", zIndex: 9999, overflow: "hidden", display: "flex", flexDirection: "column",
+        }}>
+          {/* Header */}
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <MessageCircle size={14} color="#0d9488" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>WhatsApp Notifications</span>
+              {unread > 0 && <span style={{ background: "#0d9488", color: "#fff", borderRadius: 8, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{unread} new</span>}
+            </div>
+            {notifs.length > 0 && (
+              <button onClick={onClear} style={{ fontSize: 10, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}>Clear all</button>
+            )}
+          </div>
+
+          {/* List */}
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {notifs.length === 0 ? (
+              <div style={{ padding: 24, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>
+                <Bell size={24} style={{ margin: "0 auto 8px", display: "block", opacity: 0.4 }} />
+                No notifications yet
+              </div>
+            ) : notifs.slice(0, 20).map((n) => (
+              <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid #f9f9f9", display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#d1fae5,#a7f3d0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <MessageCircle size={14} color="#059669" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{n.name}</span>
+                    <span style={{ fontSize: 10, color: "#9ca3af" }}>{new Date(n.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: "#6b7280", background: "#f0fdf4", border: "1px solid #a7f3d0", borderRadius: 4, padding: "1px 5px" }}>{n.template.replace(/_/g, " ")}</span>
+                  <p style={{ fontSize: 11, color: "#374151", marginTop: 4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{n.message.split("\n")[0]}</p>
+                  {n.waUrl && (
+                    <a href={n.waUrl} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 5, fontSize: 10, color: "#059669", fontWeight: 600, textDecoration: "none", background: "#d1fae5", padding: "3px 8px", borderRadius: 5 }}>
+                      <ExternalLink size={9} /> Send on WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -2978,6 +3314,37 @@ export default function AdminPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [adminPanel, setAdminPanel] = useState<{ open: boolean; user: AdminUser | null }>({ open: false, user: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* ── Real-time notifications ── */
+  const [notifs, setNotifs]     = useState<NotificationEvent[]>([]);
+  const [unreadCount, setUnread] = useState(0);
+
+  useEffect(() => {
+    /* Load recent on mount */
+    getRecentNotifications().then(data => { if (data.length) setNotifs(data); });
+
+    /* Subscribe to SSE stream */
+    const unsub = subscribeNotifications((evt) => {
+      setNotifs(prev => [evt, ...prev].slice(0, 50));
+      setUnread(n => n + 1);
+
+      /* Browser OS notification */
+      if (typeof window !== "undefined" && "Notification" in window) {
+        const showIt = () => {
+          new Notification(`📱 ${evt.name} — WhatsApp Ready`, {
+            body: evt.message.split("\n")[0],
+            icon: "/favicon.ico",
+          });
+        };
+        if (Notification.permission === "granted") showIt();
+        else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(p => { if (p === "granted") showIt(); });
+        }
+      }
+    });
+    return unsub;
+  }, []);
+
   const [filterBooking, setFilterBooking] = useState("all"); // ashram filter
   const [filterContact, setFilterContact] = useState("all"); // date-period filter
   const [trikalaReadings, setTrikalaReadings] = useState<TrikalaReading[]>([]);
@@ -3329,6 +3696,14 @@ export default function AdminPage() {
             </button>
           ))}
         </nav>
+
+        {/* Notification Bell */}
+        <div style={{ padding: "8px 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#9ca3af" }}>Notifications</span>
+            <NotificationBell notifs={notifs} unread={unreadCount} onClear={() => { setNotifs([]); setUnread(0); }} />
+          </div>
+        </div>
 
         {/* Logged-in user + Sign Out */}
         <div style={{ padding: "14px 14px 16px", borderTop: "1px solid #e5e7eb" }}>
@@ -3773,18 +4148,41 @@ export default function AdminPage() {
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Coming in Phase 4</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
-                {["Trikala Intake PDF","AI Draft PDF (Internal)","Guruji Review PDF","Final Consultation PDF","Remedy Instruction PDF","Follow-up Summary PDF","Devotee History PDF"].map(t => (
-                  <div key={t} style={{ background: "#fff", border: "1px solid #EDE8DD", borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>📄</span>
-                    <div>
-                      <p style={{ fontSize: 12.5, fontWeight: 700, color: "#1f2937" }}>{t}</p>
-                      <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#0d9488", background: "rgba(13,148,136,0.10)", padding: "2px 7px", borderRadius: 20, border: "1px solid rgba(13,148,136,0.22)" }}>Phase 4</span>
-                    </div>
+              {/* ── Trikala Case PDFs (PRD §9) ── */}
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Trikala Case Reports</p>
+              {trikalaReadings.length === 0 ? (
+                <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "32px 20px", textAlign: "center", color: "#0d9488", fontSize: 13 }}>
+                  No Trikala cases yet.
+                </div>
+              ) : (
+                <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
+                    {["Devotee / Case", "Status", "Priority", "PDFs"].map(h => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</span>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {trikalaReadings.slice(0, 30).map((r, i) => (
+                    <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", padding: "12px 16px", borderBottom: i < Math.min(trikalaReadings.length, 30) - 1 ? "1px solid #e5e7eb" : "none", alignItems: "center", gap: 8 }}>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937" }}>{r.fullName}</p>
+                        <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{r.caseReference}</p>
+                      </div>
+                      <span style={{ fontSize: 10.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {r.status}
+                      </span>
+                      <span style={{ fontSize: 10.5, fontWeight: 600, color: r.priority === "Urgent" ? "#dc2626" : r.priority === "VIP" ? "#7c3aed" : "#374151", background: r.priority === "Urgent" ? "#fef2f2" : r.priority === "VIP" ? "#f5f3ff" : "#f3f4f6", borderRadius: 20, padding: "2px 8px" }}>
+                        {r.priority || "Normal"}
+                      </span>
+                      <CasePdfMenu reading={r} />
+                    </div>
+                  ))}
+                  {trikalaReadings.length > 30 && (
+                    <div style={{ padding: "10px 16px", background: "#f9fafb", borderTop: "1px solid #e5e7eb", textAlign: "center" }}>
+                      <p style={{ fontSize: 11.5, color: "#6b7280" }}>Showing 30 most recent cases. Open Trikala Cases tab for full list.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

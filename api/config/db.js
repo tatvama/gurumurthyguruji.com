@@ -373,6 +373,25 @@ export const initDB = async () => {
       );
     `);
 
+    /* ── App-wide settings store (PRD §2, §10) ───────────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key        VARCHAR(80) PRIMARY KEY,
+        value      TEXT        NOT NULL DEFAULT '',
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    /* ── trikala_readings: family details + birth accuracy + consent + whatsapp ── */
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS city VARCHAR(100);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS birth_time_accuracy VARCHAR(20);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS father_name VARCHAR(120);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS mother_name VARCHAR(120);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS spouse_name VARCHAR(120);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS children_details TEXT;`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS consent BOOLEAN DEFAULT false;`);
+
     /* Seed the default super admin if not exists */
     await client.query(`
       INSERT INTO admin_users (name, mobile, role, password, sections_count, status)
