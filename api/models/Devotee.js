@@ -6,7 +6,7 @@ import { pool } from "../config/db.js";
 ────────────────────────────────────────────────────────────────────────── */
 
 const COLS = `id, devotee_ref, name, photo, gender, dob, phone, whatsapp, email,
-  city, state, country, language, relationship, tags, associated_temple,
+  city, district, state, pincode, country, language, profession, relationship, tags, associated_temple,
   seva_interest, first_contact_at, family_links, notes, consent, sensitive,
   status, created_at, updated_at`;
 
@@ -14,17 +14,17 @@ const Devotee = {
   async create(d) {
     const { rows } = await pool.query(
       `INSERT INTO devotees
-         (name, photo, gender, dob, phone, whatsapp, email, city, state, country,
-          language, relationship, tags, associated_temple, seva_interest,
+         (name, photo, gender, dob, phone, whatsapp, email, city, district, state, pincode, country,
+          language, profession, relationship, tags, associated_temple, seva_interest,
           first_contact_at, family_links, notes, consent, sensitive)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
-               COALESCE($16, NOW()),$17,$18,$19,$20)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
+               COALESCE($19, NOW()),$20,$21,$22,$23)
        RETURNING ${COLS}`,
       [
         d.name, d.photo || null, d.gender || null, d.dob || null, d.phone || null,
-        d.whatsapp || null, d.email || null, d.city || null, d.state || null,
-        d.country || "India", d.language || "Kannada", d.relationship || "new",
-        d.tags || null, d.associated_temple || null, d.seva_interest || null,
+        d.whatsapp || null, d.email || null, d.city || null, d.district || null, d.state || null,
+        d.pincode || null, d.country || "India", d.language || "Kannada", d.profession || null,
+        d.relationship || "new", d.tags || null, d.associated_temple || null, d.seva_interest || null,
         d.first_contact_at || null, d.family_links || null, d.notes || null,
         d.consent ?? false, d.sensitive ?? false,
       ]
@@ -96,8 +96,8 @@ const Devotee = {
     const fields = [];
     const params = [];
     const set = (col, val) => { params.push(val); fields.push(`${col} = $${params.length}`); };
-    const allowed = ["name","photo","gender","dob","phone","whatsapp","email","city","state",
-      "country","language","relationship","tags","associated_temple","seva_interest",
+    const allowed = ["name","photo","gender","dob","phone","whatsapp","email","city","district","state","pincode",
+      "country","language","profession","relationship","tags","associated_temple","seva_interest",
       "family_links","notes","consent","sensitive","status"];
     for (const k of allowed) if (k in d) set(k, d[k]);
     if (!fields.length) return this.findById(id);
@@ -111,11 +111,11 @@ const Devotee = {
   },
 
   /* Find-or-create a devotee from any intake (booking / case / contact) */
-  async findOrCreateFrom({ name, phone, whatsapp, email, city, state, language, relationship }) {
+  async findOrCreateFrom({ name, phone, whatsapp, email, city, district, state, pincode, language, relationship }) {
     const dupes = await this.findDuplicates({ phone, whatsapp, email, name, city });
     if (dupes.length) return { devotee: dupes[0], created: false };
     const devotee = await this.create({
-      name, phone, whatsapp: whatsapp || phone, email, city, state,
+      name, phone, whatsapp: whatsapp || phone, email, city, district, state, pincode,
       language: language || "Kannada", relationship: relationship || "new",
       first_contact_at: new Date().toISOString(),
     });

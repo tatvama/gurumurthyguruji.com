@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { postAudienceBooking } from "@/lib/api";
+import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const formSchema = z.object({
   city:          z.string().min(2, "City is required"),
   district:      z.string().min(2, "District is required"),
   state:         z.string().min(2, "State is required"),
+  pincode:       z.string().optional(),
   howKnown:      z.string().min(2, "This field is required"),
   nearestAshram: z.string().min(1, "Please select an ashram"),
   message:       z.string().optional(),
@@ -176,8 +178,19 @@ export default function MeetGurujiPage() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(formSchema) });
+
+  /* Google Places: typing/selecting a city auto-fills district, state & pincode */
+  const cityInputRef = useRef<HTMLInputElement | null>(null);
+  usePlacesAutocomplete(cityInputRef, (p) => {
+    if (p.city)     setValue("city", p.city, { shouldValidate: true });
+    if (p.district) setValue("district", p.district, { shouldValidate: true });
+    if (p.state)    setValue("state", p.state, { shouldValidate: true });
+    if (p.pincode)  setValue("pincode", p.pincode, { shouldValidate: true });
+  });
+  const cityReg = register("city");
 
   const ashramOptions: { value: string; label: string }[] = ashrams
     .filter((a) => a.status === "Active")
@@ -358,12 +371,14 @@ export default function MeetGurujiPage() {
                     </div>
 
                     {/* Row 3: City + District + State */}
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                       <FieldWrap id="city" label="City / Town *" error={(errors as any).city?.message}>
                         <Input
                           id="city"
-                          {...register("city")}
-                          placeholder="City or Town"
+                          {...cityReg}
+                          ref={(el) => { cityReg.ref(el); cityInputRef.current = el; }}
+                          placeholder="Start typing your city…"
+                          autoComplete="off"
                           className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
                         />
                       </FieldWrap>
@@ -380,6 +395,15 @@ export default function MeetGurujiPage() {
                           id="state"
                           {...register("state")}
                           placeholder="State"
+                          className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
+                        />
+                      </FieldWrap>
+                      <FieldWrap id="pincode" label="Pincode" error={(errors as any).pincode?.message}>
+                        <Input
+                          id="pincode"
+                          {...register("pincode")}
+                          placeholder="Pincode"
+                          inputMode="numeric"
                           className="h-11 border-champagne/35 bg-pearl/40 text-sm placeholder:text-deep-brown/30 focus-visible:border-antique-gold/50 focus-visible:ring-antique-gold/20"
                         />
                       </FieldWrap>

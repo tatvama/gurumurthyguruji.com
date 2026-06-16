@@ -7,7 +7,8 @@ import { pool } from "../config/db.js";
 
 const COLS = `id, appointment_ref, devotee_id, case_reference, booking_id, devotee_name,
   mobile, appointment_type, mode, start_time, end_time, duration_minutes, status,
-  priority, location, meeting_link, purpose, outcome_note, assigned_to, created_at, updated_at`;
+  priority, location, meeting_link, purpose, outcome_note, assigned_to,
+  checked_in_at, details_verified, office_remarks, guruji_remarks, created_at, updated_at`;
 
 const Appointment = {
   async create(a) {
@@ -65,13 +66,24 @@ const Appointment = {
     return rows;
   },
 
+  /* Guruji darshan queue — devotees who have checked in today, in arrival order */
+  async findCheckedInToday() {
+    const { rows } = await pool.query(
+      `SELECT ${COLS} FROM appointments
+       WHERE checked_in_at::date = CURRENT_DATE
+       ORDER BY checked_in_at ASC`
+    );
+    return rows;
+  },
+
   async update(id, a) {
     const fields = [];
     const params = [];
     const set = (c, v) => { params.push(v); fields.push(`${c} = $${params.length}`); };
     for (const k of ["devotee_id","case_reference","booking_id","devotee_name","mobile",
       "appointment_type","mode","start_time","end_time","duration_minutes","status",
-      "priority","location","meeting_link","purpose","outcome_note","assigned_to"])
+      "priority","location","meeting_link","purpose","outcome_note","assigned_to",
+      "checked_in_at","details_verified","office_remarks","guruji_remarks"])
       if (k in a) set(k, a[k]);
     if (!fields.length) return this.findById(id);
     params.push(id);

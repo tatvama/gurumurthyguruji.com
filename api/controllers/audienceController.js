@@ -3,7 +3,7 @@ import { logAudit } from "../utils/auditLog.js";
 
 export const submitBooking = async (req, res, next) => {
   try {
-    const { fullName, mobile, email, profession, city, district, state, location, howKnown, nearestAshram, message, photo } = req.body;
+    const { fullName, mobile, email, profession, city, district, state, pincode, location, howKnown, nearestAshram, message, photo } = req.body;
     const record = await AudienceBooking.create({
       full_name: fullName,
       mobile,
@@ -12,7 +12,8 @@ export const submitBooking = async (req, res, next) => {
       city,
       district,
       state,
-      location: location || [city, district, state].filter(Boolean).join(", "),
+      pincode,
+      location: location || [city, district, state, pincode].filter(Boolean).join(", "),
       how_known: howKnown,
       nearest_ashram: nearestAshram,
       message,

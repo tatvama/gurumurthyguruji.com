@@ -156,6 +156,12 @@ body {
 html { font-size: 16px; overflow-x: hidden; }
 body { line-height: 1.7; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
 
+/* Google Places autocomplete dropdown — float above slide-over panels & modals */
+.pac-container { z-index: 100000 !important; border-radius: 10px; box-shadow: 0 12px 36px rgba(0,0,0,0.18); margin-top: 4px; font-family: inherit; }
+.pac-item { padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.pac-item:hover { background: #f0fdfa; }
+.pac-item-query { font-size: 13px; }
+
 /* Refined display typography */
 .font-heading { letter-spacing: -0.01em; }
 .tracking-refined { letter-spacing: 0.14em; }

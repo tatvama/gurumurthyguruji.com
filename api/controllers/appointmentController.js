@@ -5,7 +5,7 @@ import { autoNotify } from "../utils/notifyWhatsApp.js";
 
 const VALID_STATUSES = [
   "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
 ];
 
 /* GET /api/appointments — list with status / date-range filters */
@@ -94,5 +94,50 @@ export const deleteAppointment = async (req, res, next) => {
     await Appointment.remove(req.params.id);
     await logAudit({ action: "DELETE_APPOINTMENT", entityType: "appointment", entityId: req.params.id });
     res.json({ success: true });
+  } catch (err) { next(err); }
+};
+
+/* GET /api/appointments/queue/arrived — Guruji darshan queue (checked-in today, arrival order) */
+export const getArrivedToday = async (_req, res, next) => {
+  try {
+    const rows = await Appointment.findCheckedInToday();
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+};
+
+/* PATCH /api/appointments/:id/checkin — office staff verifies devotee & marks arrival (PRD §6)
+   Body: { devotee: {name,phone,whatsapp,email,city,state,photo}, office_remarks } */
+export const checkInAppointment = async (req, res, next) => {
+  try {
+    const { devotee: devoteePatch = {}, office_remarks } = req.body;
+
+    /* 1. Mark the appointment as Arrived + record verification + office remarks */
+    const a = await Appointment.update(req.params.id, {
+      status:           "Arrived",
+      checked_in_at:    new Date().toISOString(),
+      details_verified: true,
+      office_remarks:   office_remarks ?? null,
+    });
+    if (!a) return res.status(404).json({ success: false, message: "Appointment not found." });
+
+    /* 2. Update the linked Devotee 360 contact details + photo (only provided fields) */
+    let devotee = null;
+    if (a.devotee_id) {
+      const patch = {};
+      for (const k of ["name", "phone", "whatsapp", "email", "city", "district", "state", "pincode", "photo"]) {
+        if (devoteePatch[k] !== undefined && devoteePatch[k] !== null && devoteePatch[k] !== "") patch[k] = devoteePatch[k];
+      }
+      if (Object.keys(patch).length) devotee = await Devotee.update(a.devotee_id, patch);
+
+      await Devotee.addTimeline(a.devotee_id, {
+        event_type: "checked_in",
+        title: "Arrived for darshan — details verified",
+        description: office_remarks || "",
+        related_entity_type: "appointment", related_entity_id: String(a.id), icon: "🙏",
+      });
+    }
+
+    await logAudit({ action: "CHECKIN_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: { verified: true } });
+    res.json({ success: true, data: { appointment: a, devotee } });
   } catch (err) { next(err); }
 };

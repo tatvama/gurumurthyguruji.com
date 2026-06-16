@@ -1,6 +1,5 @@
 import TrikalaReading from "../models/TrikalaReading.js";
 import Devotee from "../models/Devotee.js";
-import { pool } from "../config/db.js";
 import { logAudit } from "../utils/auditLog.js";
 import { autoNotify } from "../utils/notifyWhatsApp.js";
 
@@ -31,7 +30,7 @@ function generateCaseRef() {
 /* POST /api/trikala-readings — public form submission */
 export const submitReading = async (req, res, next) => {
   try {
-    const { fullName, mobile, whatsapp, email, gender, occupation, city, state, preferredLanguage, dob, tob, birthTimeAccuracy, pob, fatherName, motherName, spouseName, childrenDetails, serviceType, guidanceQuery, palmImage, problemCategory, priority, consent } = req.body;
+    const { fullName, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, preferredLanguage, dob, tob, birthTimeAccuracy, pob, fatherName, motherName, spouseName, childrenDetails, serviceType, guidanceQuery, palmImage, problemCategory, priority, consent } = req.body;
 
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
@@ -45,7 +44,7 @@ export const submitReading = async (req, res, next) => {
     let devoteeId = null;
     try {
       const { devotee } = await Devotee.findOrCreateFrom({
-        name: fullName, phone: mobile, email, city, state, language: preferredLanguage,
+        name: fullName, phone: mobile, email, city, district, state, pincode, language: preferredLanguage,
       });
       devoteeId = devotee.id;
     } catch (_e) { /* devotee linking is best-effort, never blocks intake */ }
@@ -59,6 +58,9 @@ export const submitReading = async (req, res, next) => {
       gender,
       occupation,
       city:               city || null,
+      district:           district || null,
+      state:              state || null,
+      pincode:            pincode || null,
       dob,
       tob:                tob || null,
       birth_time_accuracy: birthTimeAccuracy || null,
@@ -198,7 +200,7 @@ export const updateGurujiVakya = async (req, res, next) => {
 
     await logAudit({ action: "GURUJI_VAKYA_SAVED", entityType: "trikala_case", entityId: record.case_reference, newValue: { divine_remedy, guruji_reviewed_by } });
 
-    // Mirror to devotee timeline
+    // Mirror to devotee timeline — Guruji writes the remedy as free text (no pre-defined library)
     if (record.devotee_id) {
       await Devotee.addTimeline(record.devotee_id, {
         event_type: "guruji_guidance",
@@ -206,25 +208,6 @@ export const updateGurujiVakya = async (req, res, next) => {
         description: divine_remedy || guruji_observation || "",
         related_entity_type: "trikala_case", related_entity_id: record.case_reference, icon: "🪔",
       });
-    }
-
-    /* PRD §8 — auto-assign remedy row when divine_remedy text is saved (best-effort) */
-    if (divine_remedy && divine_remedy.trim() && record.case_reference) {
-      try {
-        const name = divine_remedy.trim().slice(0, 160);
-        const { rows: dup } = await pool.query(
-          `SELECT id FROM case_remedies WHERE case_reference = $1 AND remedy_name = $2 LIMIT 1`,
-          [record.case_reference, name]
-        );
-        if (!dup.length) {
-          const instruction = [remedy_duration, remedy_place ? `at ${remedy_place}` : "", mantra_japa ? `Mantra: ${mantra_japa}` : "", seva_daana ? `Seva: ${seva_daana}` : ""].filter(Boolean).join(" · ");
-          await pool.query(
-            `INSERT INTO case_remedies (case_reference, devotee_id, remedy_name, custom_instruction, start_date, status)
-             VALUES ($1, $2, $3, $4, CURRENT_DATE, 'Assigned')`,
-            [record.case_reference, record.devotee_id || null, name, instruction || null]
-          );
-        }
-      } catch (_e) { /* auto-remedy is best-effort */ }
     }
 
     res.json({ success: true, data: record });

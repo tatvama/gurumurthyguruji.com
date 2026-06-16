@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { postTrikalaReading } from "@/lib/api";
+import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 
 /* ═══════════════════════════════════════════════════════
    TYPES
@@ -17,7 +18,7 @@ type ServiceType = "horoscope" | "ashta_rekha" | "";
 
 interface FormData {
   fullName: string; mobile: string; whatsapp: string; email: string;
-  gender: string; occupation: string; city: string;
+  gender: string; occupation: string; city: string; district: string; state: string; pincode: string;
   preferredLanguage: string;
   dob: string; tob: string; pob: string; birthTimeAccuracy: string;
   fatherName: string; motherName: string; spouseName: string; childrenDetails: string;
@@ -26,7 +27,7 @@ interface FormData {
 
 const BLANK: FormData = {
   fullName: "", mobile: "", whatsapp: "", email: "",
-  gender: "", occupation: "", city: "",
+  gender: "", occupation: "", city: "", district: "", state: "", pincode: "",
   preferredLanguage: "",
   dob: "", tob: "", pob: "", birthTimeAccuracy: "unknown",
   fatherName: "", motherName: "", spouseName: "", childrenDetails: "",
@@ -652,6 +653,13 @@ const PROBLEM_CATEGORIES = ["Health", "Marriage", "Career", "Business", "Finance
 
 function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void }) {
   const [errs, setErrs] = useState<Partial<Record<keyof FormData, string>>>({});
+  const cityRef = useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(cityRef, (p) => {
+    if (p.city)     set("city", p.city);
+    if (p.district) set("district", p.district);
+    if (p.state)    set("state", p.state);
+    if (p.pincode)  set("pincode", p.pincode);
+  });
 
   function validate() {
     const e: typeof errs = {};
@@ -702,9 +710,9 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
           </FieldBox>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-          <FieldBox hint="City where you currently reside">
+          <FieldBox hint="Start typing your city — district, state & pincode fill in">
             <span style={{ color: KO }}><Ico.Pin /></span>
-            <input style={iBase} placeholder="City" value={form.city} onChange={e => set("city", e.target.value)} />
+            <input ref={cityRef} style={iBase} placeholder="City" value={form.city} autoComplete="off" onChange={e => set("city", e.target.value)} />
           </FieldBox>
           <FieldBox hint="Language you prefer for guidance">
             <span style={{ color: KO, fontSize: 14 }}>🗣️</span>
@@ -712,6 +720,20 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
               <option value="">Preferred Language</option>
               {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
+          </FieldBox>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 kundli-grid-2">
+          <FieldBox hint="District">
+            <span style={{ color: KO }}><Ico.Pin /></span>
+            <input style={iBase} placeholder="District" value={form.district} onChange={e => set("district", e.target.value)} />
+          </FieldBox>
+          <FieldBox hint="State">
+            <span style={{ color: KO }}><Ico.Pin /></span>
+            <input style={iBase} placeholder="State" value={form.state} onChange={e => set("state", e.target.value)} />
+          </FieldBox>
+          <FieldBox hint="Pincode">
+            <span style={{ color: KO }}><Ico.Pin /></span>
+            <input style={iBase} placeholder="Pincode" inputMode="numeric" value={form.pincode} onChange={e => set("pincode", e.target.value)} />
           </FieldBox>
         </div>
 
@@ -736,104 +758,22 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
 }
 
 /* ═══════════════════════════════════════════════════════
-   PLACE OF BIRTH — autocomplete via OpenStreetMap Nominatim
+   PLACE OF BIRTH — Google Places autocomplete (fills the place text)
 ═══════════════════════════════════════════════════════ */
 function PlaceAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const [highlight, setHighlight] = useState(-1);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const skipNextFetch = useRef(false);
-
-  /* close on outside click */
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (skipNextFetch.current) { skipNextFetch.current = false; return; }
-    const q = value.trim();
-    if (q.length < 2) { setSuggestions([]); setOpen(false); return; }
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        abortRef.current?.abort();
-        abortRef.current = new AbortController();
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&limit=6&q=${encodeURIComponent(q)}`,
-          { signal: abortRef.current.signal, headers: { "Accept-Language": "en" } }
-        );
-        const data: any[] = await res.json();
-        const names = Array.from(new Set(data.map(d => d.display_name as string))).slice(0, 6);
-        setSuggestions(names);
-        setOpen(names.length > 0);
-        setHighlight(-1);
-      } catch { /* aborted or network error — ignore */ }
-    }, 350);
-
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [value]);
-
-  function pick(name: string) {
-    skipNextFetch.current = true;
-    onChange(name);
-    setOpen(false);
-    setSuggestions([]);
-  }
-
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (!open || suggestions.length === 0) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setHighlight(h => (h + 1) % suggestions.length); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight(h => (h - 1 + suggestions.length) % suggestions.length); }
-    else if (e.key === "Enter" && highlight >= 0) { e.preventDefault(); pick(suggestions[highlight]); }
-    else if (e.key === "Escape") setOpen(false);
-  }
-
+  const ref = useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(ref, (p) => {
+    onChange(p.formatted || [p.city, p.district, p.state, p.country].filter(Boolean).join(", "));
+  });
   return (
-    <div ref={wrapRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
-      <input
-        style={{ ...iBase, fontSize: 13, width: "100%" }}
-        placeholder=""
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
-        onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
-        autoComplete="off"
-      />
-      {open && (
-        <ul style={{
-          position: "absolute", left: -38, right: -14, top: "calc(100% + 14px)", zIndex: 500,
-          background: "#fff", borderRadius: 12, border: "1.5px solid rgba(200,170,130,0.50)",
-          boxShadow: "0 12px 36px rgba(42,28,19,0.16)", maxHeight: 230, overflowY: "auto",
-          padding: "6px 0", margin: 0, listStyle: "none",
-        }}>
-          {suggestions.map((s, i) => (
-            <li
-              key={s}
-              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
-              onMouseEnter={() => setHighlight(i)}
-              style={{
-                display: "flex", alignItems: "flex-start", gap: 8,
-                padding: "9px 14px", cursor: "pointer", fontSize: 12.5, lineHeight: 1.45,
-                color: "#2A1C13",
-                background: highlight === i ? KOL : "transparent",
-                transition: "background 0.12s",
-              }}
-            >
-              <span style={{ color: KO, flexShrink: 0, marginTop: 1 }}><Ico.Pin /></span>
-              <span>{s}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <input
+      ref={ref}
+      style={{ ...iBase, fontSize: 13, width: "100%" }}
+      placeholder="Town / city of birth"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      autoComplete="off"
+    />
   );
 }
 
@@ -1104,6 +1044,9 @@ export default function KundliPage() {
         gender:           form.gender,
         occupation:       form.occupation,
         city:             form.city || undefined,
+        district:         form.district || undefined,
+        state:            form.state || undefined,
+        pincode:          form.pincode || undefined,
         preferredLanguage: form.preferredLanguage || undefined,
         dob:              form.dob,
         tob:              form.tob || undefined,

@@ -8,9 +8,9 @@ export default function AdminSubLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <style>{`
-        /* Hide WhatsApp float (bg-[#25D366] fixed button) */
-        a[href*="wa.me"],
-        a[href*="whatsapp"] { display: none !important; }
+        /* Hide WhatsApp float (bg-[#25D366] fixed button) only —
+           scoped by its aria-label so in-panel WhatsApp links still render */
+        a[aria-label="Message Guruji's seva team on WhatsApp"] { display: none !important; }
         /* Hide nav progress bar */
         [role="progressbar"],
         #nprogress { display: none !important; }

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   getAudienceBookings,
@@ -25,10 +25,9 @@ import {
   getCasePad, saveCasePad, clearCasePad,
   getTodayStats,
   getAnalytics,
-  getDevotees, getDevoteeHistory, createDevotee, updateDevotee, checkDuplicateDevotee,
-  getRemedyLibrary, createRemedy, updateRemedy, deleteRemedy,
-  getCaseRemedies, assignRemedy, updateRemedyAssignment, deleteRemedyAssignment,
+  getDevotees, getDevotee, getDevoteeHistory, createDevotee, updateDevotee, checkDuplicateDevotee,
   getAppointments, createAppointment, updateAppointment, deleteAppointment,
+  checkInAppointment, convertCaseToAppointment,
   getAiReport, generateAiReport,
   getChatMessages, sendChatMessage, clearChatHistory,
   generateWhatsAppMessage, logWhatsAppSent,
@@ -40,7 +39,7 @@ import {
   subscribeNotifications,
   getRecentNotifications,
   type NotificationEvent,
-  TRIKALA_STATUSES, REMEDY_CATEGORIES, REMEDY_STATUSES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES,
+  TRIKALA_STATUSES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, APPOINTMENT_MODES,
   WHATSAPP_TEMPLATES, ADMIN_ROLES,
   type AudienceBooking,
   type ContactMessage,
@@ -52,13 +51,12 @@ import {
   type Analytics,
   type Devotee,
   type DevoteeHistory,
-  type Remedy,
-  type CaseRemedy,
   type Appointment,
   type AiReport,
   type ChatMessage,
   type AuditLog,
 } from "@/lib/api";
+import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import {
   Users,
   Mail,
@@ -90,6 +88,11 @@ import {
   BellRing,
   MessageCircle,
   ExternalLink,
+  Camera,
+  CalendarPlus,
+  Plus,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 
 /* ── constants ──────────────────────────────────────────────────────── */
@@ -99,7 +102,7 @@ const PAGE_SIZE = 15;
 
 const COSMIC = "linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)";
 
-type Tab = "today" | "bookings" | "contacts" | "admins" | "trikala" | "devotees" | "appointments" | "remedies" | "reports" | "settings";
+type Tab = "today" | "bookings" | "contacts" | "admins" | "trikala" | "devotees" | "appointments" | "reports" | "settings";
 
 /* ── CustomSelect ──────────────────────────────────────────────────── */
 function CustomSelect({
@@ -254,6 +257,7 @@ function DevoteeProfilePanel({
     try {
       const updated = await updateDevotee(localD.id, {
         name: localD.name, phone: localD.phone, email: localD.email,
+        profession: localD.profession,
         city: localD.city, state: localD.state, language: localD.language,
         relationship: localD.relationship, sevaInterest: localD.sevaInterest,
         associatedTemple: localD.associatedTemple, notes: localD.notes,
@@ -367,11 +371,27 @@ function DevoteeProfilePanel({
 
             {/* Body */}
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
-              {/* Quick contact */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                {d.phone && <a href={`tel:${d.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb", color: "#0d9488", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}><Phone size={14} /> Call</a>}
-                {(d.whatsapp || d.phone) && <a href={`https://wa.me/91${(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10)}`} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", borderRadius: 10, background: "#25D366", border: "none", color: "#fff", fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}>WhatsApp</a>}
-                {d.email && <a href={`mailto:${d.email}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb", color: "#0d9488", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}><Mail size={14} /> Email</a>}
+              {/* Quick contact — Call / WhatsApp / Email */}
+              <div style={{ display: "flex", gap: 7, marginBottom: 12 }}>
+                <a href={`tel:${d.phone || ""}`}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.phone ? 1 : 0.4, pointerEvents: d.phone ? "auto" : "none" }}>
+                  <Phone size={16} />
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>Call</span>
+                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace" }}>{d.phone || "—"}</span>
+                </a>
+                <a href={`https://wa.me/91${(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10)}`}
+                  target="_blank" rel="noreferrer"
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: (d.whatsapp || d.phone) ? 1 : 0.4, pointerEvents: (d.whatsapp || d.phone) ? "auto" : "none" }}>
+                  <MessageCircle size={16} />
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>WhatsApp</span>
+                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace" }}>{(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10) || "—"}</span>
+                </a>
+                <a href={`mailto:${d.email || ""}`}
+                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.email ? 1 : 0.4, pointerEvents: d.email ? "auto" : "none" }}>
+                  <Mail size={16} />
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>Email</span>
+                  <span style={{ fontSize: 9, color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%", padding: "0 4px", textAlign: "center" }}>{d.email || "—"}</span>
+                </a>
               </div>
 
               {/* WhatsApp reminder templates */}
@@ -414,7 +434,21 @@ function DevoteeProfilePanel({
                   <Fld label="WhatsApp" val={d.whatsapp} field="whatsapp" />
                   <Fld label="Email" val={d.email} field="email" />
                   <Fld label="City" val={d.city} field="city" />
+                  <Fld label="District" val={d.district} field="district" />
                   <Fld label="State" val={d.state} field="state" />
+                  <Fld label="Pincode" val={d.pincode} field="pincode" />
+                  {editMode ? (
+                    <div style={{ padding: "9px 0", borderBottom: "1px solid #e5e7eb", display: "flex", flexDirection: "column", gap: 3 }}>
+                      <label style={{ fontSize: 10, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>Profession</label>
+                      <input value={(localD as any)?.profession ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, profession: e.target.value }))}
+                        style={{ padding: "6px 10px", borderRadius: 7, border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: 12.5, color: "#1f2937", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: "1px solid #e5e7eb" }}>
+                      <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0 }}>Profession</span>
+                      <span style={{ fontSize: 12.5, color: d.profession ? "#1f2937" : "#9ca3af", fontWeight: 500, textAlign: "right" }}>{d.profession || "—"}</span>
+                    </div>
+                  )}
                   <Fld label="Language" val={d.language} field="language" />
                   <Fld label="Relationship" val={d.relationship} field="relationship" />
                   <Fld label="Seva Interest" val={d.sevaInterest} field="sevaInterest" />
@@ -465,16 +499,6 @@ function DevoteeProfilePanel({
                       ))}
                   </Section>
 
-                  {/* Remedies */}
-                  <Section title="Divine Remedies" count={history.remedies.length}>
-                    {history.remedies.length === 0 ? <p style={{ fontSize: 12.5, color: "#0d9488" }}>No remedies assigned.</p> :
-                      history.remedies.map((r: any) => (
-                        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "11px 14px", marginBottom: 7 }}>
-                          <div><p style={{ fontSize: 12.5, fontWeight: 600, color: "#1f2937" }}>🕯️ {r.remedy_name}</p><p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{r.category}</p></div>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 9px", borderRadius: 20, height: "fit-content" }}>{r.status}</span>
-                        </div>
-                      ))}
-                  </Section>
 
                   {/* Timeline */}
                   <Section title="Timeline" count={history.timeline.length}>
@@ -502,37 +526,121 @@ function DevoteeProfilePanel({
   );
 }
 
+/* ── Reusable custom dropdown ──────────────────────────────────── */
+function FancySelect({ label, value, onChange, options, placeholder = "Select" }: {
+  label?: string; value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[]; placeholder?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+  const selected = options.find(o => o.value === value);
+  return (
+    <div ref={ref} style={{ position: "relative", marginBottom: 13 }}>
+      {label && <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>{label}</label>}
+      <button type="button" onClick={() => setOpen(p => !p)}
+        onMouseEnter={e => { (e.currentTarget).style.borderColor = "#9ca3af"; (e.currentTarget).style.background = "#f9fafb"; }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget).style.borderColor = "#e5e7eb"; (e.currentTarget).style.background = "#fff"; } }}
+        style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${open ? "#9ca3af" : "#e5e7eb"}`, background: open ? "#f9fafb" : "#fff", fontSize: 13, color: selected ? "#1f2937" : "#9ca3af", fontWeight: selected ? 700 : 400, outline: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "border-color 0.15s, background 0.15s", boxSizing: "border-box" as const }}>
+        <span>{selected ? selected.label : placeholder}</span>
+        <ChevronDown size={14} color="#6b7280" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 400, background: "#fff", borderRadius: 10, border: "1.5px solid #e5e7eb", boxShadow: "0 8px 28px rgba(0,0,0,0.13)", overflow: "hidden" }}>
+          {options.map(opt => (
+            <button key={opt.value} type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              onMouseEnter={e => (e.currentTarget).style.background = "#f0fdfb"}
+              onMouseLeave={e => (e.currentTarget).style.background = "transparent"}
+              style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", fontSize: 13, color: opt.value === value ? "#0d9488" : "#374151", fontWeight: opt.value === value ? 700 : 400, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.12s" }}>
+              <span>{opt.label}</span>
+              {opt.value === value && <Check size={13} color="#0d9488" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════
    ADD DEVOTEE — create form with duplicate detection (PRD §12-C)
 ══════════════════════════════════════════════════════════════════ */
 function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [f, setF] = useState({ name: "", phone: "", whatsapp: "", email: "", city: "", state: "", relationship: "new", language: "Kannada", notes: "" });
+  const [f, setF] = useState({ name: "", phone: "", whatsapp: "", email: "", profession: "", address: "", city: "", district: "", state: "", pincode: "", relationship: "new", language: "Kannada", notes: "", gender: "", dob: "" });
+  const [photo, setPhoto] = useState("");
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
   const [dupes, setDupes] = useState<Devotee[]>([]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [touched, setTouched] = useState(false);
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
 
+  function onPhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const w = Math.min(480, img.width), h = Math.round((img.height / img.width) * w);
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        cv.getContext("2d")?.drawImage(img, 0, 0, w, h);
+        setPhoto(cv.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+  const addressRef = React.useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(addressRef, (p) => {
+    setF(prev => ({
+      ...prev,
+      address:  p.formatted || prev.address,
+      city:     p.city     || prev.city,
+      district: p.district || prev.district,
+      state:    p.state    || prev.state,
+      pincode:  p.pincode  || prev.pincode,
+    }));
+  });
+
+  const REQUIRED: (keyof typeof f)[] = ["name", "email", "phone", "profession", "address"];
+  const missing = REQUIRED.filter(k => !f[k].trim());
+
   async function submit(force = false) {
-    if (!f.name.trim()) { setErr("Name is required"); return; }
+    setTouched(true);
+    if (missing.length) { setErr("Please fill all required fields."); return; }
     setSaving(true); setErr("");
     try {
       if (!force) {
         const found = await checkDuplicateDevotee({ phone: f.phone, whatsapp: f.whatsapp, email: f.email, name: f.name, city: f.city });
         if (found.length) { setDupes(found); setSaving(false); return; }
       }
-      await createDevotee({ ...f, force: true });
+      await createDevotee({ ...f, photo: photo || undefined, force: true });
       onCreated();
     } catch (e: any) { setErr(e?.message || "Failed to create devotee"); }
     finally { setSaving(false); }
   }
 
-  const field = (label: string, key: string, type = "text") => (
-    <div style={{ marginBottom: 13 }}>
-      <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>{label}</label>
-      <input type={type} value={(f as any)[key]} onChange={e => set(key, e.target.value)}
-        style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
-    </div>
-  );
+  const field = (label: string, key: keyof typeof f, type = "text") => {
+    const isReq = REQUIRED.includes(key);
+    const invalid = touched && isReq && !f[key].trim();
+    return (
+      <div style={{ marginBottom: 13 }}>
+        <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>
+          {label}{isReq && <span style={{ color: "#dc2626", marginLeft: 2 }}>*</span>}
+        </label>
+        <input type={type} value={f[key]} onChange={e => set(key, e.target.value)}
+          style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${invalid ? "#dc2626" : "#e5e7eb"}`, background: invalid ? "#fef2f2" : "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
+        {invalid && <p style={{ fontSize: 11, color: "#dc2626", marginTop: 4 }}>This field is required</p>}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -555,17 +663,60 @@ function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreate
               </div>
             </div>
           )}
-          {field("Full Name *", "name")}
+          {/* Photo upload */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+            <div style={{ position: "relative", cursor: "pointer" }} onClick={() => photoInputRef.current?.click()}>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#e5e7eb", border: "2px dashed #0d9488", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {photo
+                  ? <img src={photo} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <Camera size={24} color="#0d9488" />}
+              </div>
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: 22, height: 22, borderRadius: "50%", background: "#0d9488", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Plus size={12} color="#fff" />
+              </div>
+            </div>
+            {photo && (
+              <button onClick={e => { e.stopPropagation(); setPhoto(""); }} style={{ position: "absolute", marginTop: 86, fontSize: 11, color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Remove</button>
+            )}
+            <input ref={photoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onPhotoFile} />
+          </div>
+
+          {field("Full Name", "name")}
+          {/* Gender + DOB */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <FancySelect label="Gender" value={f.gender} onChange={v => set("gender", v)}
+              options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }, { value: "Other", label: "Other" }]} />
+            <div style={{ marginBottom: 13 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Date of Birth</label>
+              <input type="date" value={f.dob} onChange={e => set("dob", e.target.value)} max={new Date().toISOString().slice(0, 10)}
+                style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
+            </div>
+          </div>
+
           {field("Phone", "phone", "tel")}
           {field("WhatsApp", "whatsapp", "tel")}
           {field("Email", "email", "email")}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>{field("City", "city")}{field("State", "state")}</div>
-          <div style={{ marginBottom: 13 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Relationship</label>
-            <select value={f.relationship} onChange={e => set("relationship", e.target.value)} style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none" }}>
-              {["new", "regular", "donor", "volunteer", "vip", "family"].map(r => <option key={r} value={r}>{r[0].toUpperCase() + r.slice(1)}</option>)}
-            </select>
-          </div>
+          {field("Profession", "profession")}
+          {(() => {
+            const invalid = touched && !f.address.trim();
+            return (
+              <div style={{ marginBottom: 13 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>
+                  Address<span style={{ color: "#dc2626", marginLeft: 2 }}>*</span>
+                </label>
+                <input ref={addressRef} value={f.address} autoComplete="off" placeholder="Start typing address — city, district, state & pincode auto-fill…" onChange={e => set("address", e.target.value)}
+                  style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${invalid ? "#dc2626" : "#e5e7eb"}`, background: invalid ? "#fef2f2" : "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
+                {invalid && <p style={{ fontSize: 11, color: "#dc2626", marginTop: 4 }}>This field is required</p>}
+                {(f.city || f.district || f.state || f.pincode) && (
+                  <p style={{ fontSize: 11, color: "#0d9488", fontWeight: 600, marginTop: 6 }}>
+                    {[f.city, f.district, f.state, f.pincode].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+          <FancySelect label="Relationship" value={f.relationship} onChange={v => set("relationship", v)}
+            options={["new","regular","donor","volunteer","vip","family"].map(r => ({ value: r, label: r[0].toUpperCase() + r.slice(1) }))} />
           {field("Preferred Language", "language")}
           <div style={{ marginBottom: 13 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Notes</label>
@@ -645,7 +796,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
           <div style={{ marginBottom: 13 }}><label style={lbl}>Mobile</label><input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Type</label><select value={f.appointmentType} onChange={e => set("appointmentType", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{APPOINTMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Mode</label><select value={f.mode} onChange={e => set("mode", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{["in-person", "phone", "video"].map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>Mode</label><select value={f.mode} onChange={e => set("mode", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{APPOINTMENT_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}</select></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><input type="datetime-local" value={f.startTime} onChange={e => set("startTime", e.target.value)} style={inp} /></div>
@@ -656,7 +807,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
             <div style={{ marginBottom: 13 }}><label style={lbl}>Priority</label><select value={f.priority} onChange={e => set("priority", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{["Normal", "High", "Urgent", "VIP"].map(p => <option key={p} value={p}>{p}</option>)}</select></div>
           </div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input value={f.location} onChange={e => set("location", e.target.value)} style={inp} /></div>
-          {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Meeting Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} style={inp} /></div>}
+          {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Google Meet Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} /></div>}
           <div style={{ marginBottom: 13 }}><label style={lbl}>Purpose</label><textarea value={f.purpose} onChange={e => set("purpose", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
           {appt && <div style={{ marginBottom: 13 }}><label style={lbl}>Outcome Note (after meeting)</label><textarea value={f.outcomeNote} onChange={e => set("outcomeNote", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>}
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
@@ -672,41 +823,110 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   REMEDY — library create / edit slide-over (PRD §12-D)
+   CHECK-IN — office staff verify devotee details + photo before darshan
+   (PRD §6: on arrival, staff confirm contact info, capture a photo, and
+    mark the devotee Arrived so they enter the Guruji darshan queue.)
 ══════════════════════════════════════════════════════════════════ */
-function RemedyPanel({ remedy, onClose, onSaved }: { remedy: Remedy | null; onClose: () => void; onSaved: () => void }) {
-  const [f, setF] = useState({
-    name: remedy?.name || "", category: remedy?.category || "Pooja",
-    defaultInstruction: remedy?.defaultInstruction || "", defaultDuration: remedy?.defaultDuration || "",
-    language: remedy?.language || "Kannada", reminderSchedule: remedy?.reminderSchedule || "",
-    followupRequired: remedy?.followupRequired || false, gurujiApprovalRequired: remedy?.gurujiApprovalRequired || false,
-    adminCaution: remedy?.adminCaution || "",
+function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: () => void; onSaved: (a: Appointment) => void }) {
+  const [d, setD] = useState({
+    name: appt.devoteeName || "", phone: appt.mobile || "",
+    whatsapp: "", email: "", city: "", district: "", state: "", pincode: "",
   });
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState("");
-  const set = (k: string, v: any) => setF(p => ({ ...p, [k]: v }));
+  const [photo, setPhoto]     = useState<string>("");
+  const [remarks, setRemarks] = useState(appt.officeRemarks || "");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [err, setErr]         = useState("");
+  const [camOn, setCamOn]     = useState(false);
+  const videoRef  = React.useRef<HTMLVideoElement | null>(null);
+  const streamRef = React.useRef<MediaStream | null>(null);
+  const cityRef   = React.useRef<HTMLInputElement | null>(null);
+  const set = (k: string, v: string) => setD(p => ({ ...p, [k]: v }));
 
-  async function save() {
-    if (!f.name.trim()) { setErr("Name is required"); return; }
-    setSaving(true); setErr("");
-    const payload: any = {
-      name: f.name, category: f.category, default_instruction: f.defaultInstruction,
-      default_duration: f.defaultDuration, language: f.language, reminder_schedule: f.reminderSchedule,
-      followup_required: f.followupRequired, guruji_approval_required: f.gurujiApprovalRequired,
-      admin_caution: f.adminCaution,
-    };
+  usePlacesAutocomplete(cityRef, (p) => {
+    setD(prev => ({
+      ...prev,
+      city: p.city || prev.city,
+      district: p.district || prev.district,
+      state: p.state || prev.state,
+      pincode: p.pincode || prev.pincode,
+    }));
+  });
+
+  const stopCam = React.useCallback(() => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setCamOn(false);
+  }, []);
+
+  /* Pull the full linked Devotee 360 record so staff can verify every field */
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      if (!appt.devoteeId) return;
+      setLoading(true);
+      try {
+        const dev = await getDevotee(appt.devoteeId);
+        if (ignore || !dev) return;
+        setD({
+          name: dev.name || appt.devoteeName || "", phone: dev.phone || appt.mobile || "",
+          whatsapp: dev.whatsapp || "", email: dev.email || "", city: dev.city || "",
+          district: dev.district || "", state: dev.state || "", pincode: dev.pincode || "",
+        });
+        if (dev.photo) setPhoto(dev.photo);
+      } catch { /* ignore */ } finally { if (!ignore) setLoading(false); }
+    })();
+    return () => { ignore = true; stopCam(); };
+  }, [appt.devoteeId, appt.devoteeName, appt.mobile, stopCam]);
+
+  useEffect(() => {
+    if (camOn && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [camOn]);
+
+  async function startCam() {
+    setErr("");
     try {
-      if (remedy) await updateRemedy(remedy.id, payload);
-      else        await createRemedy(payload as any);
-      onSaved();
-    } catch (e: any) { setErr(e?.message || "Failed to save"); }
-    finally { setSaving(false); }
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640 }, audio: false });
+      streamRef.current = s; setCamOn(true);
+    } catch { setErr("Camera unavailable — please use Upload Photo instead."); }
   }
-  async function remove() {
-    if (!remedy) return;
-    setSaving(true);
-    try { await deleteRemedy(remedy.id); onSaved(); }
-    catch (e: any) { setErr(e?.message || "Failed to delete"); setSaving(false); }
+  function capture() {
+    const v = videoRef.current; if (!v) return;
+    const w = 420, h = v.videoHeight && v.videoWidth ? Math.round((v.videoHeight / v.videoWidth) * w) : 420;
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    cv.getContext("2d")?.drawImage(v, 0, 0, w, h);
+    setPhoto(cv.toDataURL("image/jpeg", 0.82));
+    stopCam();
+  }
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const w = Math.min(480, img.width), h = Math.round((img.height / img.width) * w);
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        cv.getContext("2d")?.drawImage(img, 0, 0, w, h);
+        setPhoto(cv.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function confirm() {
+    if (!d.name.trim()) { setErr("Devotee name is required"); return; }
+    setSaving(true); setErr("");
+    try {
+      const { appointment } = await checkInAppointment(appt.id, {
+        devotee: { name: d.name, phone: d.phone, whatsapp: d.whatsapp, email: d.email, city: d.city, district: d.district, state: d.state, pincode: d.pincode, photo: photo || undefined },
+        office_remarks: remarks,
+      });
+      onSaved(appointment);
+    } catch (e: any) { setErr(e?.message || "Check-in failed"); setSaving(false); }
   }
 
   const lbl = { fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 } as const;
@@ -714,38 +934,74 @@ function RemedyPanel({ remedy, onClose, onSaved }: { remedy: Remedy | null; onCl
 
   return (
     <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={() => { stopCam(); onClose(); }}
+        style={{ position: "fixed", inset: 0, zIndex: 220, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 420, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "18px 22px", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(17,24,39,0.5)" }}>Remedy Library</p><h2 style={{ fontSize: 17, fontWeight: 800 }}>{remedy ? "Edit Remedy" : "Add Remedy"}</h2></div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937" }}><X size={16} /></button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Remedy Name *</label><input value={f.name} onChange={e => set("name", e.target.value)} style={inp} /></div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Category</label><select value={f.category} onChange={e => set("category", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{REMEDY_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Default Instruction</label><textarea value={f.defaultInstruction} onChange={e => set("defaultInstruction", e.target.value)} rows={3} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Duration</label><input value={f.defaultDuration} onChange={e => set("defaultDuration", e.target.value)} placeholder="21 days" style={inp} /></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Language</label><input value={f.language} onChange={e => set("language", e.target.value)} style={inp} /></div>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 221, width: 440, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        <div style={{ background: "linear-gradient(135deg,#0d9488,#0f766e)", padding: "18px 22px", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)" }}>Darshan Check-In{appt.appointmentRef ? ` · ${appt.appointmentRef}` : ""}</p>
+            <h2 style={{ fontSize: 17, fontWeight: 800 }}>Verify &amp; Mark Arrived</h2>
           </div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Reminder Schedule</label><input value={f.reminderSchedule} onChange={e => set("reminderSchedule", e.target.value)} placeholder="Daily / Weekly" style={inp} /></div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Admin Caution</label><input value={f.adminCaution} onChange={e => set("adminCaution", e.target.value)} style={inp} /></div>
-          <label style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11, cursor: "pointer" }}>
-            <input type="checkbox" checked={f.followupRequired} onChange={e => set("followupRequired", e.target.checked)} style={{ width: 16, height: 16, accentColor: "#0d9488" }} />
-            <span style={{ fontSize: 12.5, color: "#1f2937" }}>Follow-up required after remedy period</span>
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11, cursor: "pointer" }}>
-            <input type="checkbox" checked={f.gurujiApprovalRequired} onChange={e => set("gurujiApprovalRequired", e.target.checked)} style={{ width: 16, height: 16, accentColor: "#0d9488" }} />
-            <span style={{ fontSize: 12.5, color: "#1f2937" }}>Guruji approval required before assigning</span>
-          </label>
+          <button onClick={() => { stopCam(); onClose(); }} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}><X size={16} /></button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+          {loading && <p style={{ fontSize: 12.5, color: "#6b7280", marginBottom: 12 }}>Loading devotee record…</p>}
+
+          {/* Photo capture */}
+          <label style={lbl}>Devotee Photo</label>
+          <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 16 }}>
+            <div style={{ width: 96, height: 96, borderRadius: 12, overflow: "hidden", flexShrink: 0, border: "1.5px solid #e5e7eb", background: "#eef2f7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {camOn ? (
+                <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : photo ? (
+                <img src={photo} alt="devotee" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontSize: 30 }}>🙏</span>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {camOn ? (
+                <>
+                  <button onClick={capture} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}><Camera size={14} /> Capture</button>
+                  <button onClick={stopCam} style={{ padding: "7px 14px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={startCam} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, border: "1.5px solid #5eead4", background: "rgba(13,148,136,0.08)", color: "#0d9488", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}><Camera size={14} /> Open Camera</button>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", color: "#374151", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+                    Upload Photo
+                    <input type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
+                  </label>
+                  {photo && <button onClick={() => setPhoto("")} style={{ padding: "6px 14px", borderRadius: 9, border: "none", background: "none", color: "#dc2626", fontSize: 11.5, fontWeight: 600, cursor: "pointer", textAlign: "left" }}>Remove</button>}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Verify contact details */}
+          <div style={{ marginBottom: 13 }}><label style={lbl}>Name *</label><input value={d.name} onChange={e => set("name", e.target.value)} style={inp} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>Phone</label><input value={d.phone} onChange={e => set("phone", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>WhatsApp</label><input value={d.whatsapp} onChange={e => set("whatsapp", e.target.value)} style={inp} /></div>
+          </div>
+          <div style={{ marginBottom: 13 }}><label style={lbl}>Email</label><input value={d.email} onChange={e => set("email", e.target.value)} style={inp} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>City</label><input ref={cityRef} value={d.city} autoComplete="off" placeholder="Start typing city…" onChange={e => set("city", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>District</label><input value={d.district} onChange={e => set("district", e.target.value)} style={inp} /></div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>State</label><input value={d.state} onChange={e => set("state", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>Pincode</label><input value={d.pincode} inputMode="numeric" onChange={e => set("pincode", e.target.value)} style={inp} /></div>
+          </div>
+          <div style={{ marginBottom: 13 }}><label style={lbl}>Office Remarks (internal)</label><textarea value={remarks} onChange={e => setRemarks(e.target.value)} rows={3} placeholder="Anything Guruji's office should know before darshan…" style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
         </div>
+
         <div style={{ padding: "14px 22px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
-          {remedy && <button onClick={remove} disabled={saving} style={{ padding: "11px 14px", borderRadius: 10, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Trash2 size={14} /></button>}
-          <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-          <button onClick={save} disabled={saving} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>{saving ? "Saving…" : remedy ? "Save Changes" : "Add Remedy"}</button>
+          <button onClick={() => { stopCam(); onClose(); }} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={confirm} disabled={saving} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}><CheckCircle2 size={15} /> {saving ? "Saving…" : "Confirm Arrival"}</button>
         </div>
       </motion.div>
     </>
@@ -1870,8 +2126,8 @@ const TRIKALA_STATUS_CFG: Record<string, { bg: string; color: string; dot: strin
   "Reopened":               { bg: "#FEF3C7", color: "#B45309", dot: "#B45309" },
 };
 const ALL_TRIKALA_STATUSES = TRIKALA_STATUSES;
-type DetailTab = "Analysis" | "Guruji Vakya" | "Remedies" | "Notes" | "AI Chat" | "Pad" | "Follow-ups";
-const DETAIL_TABS: DetailTab[] = ["Analysis", "Guruji Vakya", "Remedies", "Notes", "AI Chat", "Pad", "Follow-ups"];
+type DetailTab = "Analysis" | "Guruji Vakya" | "Notes" | "AI Chat" | "Pad" | "Follow-ups";
+const DETAIL_TABS: DetailTab[] = ["Analysis", "Guruji Vakya", "Notes", "AI Chat", "Pad", "Follow-ups"];
 
 /* small icon helpers */
 const TIco = {
@@ -2059,110 +2315,6 @@ function GurujiVakyaTab({ reading, onSaved }: { reading: TrikalaReading; onSaved
   );
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   CASE REMEDIES tab (PRD §3 Stage 4) — assign from library, track status
-══════════════════════════════════════════════════════════════════ */
-function CaseRemediesTab({ reading }: { reading: TrikalaReading }) {
-  const [items, setItems] = useState<CaseRemedy[]>([]);
-  const [lib, setLib] = useState<Remedy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
-  const [sel, setSel] = useState("");
-  const [custom, setCustom] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [its, library] = await Promise.all([getCaseRemedies(reading.caseReference), getRemedyLibrary()]);
-      setItems(its); setLib(library);
-    } catch { /* ignore */ } finally { setLoading(false); }
-  }, [reading.caseReference]);
-  useEffect(() => { load(); }, [load]);
-
-  async function assign() {
-    const chosen = lib.find(r => String(r.id) === sel);
-    if (!chosen && !custom.trim()) return;
-    setBusy(true);
-    try {
-      await assignRemedy(reading.caseReference, {
-        remedy_name: chosen ? chosen.name : custom.trim(),
-        remedy_id: chosen?.id, category: chosen?.category,
-        custom_instruction: custom.trim() || chosen?.defaultInstruction || "",
-        start_date: startDate || null, end_date: endDate || null,
-        devotee_id: reading.devoteeId,
-      } as any);
-      setSel(""); setCustom(""); setStartDate(""); setEndDate(""); setAdding(false);
-      load();
-    } catch { /* ignore */ } finally { setBusy(false); }
-  }
-  async function setStatus(id: number, status: string) {
-    try { await updateRemedyAssignment(id, { status }); load(); } catch { /* ignore */ }
-  }
-  async function remove(id: number) {
-    try { await deleteRemedyAssignment(id); load(); } catch { /* ignore */ }
-  }
-
-  const inp = { width: "100%", height: 38, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" as const };
-
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderBottom: "1px solid #F2F3F5" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <span style={{ fontSize: 16 }}>🕯️</span>
-          <p style={{ fontSize: 14.5, fontWeight: 700, color: "#23262d" }}>Divine Remedies</p>
-        </div>
-        <button onClick={() => setAdding(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
-          {adding ? "Cancel" : "+ Assign Remedy"}
-        </button>
-      </div>
-      <div style={{ padding: "18px 24px" }}>
-        {adding && (
-          <div style={{ background: "#FBF8F2", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px", marginBottom: 18 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: "#0d9488", display: "block", marginBottom: 6 }}>From Library</label>
-            <select value={sel} onChange={e => setSel(e.target.value)} style={{ ...inp, marginBottom: 10 }}>
-              <option value="">— Select a remedy —</option>
-              {lib.map(r => <option key={r.id} value={r.id}>{remedyIcon(r.category)} {r.name} ({r.category})</option>)}
-            </select>
-            <label style={{ fontSize: 11, fontWeight: 700, color: "#0d9488", display: "block", marginBottom: 6 }}>Custom Instruction</label>
-            <textarea value={custom} onChange={e => setCustom(e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 12px", resize: "vertical", fontFamily: "inherit", marginBottom: 10 }} placeholder="Personalised instruction for this devotee…" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-              <div><label style={{ fontSize: 11, fontWeight: 700, color: "#0d9488", display: "block", marginBottom: 6 }}>Start</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inp} /></div>
-              <div><label style={{ fontSize: 11, fontWeight: 700, color: "#0d9488", display: "block", marginBottom: 6 }}>End</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={inp} /></div>
-            </div>
-            <button onClick={assign} disabled={busy || (!sel && !custom.trim())} style={{ padding: "9px 20px", borderRadius: 9, border: "none", background: "#0d9488", color: "#1f2937", fontSize: 12.5, fontWeight: 700, cursor: "pointer", opacity: busy || (!sel && !custom.trim()) ? 0.5 : 1 }}>{busy ? "Assigning…" : "Assign"}</button>
-          </div>
-        )}
-        {loading ? (
-          <p style={{ textAlign: "center", color: "#878d98", padding: 24, fontSize: 13 }}>Loading…</p>
-        ) : items.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#0d9488", padding: 24, fontSize: 13 }}>No remedies assigned yet.</p>
-        ) : items.map(it => (
-          <div key={it.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>{remedyIcon(it.category)} {it.remedyName}</p>
-                {it.customInstruction && <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: 4, lineHeight: 1.5 }}>{it.customInstruction}</p>}
-                <p style={{ fontSize: 11, color: "#6b7280", marginTop: 6 }}>{it.category}{it.startDate ? ` · ${fmt(it.startDate)}` : ""}{it.endDate ? ` → ${fmt(it.endDate)}` : ""}</p>
-              </div>
-              <button onClick={() => remove(it.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#cbb9a6", flexShrink: 0 }}><Trash2 size={14} /></button>
-            </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-              {REMEDY_STATUSES.map(s => (
-                <button key={s} onClick={() => setStatus(it.id, s)}
-                  style={{ padding: "3px 10px", borderRadius: 20, border: it.status === s ? "1.5px solid #0d9488" : "1px solid #e5e7eb", background: it.status === s ? "#0d9488" : "#fff", color: it.status === s ? "#fff" : "#6b7280", fontSize: 10.5, fontWeight: 600, cursor: "pointer" }}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 /* ══════════════════════════════════════════════════════════════════
    APPOINTMENT CALENDAR VIEW (PRD §6) — month grid with event dots
@@ -2303,10 +2455,10 @@ function NotificationSettings() {
 }
 
 function SettingsTab({
-  todayStats, trikalaCount, devoteeCount, appointmentCount, remedyCount, adminCount, onSidebarToggle,
+  todayStats, trikalaCount, devoteeCount, appointmentCount, adminCount, onSidebarToggle,
 }: {
   todayStats: TodayStats | null; trikalaCount: number; devoteeCount: number; appointmentCount: number;
-  remedyCount: number; adminCount: number; onSidebarToggle: () => void;
+  adminCount: number; onSidebarToggle: () => void;
 }) {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -2321,7 +2473,6 @@ function SettingsTab({
     { label: "Trikala Cases",  value: trikalaCount,     icon: "⭕", color: "#0d9488" },
     { label: "Devotees",       value: devoteeCount,     icon: "🙏", color: "#7c3aed" },
     { label: "Appointments",   value: appointmentCount, icon: "📅", color: "#0891b2" },
-    { label: "Remedy Library", value: remedyCount,      icon: "🕯️", color: "#0d9488" },
     { label: "Admin Users",    value: adminCount,       icon: "🔑", color: "#059669" },
     { label: "New Intake (today)",value: todayStats?.newIntake ?? 0, icon: "📋", color: "#d97706" },
   ];
@@ -2955,6 +3106,17 @@ function TrikalaDetailPanel({
   const [saveErr,   setSaveErr]   = useState("");
   const [savingPri, setSavingPri] = useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>("Analysis");
+  const [scheduling,   setScheduling]   = useState(false);
+  const [scheduledRef, setScheduledRef] = useState("");
+
+  async function scheduleAppointment() {
+    setScheduling(true);
+    try {
+      const appt = await convertCaseToAppointment(reading.caseReference);
+      setScheduledRef(appt.appointmentRef || "created");
+    } catch { setScheduledRef("error"); }
+    finally { setScheduling(false); }
+  }
 
   async function save() {
     if (status === reading.status) return;
@@ -2994,7 +3156,6 @@ function TrikalaDetailPanel({
   const tabIcon: Record<DetailTab, React.ReactNode> = {
     "Analysis":     <TIco.Star />,
     "Guruji Vakya": <span style={{ fontSize: 14 }}>🪔</span>,
-    "Remedies":     <span style={{ fontSize: 14 }}>🕯️</span>,
     "Notes":        <TIco.Notes />,
     "AI Chat":      <TIco.AI />,
     "Pad":          <TIco.Pad />,
@@ -3051,6 +3212,13 @@ function TrikalaDetailPanel({
           {reading.status}
         </span>
         <div style={{ flex: 1 }} />
+        {scheduledRef && scheduledRef !== "error"
+          ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: "#15803d", background: "#dcfce7", padding: "5px 11px", borderRadius: 20 }}><CheckCircle2 size={13} /> Appointment {scheduledRef}</span>
+          : <button onClick={scheduleAppointment} disabled={scheduling}
+              title="Create an appointment for this devotee in the Appointment Command Center"
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "6px 12px", borderRadius: 8, cursor: scheduling ? "default" : "pointer", whiteSpace: "nowrap" }}>
+              <CalendarPlus size={14} /> {scheduling ? "Scheduling…" : "Schedule Appointment"}
+            </button>}
         <CasePdfMenu reading={reading} />
         <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, marginLeft: 8 }}>{reading.fullName}</span>
       </div>
@@ -3186,7 +3354,6 @@ function TrikalaDetailPanel({
           <div className="tdp-content" style={{ flex: 1, background: "#fff", border: "1px solid #EDEDEF", borderRadius: 14, overflowY: "auto", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             {activeTab === "Analysis" && <AiAnalysisTab reading={reading} onStatusChange={onStatusChange} />}
             {activeTab === "Guruji Vakya" && <GurujiVakyaTab reading={reading} onSaved={onStatusChange} />}
-            {activeTab === "Remedies" && <CaseRemediesTab reading={reading} />}
             {activeTab === "Notes" && <div style={{ padding: "22px 24px" }}><PrivateNotes caseId={reading.caseReference} /></div>}
             {activeTab === "AI Chat" && <div style={{ height: "100%", display: "flex", flexDirection: "column" }}><AiChatTab reading={reading} /></div>}
             {activeTab === "Pad" && <div style={{ padding: "22px 24px" }}><WritingPad caseId={reading.caseReference} /></div>}
@@ -3300,7 +3467,9 @@ export default function AdminPage() {
   const [loggedMobile, setLoggedMobile] = useState("");
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const VALID_TABS: Tab[] = ["today", "bookings", "contacts", "admins", "trikala", "devotees", "appointments", "remedies", "reports", "settings"];
+  const routeParams  = useParams();
+  const locale       = (routeParams?.locale as string) || "en";
+  const VALID_TABS: Tab[] = ["today", "bookings", "contacts", "admins", "trikala", "devotees", "appointments", "reports", "settings"];
   const initTab = (searchParams.get("tab") as Tab | null);
   const [tab, setTab] = useState<Tab>(VALID_TABS.includes(initTab as Tab) ? (initTab as Tab) : "today");
   const [bookings, setBookings] = useState<AudienceBooking[]>([]);
@@ -3369,10 +3538,7 @@ export default function AdminPage() {
   const [apptFilter, setApptFilter]       = useState("all");
   const [apptView, setApptView]           = useState<"list" | "calendar">("list");
   const [apptPanel, setApptPanel]         = useState<{ open: boolean; appt: Appointment | null }>({ open: false, appt: null });
-  const [remedyLib, setRemedyLib]         = useState<Remedy[]>([]);
-  const [remedyLibLoading, setRemedyLibLoading] = useState(false);
-  const [remedyCatFilter, setRemedyCatFilter]   = useState("all");
-  const [remedyPanel, setRemedyPanel]     = useState<{ open: boolean; remedy: Remedy | null }>({ open: false, remedy: null });
+  const [checkInAppt, setCheckInAppt]     = useState<Appointment | null>(null);
   const [addDevoteeOpen, setAddDevoteeOpen] = useState(false);
 
   /* ── check existing session ── */
@@ -3454,11 +3620,6 @@ export default function AdminPage() {
     try { setAppointments(await getAppointments({ status: apptFilter })); }
     catch { /* ignore */ } finally { setApptLoading(false); }
   }, [apptFilter]);
-  const fetchRemedyLib = useCallback(async () => {
-    setRemedyLibLoading(true);
-    try { setRemedyLib(await getRemedyLibrary(remedyCatFilter)); }
-    catch { /* ignore */ } finally { setRemedyLibLoading(false); }
-  }, [remedyCatFilter]);
 
   // Today: load stats + ensure trikala/bookings present for the activity feed
   useEffect(() => {
@@ -3469,7 +3630,6 @@ export default function AdminPage() {
 
   useEffect(() => { if (authed && tab === "devotees")     fetchDevotees();     }, [authed, tab, fetchDevotees]);
   useEffect(() => { if (authed && tab === "appointments") fetchAppointments(); }, [authed, tab, fetchAppointments]);
-  useEffect(() => { if (authed && tab === "remedies")     fetchRemedyLib();    }, [authed, tab, fetchRemedyLib]);
 
   /* ── open a devotee 360 profile ── */
   const openDevotee = useCallback(async (d: Devotee) => {
@@ -3651,7 +3811,7 @@ export default function AdminPage() {
           {([
             { key: "trikala"     as const, label: "Trikala Cases",    icon: "⭕" },
             { key: "appointments"as const, label: "Appointments",     icon: "📅" },
-            { key: "bookings"    as const, label: "Audience Bookings", icon: "📋" },
+            { key: "bookings"    as const, label: "Appointments Bookings", icon: "📋" },
             { key: "contacts"    as const, label: "Contact Messages",  icon: "📬" },
           ]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
@@ -3661,6 +3821,14 @@ export default function AdminPage() {
             </button>
           ))}
 
+          {/* Guruji Darshan — opens the dedicated Guruji console (separate page) */}
+          <button onClick={() => router.push(`/${locale}/admin/guruji`)}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "1.5px solid #5eead4", cursor: "pointer", marginTop: 4, marginBottom: 3, background: "linear-gradient(135deg,#f0fdfa,#ecfdf5)", transition: "all 0.15s" }}>
+            <span style={{ fontSize: 14 }}>🕉️</span>
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", color: "#0f766e" }}>Guruji Darshan</span>
+            <ArrowRight size={13} color="#0d9488" />
+          </button>
+
           <div style={{ height: 1, background: "#f0f0f0", margin: "10px 0 12px" }} />
 
           {/* Spiritual records */}
@@ -3669,8 +3837,7 @@ export default function AdminPage() {
           </p>
           {([
             { key: "devotees" as const, label: "Devotee Profiles",  icon: "🙏" },
-            { key: "remedies" as const, label: "Divine Remedies",   icon: "🕯️" },
-            { key: "reports"  as const, label: "Reports & PDFs",    icon: "📄" },
+            // { key: "reports"  as const, label: "Reports & PDFs",    icon: "📄" },
           ]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
@@ -3771,14 +3938,16 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <div className="adm-hero-right">
-                    <div className="adm-hero-live">
-                      <span className="adm-live-dot" />
-                      <span className="adm-live-text">Live</span>
+                    <div className="adm-hero-actions">
+                      <div className="adm-hero-live">
+                        <span className="adm-live-dot" />
+                        <span>Live</span>
+                      </div>
+                      <button className="adm-hero-btn-out" onClick={refresh}>
+                        <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                        <span className="adm-hero-btn-txt">Refresh</span>
+                      </button>
                     </div>
-                    <button className="adm-hero-btn-out" onClick={refresh}>
-                      <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
-                      <span className="adm-hero-btn-txt">Refresh</span>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -3807,8 +3976,7 @@ export default function AdminPage() {
                     { label: "Audience Bookings",  desc: "View appointment requests",   tab: "bookings" as const, icon: "📋" },
                     { label: "Contact Messages",   desc: "Review submitted messages",   tab: "contacts" as const, icon: "📬" },
                     { label: "Devotee Profiles",   desc: "Search devotee records",      tab: "devotees" as const, icon: "🙏" },
-                    { label: "Divine Remedies",    desc: "Manage remedy library",       tab: "remedies" as const, icon: "🕯️" },
-                    { label: "Reports & PDFs",     desc: "Generate and export reports", tab: "reports"  as const, icon: "📄" },
+                    // { label: "Reports & PDFs",     desc: "Generate and export reports", tab: "reports"  as const, icon: "📄" },
                   ].map(q => (
                     <button key={q.label} onClick={() => tabChange(q.tab)}
                       style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid #EDE8DD", background: "#fff", cursor: "pointer", textAlign: "left", transition: "all 0.18s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
@@ -3949,7 +4117,18 @@ export default function AdminPage() {
                               <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{a.startTime ? `${fmt(a.startTime)} · ${fmtTime(a.startTime)}` : "Slot to be fixed"}{a.mode ? ` · ${a.mode}` : ""}{a.mobile ? ` · ${a.mobile}` : ""}</p>
                             </div>
                             {a.priority && a.priority !== "Normal" && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.08)", padding: "2px 8px", borderRadius: 20 }}>{a.priority}</span>}
-                            <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "4px 10px", borderRadius: 20, whiteSpace: "nowrap", flexShrink: 0 }}>{a.status}</span>
+                            {!["Arrived", "Completed", "Cancelled", "No-show", "Closed"].includes(a.status) && (
+                              <button onClick={(e) => { e.stopPropagation(); setCheckInAppt(a); }}
+                                title="Verify details & mark arrived for darshan"
+                                style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "5px 11px", borderRadius: 20, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
+                                <CheckCircle2 size={13} /> Check In
+                              </button>
+                            )}
+                            <span style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, padding: "4px 10px", borderRadius: 20,
+                              color: a.status === "Arrived" ? "#15803d" : "#374151",
+                              background: a.status === "Arrived" ? "#dcfce7" : "#f3f4f6" }}>
+                              {a.status === "Arrived" ? "🙏 Arrived" : a.status}
+                            </span>
                           </div>
                         ));
                       })()}
@@ -3962,83 +4141,9 @@ export default function AdminPage() {
                 <AppointmentPanel appt={apptPanel.appt} onClose={() => setApptPanel({ open: false, appt: null })}
                   onSaved={() => { setApptPanel({ open: false, appt: null }); fetchAppointments(); }} />
               )}
-            </div>
-          );
-        })()}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            REMEDIES tab — PRD §4 Stage 4 (placeholder, Phase 4)
-        ══════════════════════════════════════════════════════════════════ */}
-        {tab === "remedies" && (() => {
-          const CATS = ["all", ...REMEDY_CATEGORIES];
-          return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f9fafb", minHeight: 0, overflowY: "auto" }}>
-              <div className="adm-hero-card">
-                <div className="adm-hero-row">
-                  <div className="adm-hero-left">
-                    <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
-                    <div className="adm-hero-icon-wrap"><span style={{ fontSize: 22 }}>🕯️</span></div>
-                    <div className="adm-hero-text">
-                      <p className="adm-hero-eyebrow">Spiritual Service</p>
-                      <h1 className="adm-hero-h1">Divine Remedies</h1>
-                      <p className="adm-hero-desc">Master remedy library — assign from any Trikala case</p>
-                    </div>
-                  </div>
-                  <div className="adm-hero-right">
-                    <div className="adm-hero-count"><span className="adm-hero-count-num">{remedyLib.length}</span><span className="adm-hero-count-lbl">Remedies</span></div>
-                    <div className="adm-hero-sep" />
-                    <div className="adm-hero-actions">
-                      <button className="adm-hero-btn-gold" onClick={() => setRemedyPanel({ open: true, remedy: null })}>
-                        <UserPlus size={14} /><span className="adm-hero-btn-txt">Add Remedy</span>
-                      </button>
-                      <button className="adm-hero-btn-out" onClick={fetchRemedyLib}>
-                        <RefreshCw size={13} style={remedyLibLoading ? { animation: "spin 1s linear infinite" } : {}} />
-                        <span className="adm-hero-btn-txt">Refresh</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ padding: "20px 28px 32px" }}>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>
-                  {CATS.map(c => {
-                    const active = remedyCatFilter === c;
-                    return (
-                      <button key={c} onClick={() => setRemedyCatFilter(c)}
-                        style={{ padding: "4px 13px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 11.5, fontWeight: active ? 700 : 500, cursor: "pointer" }}>
-                        {c === "all" ? "All" : c}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {remedyLibLoading ? (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#6b7280", gap: 10 }}><RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> Loading…</div>
-                ) : remedyLib.length === 0 ? (
-                  <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No remedies in this category. Add one to build the library.</div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 12 }}>
-                    {remedyLib.map(r => (
-                      <div key={r.id} className="remedy-card" onClick={() => setRemedyPanel({ open: true, remedy: r })} style={{ cursor: "pointer" }}>
-                        <div className="remedy-card-icon">{remedyIcon(r.category)}</div>
-                        <div className="remedy-card-name">{r.name}</div>
-                        <div className="remedy-card-cat">{r.category}</div>
-                        {r.defaultInstruction && <div className="remedy-card-desc">{r.defaultInstruction}</div>}
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-                          {r.defaultDuration && <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", background: "#f3f4f6", padding: "2px 8px", borderRadius: 20 }}>{r.defaultDuration}</span>}
-                          {r.followupRequired && <span style={{ fontSize: 10, fontWeight: 600, color: "#1d4ed8", background: "rgba(37,99,235,0.1)", padding: "2px 8px", borderRadius: 20 }}>Follow-up</span>}
-                          {r.gurujiApprovalRequired && <span style={{ fontSize: 10, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.10)", padding: "2px 8px", borderRadius: 20 }}>Guruji approval</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {remedyPanel.open && (
-                <RemedyPanel remedy={remedyPanel.remedy} onClose={() => setRemedyPanel({ open: false, remedy: null })}
-                  onSaved={() => { setRemedyPanel({ open: false, remedy: null }); fetchRemedyLib(); }} />
+              {checkInAppt && (
+                <CheckInPanel appt={checkInAppt} onClose={() => setCheckInAppt(null)}
+                  onSaved={() => { setCheckInAppt(null); fetchAppointments(); }} />
               )}
             </div>
           );
@@ -4196,7 +4301,6 @@ export default function AdminPage() {
             trikalaCount={trikalaReadings.length}
             devoteeCount={devotees.length}
             appointmentCount={appointments.length}
-            remedyCount={remedyLib.length}
             adminCount={admins.length}
             onSidebarToggle={() => setSidebarOpen(v => !v)}
           />;
@@ -4552,7 +4656,7 @@ export default function AdminPage() {
                       <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                           <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                            {["DEVOTEE", "REF", "PHONE", "RELATIONSHIP", "LOCATION", ""].map(h => (
+                            {["DEVOTEE", "REF", "PHONE", "PROFESSION", "RELATIONSHIP", "LOCATION", ""].map(h => (
                               <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
                             ))}
                           </tr>
@@ -4584,6 +4688,7 @@ export default function AdminPage() {
                                 </td>
                                 <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 12, color: "#0d9488", whiteSpace: "nowrap" }}>{d.devoteeRef || "—"}</td>
                                 <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{d.phone || "—"}</td>
+                                <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{d.profession || "—"}</td>
                                 <td style={{ padding: "13px 16px" }}>
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: relColor.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
                                     {d.relationship || "new"}
@@ -4625,7 +4730,7 @@ export default function AdminPage() {
         })()}
 
         {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "remedies" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
 
@@ -4683,7 +4788,7 @@ export default function AdminPage() {
 
 
         {/* Search + filter bar */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "remedies" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
           <div className="adm-searchbar">
             {/* Search input */}
             <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -4791,7 +4896,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Bookings / Contacts Table ── */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "remedies" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
           <div className="adm-content">
             {loading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "#6b7280", fontSize: 14, gap: 10 }}>
@@ -4875,7 +4980,7 @@ export default function AdminPage() {
         )}
 
         {/* Pagination */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "remedies" && tab !== "reports" && tab !== "settings" && !loading && !error && filtered.length > PAGE_SIZE && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && !loading && !error && filtered.length > PAGE_SIZE && (
           <footer className="adm-pagination">
             <p style={{ fontSize: 12, color: "#6b7280" }}>
               Page {safePage} of {totalPages} · {filtered.length} total

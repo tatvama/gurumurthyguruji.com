@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getAppointments, getAppointment, createAppointment,
-  updateAppointment, deleteAppointment,
+  updateAppointment, deleteAppointment, getArrivedToday, checkInAppointment,
 } from "../controllers/appointmentController.js";
 import Appointment from "../models/Appointment.js";
 import { pool } from "../config/db.js";
@@ -15,15 +15,18 @@ export const APPOINTMENT_TYPES = [
   "Internal Meeting", "Travel Block", "Rest / Personal Time",
 ];
 
-/* PRD §6 — 10 appointment statuses */
+/* PRD §6 — appointment statuses (Arrived = office check-in before darshan) */
 export const APPOINTMENT_STATUSES = [
   "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
 ];
 
+/* Static / collection routes BEFORE "/:id" so they aren't shadowed */
+router.get("/queue/arrived", getArrivedToday);
 router.get("/", getAppointments);
-router.get("/:id", getAppointment);
 router.post("/", createAppointment);
+router.get("/:id", getAppointment);
+router.patch("/:id/checkin", checkInAppointment);
 router.patch("/:id", updateAppointment);
 router.delete("/:id", deleteAppointment);
 
@@ -51,6 +54,31 @@ router.post("/from-booking/:bookingId", async (req, res, next) => {
       priority:         "Normal",
       location:         b.nearest_ashram || "",
       purpose:          b.message || "",
+    });
+    res.status(201).json({ success: true, data: appt });
+  } catch (err) { next(err); }
+});
+
+/* POST /from-case/:caseRef — schedule an appointment for a Trikala case (PRD §6) */
+router.post("/from-case/:caseRef", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM trikala_readings WHERE case_reference = $1`, [req.params.caseRef]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: "Case not found" });
+    const c = rows[0];
+    const appt = await Appointment.create({
+      case_reference:   c.case_reference,
+      devotee_id:       c.devotee_id || null,
+      devotee_name:     c.full_name,
+      mobile:           c.mobile,
+      appointment_type: "Trikala Consultation",
+      mode:             req.body.mode || "in-person",
+      status:           "Scheduled",
+      priority:         c.priority || "Normal",
+      start_time:       req.body.start_time || null,
+      location:         req.body.location || "Guruji Ashram",
+      purpose:          (c.guidance_query || "").slice(0, 280),
     });
     res.status(201).json({ success: true, data: appt });
   } catch (err) { next(err); }

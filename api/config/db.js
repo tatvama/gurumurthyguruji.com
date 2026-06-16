@@ -122,6 +122,7 @@ export const initDB = async () => {
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS city VARCHAR(120);`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
+    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS photo TEXT;`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS devotee_id INTEGER;`);
 
@@ -162,6 +163,10 @@ export const initDB = async () => {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_devotees_phone ON devotees(phone);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_devotees_email ON devotees(email);`);
+    /* Full address fields (Google Places auto-fill) */
+    await client.query(`ALTER TABLE devotees ADD COLUMN IF NOT EXISTS district   VARCHAR(120);`);
+    await client.query(`ALTER TABLE devotees ADD COLUMN IF NOT EXISTS pincode    VARCHAR(12);`);
+    await client.query(`ALTER TABLE devotees ADD COLUMN IF NOT EXISTS profession VARCHAR(120);`);
 
     /* ── Divine Remedy library (PRD §3 Stage 4, §12-D) ────────────────── */
     await client.query(`
@@ -231,6 +236,12 @@ export const initDB = async () => {
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);`);
+
+    /* ── Devotee arrival / check-in fields (office-staff verification before darshan) ── */
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS checked_in_at   TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS details_verified BOOLEAN DEFAULT false;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS office_remarks  TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS guruji_remarks  TEXT;`);
 
     /* ── Devotee chronological timeline (PRD §7) ──────────────────────── */
     await client.query(`
@@ -385,6 +396,9 @@ export const initDB = async () => {
     /* ── trikala_readings: family details + birth accuracy + consent + whatsapp ── */
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS city VARCHAR(100);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
+    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS birth_time_accuracy VARCHAR(20);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS father_name VARCHAR(120);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS mother_name VARCHAR(120);`);

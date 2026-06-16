@@ -187,6 +187,7 @@ export async function postAudienceBooking(payload: {
   city?: string;
   district?: string;
   state?: string;
+  pincode?: string;
   howKnown: string;
   nearestAshram: string;
   message?: string;
@@ -291,6 +292,9 @@ export async function postTrikalaReading(payload: {
   gender: string;
   occupation: string;
   city?: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
   preferredLanguage?: string;
   dob: string;
   tob?: string;
@@ -487,9 +491,12 @@ export interface Devotee {
   whatsapp?: string;
   email?: string;
   city?: string;
+  district?: string;
   state?: string;
+  pincode?: string;
   country?: string;
   language?: string;
+  profession?: string;
   relationship?: string;   // new | regular | donor | volunteer | vip | family
   tags?: string;
   associatedTemple?: string;
@@ -507,7 +514,8 @@ function mapDevotee(r: Record<string, any>): Devotee {
   return {
     id: r.id, devoteeRef: r.devotee_ref ?? r.devoteeRef, name: r.name, photo: r.photo,
     gender: r.gender, dob: r.dob, phone: r.phone, whatsapp: r.whatsapp, email: r.email,
-    city: r.city, state: r.state, country: r.country, language: r.language,
+    city: r.city, district: r.district, state: r.state, pincode: r.pincode, country: r.country, language: r.language,
+    profession: r.profession,
     relationship: r.relationship, tags: r.tags, associatedTemple: r.associated_temple ?? r.associatedTemple,
     sevaInterest: r.seva_interest ?? r.sevaInterest, firstContactAt: r.first_contact_at ?? r.firstContactAt,
     familyLinks: r.family_links ?? r.familyLinks, notes: r.notes, consent: r.consent,
@@ -573,91 +581,18 @@ export async function updateDevotee(id: number, payload: Partial<Devotee>): Prom
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   REMEDIES — library + case assignments (PRD §3 Stage 4, §12-D)
-══════════════════════════════════════════════════════════════════ */
-export interface Remedy {
-  id: number; name: string; category: string;
-  defaultInstruction?: string; defaultDuration?: string; language?: string;
-  reminderSchedule?: string; followupRequired?: boolean; adminCaution?: string;
-  gurujiApprovalRequired?: boolean; active?: boolean; createdAt?: string;
-}
-function mapRemedy(r: Record<string, any>): Remedy {
-  return {
-    id: r.id, name: r.name, category: r.category,
-    defaultInstruction: r.default_instruction ?? r.defaultInstruction,
-    defaultDuration: r.default_duration ?? r.defaultDuration, language: r.language,
-    reminderSchedule: r.reminder_schedule ?? r.reminderSchedule,
-    followupRequired: r.followup_required ?? r.followupRequired,
-    adminCaution: r.admin_caution ?? r.adminCaution,
-    gurujiApprovalRequired: r.guruji_approval_required ?? r.gurujiApprovalRequired,
-    active: r.active, createdAt: r.created_at ?? r.createdAt,
-  };
-}
-export const REMEDY_CATEGORIES = [
-  "Pooja", "Mantra", "Vrata", "Temple Visit", "Daana", "Seva",
-  "Personal Discipline", "Follow-up Consultation",
-] as const;
-
-export async function getRemedyLibrary(category?: string): Promise<Remedy[]> {
-  const qs = category && category !== "all" ? `?category=${encodeURIComponent(category)}` : "";
-  const json = await getJson(`/api/remedies${qs}`);
-  return (json.data ?? []).map(mapRemedy);
-}
-export async function createRemedy(payload: Partial<Remedy> & { name: string; category: string }): Promise<Remedy> {
-  const data = await sendJson(`/api/remedies`, "POST", payload);
-  return mapRemedy(data.data);
-}
-export async function updateRemedy(id: number, payload: Partial<Remedy>): Promise<Remedy> {
-  const data = await sendJson(`/api/remedies/${id}`, "PATCH", payload);
-  return mapRemedy(data.data);
-}
-export async function deleteRemedy(id: number): Promise<void> {
-  await sendJson(`/api/remedies/${id}`, "DELETE");
-}
-
-export interface CaseRemedy {
-  id: number; caseReference?: string; devoteeId?: number; remedyId?: number;
-  remedyName: string; category?: string; customInstruction?: string;
-  startDate?: string; endDate?: string; status: string;
-  completionNote?: string; adminRemarks?: string; gurujiRemarks?: string; createdAt?: string;
-}
-function mapCaseRemedy(r: Record<string, any>): CaseRemedy {
-  return {
-    id: r.id, caseReference: r.case_reference ?? r.caseReference, devoteeId: r.devotee_id ?? r.devoteeId,
-    remedyId: r.remedy_id ?? r.remedyId, remedyName: r.remedy_name ?? r.remedyName, category: r.category,
-    customInstruction: r.custom_instruction ?? r.customInstruction, startDate: r.start_date ?? r.startDate,
-    endDate: r.end_date ?? r.endDate, status: r.status, completionNote: r.completion_note ?? r.completionNote,
-    adminRemarks: r.admin_remarks ?? r.adminRemarks, gurujiRemarks: r.guruji_remarks ?? r.gurujiRemarks,
-    createdAt: r.created_at ?? r.createdAt,
-  };
-}
-export const REMEDY_STATUSES = ["Assigned", "In Progress", "Completed", "Reviewed", "Closed"] as const;
-
-export async function getCaseRemedies(caseRef: string): Promise<CaseRemedy[]> {
-  const json = await getJson(`/api/remedies/case/${encodeURIComponent(caseRef)}`);
-  return (json.data ?? []).map(mapCaseRemedy);
-}
-export async function assignRemedy(caseRef: string, payload: Partial<CaseRemedy> & { remedy_name: string }): Promise<CaseRemedy> {
-  const data = await sendJson(`/api/remedies/case/${encodeURIComponent(caseRef)}`, "POST", payload);
-  return mapCaseRemedy(data.data);
-}
-export async function updateRemedyAssignment(id: number, payload: Record<string, any>): Promise<CaseRemedy> {
-  const data = await sendJson(`/api/remedies/assignment/${id}`, "PATCH", payload);
-  return mapCaseRemedy(data.data);
-}
-export async function deleteRemedyAssignment(id: number): Promise<void> {
-  await sendJson(`/api/remedies/assignment/${id}`, "DELETE");
-}
-
-/* ══════════════════════════════════════════════════════════════════
    APPOINTMENTS — command center (PRD §6)
+   (Pre-defined remedy library removed — Guruji writes remedies as free
+    text in the Guruji Vakya panel; see GurujiVakya in trikala section.)
 ══════════════════════════════════════════════════════════════════ */
 export interface Appointment {
   id: number; appointmentRef?: string; devoteeId?: number; caseReference?: string; bookingId?: number;
   devoteeName?: string; mobile?: string; appointmentType?: string; mode?: string;
   startTime?: string; endTime?: string; durationMinutes?: number; status: string;
   priority?: string; location?: string; meetingLink?: string; purpose?: string;
-  outcomeNote?: string; assignedTo?: string; createdAt?: string; updatedAt?: string;
+  outcomeNote?: string; assignedTo?: string;
+  checkedInAt?: string; detailsVerified?: boolean; officeRemarks?: string; gurujiRemarks?: string;
+  createdAt?: string; updatedAt?: string;
 }
 function mapAppointment(r: Record<string, any>): Appointment {
   return {
@@ -669,6 +604,8 @@ function mapAppointment(r: Record<string, any>): Appointment {
     durationMinutes: r.duration_minutes ?? r.durationMinutes, status: r.status, priority: r.priority,
     location: r.location, meetingLink: r.meeting_link ?? r.meetingLink, purpose: r.purpose,
     outcomeNote: r.outcome_note ?? r.outcomeNote, assignedTo: r.assigned_to ?? r.assignedTo,
+    checkedInAt: r.checked_in_at ?? r.checkedInAt, detailsVerified: r.details_verified ?? r.detailsVerified,
+    officeRemarks: r.office_remarks ?? r.officeRemarks, gurujiRemarks: r.guruji_remarks ?? r.gurujiRemarks,
     createdAt: r.created_at ?? r.createdAt, updatedAt: r.updated_at ?? r.updatedAt,
   };
 }
@@ -678,7 +615,13 @@ export const APPOINTMENT_TYPES = [
 ] as const;
 export const APPOINTMENT_STATUSES = [
   "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+] as const;
+/* The 3 ways a devotee meets Guruji (PRD §6) */
+export const APPOINTMENT_MODES = [
+  { value: "phone",     label: "Phone Call" },
+  { value: "in-person", label: "Direct Meet" },
+  { value: "video",     label: "Video Call (Google Meet)" },
 ] as const;
 
 export async function getAppointments(opts: { status?: string; from?: string; to?: string } = {}): Promise<Appointment[]> {
@@ -687,6 +630,11 @@ export async function getAppointments(opts: { status?: string; from?: string; to
   if (opts.from) qs.set("from", opts.from);
   if (opts.to) qs.set("to", opts.to);
   const json = await getJson(`/api/appointments${qs.toString() ? "?" + qs : ""}`);
+  return (json.data ?? []).map(mapAppointment);
+}
+/* Guruji darshan queue — everyone who checked in today, in arrival order */
+export async function getArrivedQueue(): Promise<Appointment[]> {
+  const json = await getJson(`/api/appointments/queue/arrived`);
   return (json.data ?? []).map(mapAppointment);
 }
 export async function createAppointment(payload: Record<string, any>): Promise<Appointment> {
@@ -699,6 +647,19 @@ export async function updateAppointment(id: number, payload: Record<string, any>
 }
 export async function deleteAppointment(id: number): Promise<void> {
   await sendJson(`/api/appointments/${id}`, "DELETE");
+}
+/* Office staff: verify devotee details + photo and mark them Arrived for darshan */
+export async function checkInAppointment(
+  id: number,
+  payload: { devotee?: Record<string, any>; office_remarks?: string },
+): Promise<{ appointment: Appointment; devotee: Devotee | null }> {
+  const data = await sendJson(`/api/appointments/${id}/checkin`, "PATCH", payload);
+  return { appointment: mapAppointment(data.data.appointment), devotee: data.data.devotee ? mapDevotee(data.data.devotee) : null };
+}
+/* Schedule an appointment straight from a Trikala case */
+export async function convertCaseToAppointment(caseRef: string, payload: Record<string, any> = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/from-case/${encodeURIComponent(caseRef)}`, "POST", payload);
+  return mapAppointment(data.data);
 }
 
 /* ══════════════════════════════════════════════════════════════════
