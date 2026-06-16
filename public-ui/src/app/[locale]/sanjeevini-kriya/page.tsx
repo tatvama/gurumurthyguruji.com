@@ -107,19 +107,19 @@ export default function SanjeeviniKriyaPage() {
           </div>
 
           {/* CTA */}
-          <div className="sacred-burgundy-bg rounded-[3rem] p-12 md:p-20 text-center text-pearl relative overflow-hidden shadow-2xl group">
+          <div className="sacred-burgundy-bg rounded-[2rem] sm:rounded-[3rem] p-7 sm:p-12 md:p-20 text-center text-pearl relative overflow-hidden shadow-2xl group">
             <div className="absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat opacity-[0.06] bg-[size:120px] pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-tr from-saffron-accent/15 via-transparent to-transparent pointer-events-none" />
-            
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-champagne mb-6 relative z-10 text-gold-glow">
+
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-5xl font-bold text-champagne mb-4 sm:mb-6 relative z-10 text-gold-glow">
               {t("sanjeevini.cta.heading")}
             </h2>
-            <p className="text-lg text-pearl/85 max-w-2xl mx-auto mb-10 relative z-10">
+            <p className="text-sm sm:text-base md:text-lg text-pearl/85 max-w-2xl mx-auto mb-7 sm:mb-10 relative z-10">
               {t("sanjeevini.cta.text")}
             </p>
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-saffron-accent to-antique-gold text-white border-0 hover:brightness-110 shadow-lg relative z-10 transition-all font-semibold hover:-translate-y-0.5 text-lg px-8 py-6 h-auto" 
+            <Button
+              size="default"
+              className="bg-gradient-to-r from-saffron-accent to-antique-gold text-white border-0 hover:brightness-110 shadow-lg relative z-10 transition-all font-semibold hover:-translate-y-0.5 text-sm sm:text-base px-6 sm:px-8 py-2.5 sm:py-3 h-auto w-auto max-w-[80%] sm:max-w-none"
               asChild
             >
               <Link href="/meet-guruji">{t("sanjeevini.cta.button")}</Link>

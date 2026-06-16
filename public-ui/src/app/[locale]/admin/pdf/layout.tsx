@@ -13,6 +13,11 @@ export default function PdfSubLayout({ children }: { children: ReactNode }) {
           background: #555 !important;
           min-height: 100vh !important;
         }
+        @media print {
+          body {
+            background: #fff !important;
+          }
+        }
       `}</style>
       {children}
     </>

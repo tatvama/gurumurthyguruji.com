@@ -199,13 +199,14 @@ export const siteConfig = {
   tagline: "Blessed by Shri Thrayambak Babaji & Shirdi Sai Baba · Guiding 5,000+ Seekers",
   url: "https://www.gurumurthyguruji.com",
   trust: "Sai Samsthana Trust",
-  // ↓↓↓ PLACEHOLDERS — replace with real values ↓↓↓
-  phoneDisplay: "+91 XXXXX XXXXX",
-  phoneHref: "tel:+91XXXXXXXXXX",
-  whatsappDisplay: "+91 XXXXX XXXXX",
-  whatsappHref: "https://wa.me/91XXXXXXXXXX",
-  email: "contact@gurumurthyguruji.com",
-  addressMain: "Sadhguru Shirdi Sai Baba Mandir, Srirangapatna, Mandya Dist, Karnataka, India",
+  phoneDisplay: process.env.NEXT_PUBLIC_PHONE_DISPLAY || "+91 XXXXX XXXXX",
+  phoneHref: process.env.NEXT_PUBLIC_PHONE_HREF || "tel:+91XXXXXXXXXX",
+  whatsappDisplay: process.env.NEXT_PUBLIC_WHATSAPP_DISPLAY || "+91 XXXXX XXXXX",
+  whatsappHref: process.env.NEXT_PUBLIC_WHATSAPP_HREF || "https://wa.me/91XXXXXXXXXX",
+  email: process.env.NEXT_PUBLIC_EMAIL || "contact@gurumurthyguruji.com",
+  ashramName: process.env.NEXT_PUBLIC_ASHRAM_NAME || "Sadhguru Shirdi Sai Baba Mandir",
+  ashramLocation: process.env.NEXT_PUBLIC_ASHRAM_LOCATION || "Srirangapatna, Mandya Dist, Karnataka",
+  addressMain: `${process.env.NEXT_PUBLIC_ASHRAM_NAME || "Sadhguru Shirdi Sai Baba Mandir"}, ${process.env.NEXT_PUBLIC_ASHRAM_LOCATION || "Srirangapatna, Mandya Dist, Karnataka"}, India`,
   social: {
     youtube: "#",
     instagram: "#",
@@ -245,7 +246,7 @@ export const trikalaJnana = {
 // Frequently asked questions.
 export const faqs = [
   {
-    q: "Is the audience with Guruji really free of charge?",
+    q: "Is the appointment with Guruji really free of charge?",
     a: "Yes. Guruji offers darshan, Trikāla Jñāna and spiritual guidance entirely free of charge. Seekers come only with sincerity and devotion.",
   },
   {
@@ -266,11 +267,11 @@ export const faqs = [
   },
   {
     q: "Where can I meet Guruji?",
-    a: "At the ashrams and Shirdi Sai Baba mandirs established across Karnataka. Request an audience and our team will guide you to the nearest centre.",
+    a: "At the ashrams and Shirdi Sai Baba mandirs established across Karnataka. Request an appointment and our team will guide you to the nearest centre.",
   },
   {
     q: "Can I receive guidance if I live far away or abroad?",
-    a: "Yes. Many seekers connect from across India and the world. Mention your location when you request an audience and we will do our best to assist.",
+    a: "Yes. Many seekers connect from across India and the world. Mention your location when you request an appointment and we will do our best to assist.",
   },
   {
     q: "How can I support the mission?",

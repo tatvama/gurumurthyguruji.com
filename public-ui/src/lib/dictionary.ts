@@ -29,6 +29,7 @@ export const ui = {
     // ── Calls to action ─────────────────────────────────────────
     "cta.book": "Book a Free Appointment",
     "cta.bookShort": "Book Free Appointment",
+    "cta.getTrikala": "GET Trikala Reading",
     "cta.seekGuidance": "Seek Guruji's Guidance — Free",
     "cta.discoverTrikala": "Discover Trikāla Jñāna",
     "cta.learnTrikala": "Learn About Trikāla Jñāna",
@@ -37,7 +38,7 @@ export const ui = {
     "cta.viewAll": "View All",
 
     // ── Hero ────────────────────────────────────────────────────
-    "hero.badge": "Free Sacred Audience · Open to All Seekers",
+    "hero.badge": "Free Sacred Appointment · Open to All Seekers",
     "hero.h1.line1": "Experience the Divine Grace of",
     "hero.h1.name": "Pujya Sri Gurumurthy Guruji",
     "hero.tagline": "Spiritual Master · Kriya Yoga Guide · Trikāla Jñāna",
@@ -144,7 +145,7 @@ export const ui = {
     "trikalapage.clarifier.title": "This Is Not Astrology",
     "trikalapage.receive.eyebrow": "The Blessing",
     "trikalapage.receive.title": "What a Seeker Receives",
-    "trikalapage.receive.subtitle": "Every audience is offered with love — and always free of charge.",
+    "trikalapage.receive.subtitle": "Every appointment is offered with love — and always free of charge.",
     "trikalapage.receive.b1": "Clarity on the karmic patterns shaping your life",
     "trikalapage.receive.b2": "The true, hidden cause behind your present struggles",
     "trikalapage.receive.b3": "A personal sadhana to walk toward your highest good",
@@ -172,15 +173,15 @@ export const ui = {
     "final.body":
       "Sit in the presence of Pujya Sri Gurumurthy Guruji and receive guidance for life's challenges through Trikāla Jñāna, divine wisdom, and compassion — given freely to every sincere seeker.",
 
-    // ── Meet Guruji (free-audience form) ────────────────────────
+    // ── Meet Guruji (free-appointment form) ────────────────────────
     "meet.badge": "Always Free of Charge",
     "meet.title.a": "Book Your Free",
-    "meet.title.b": "Sacred Audience",
+    "meet.title.b": "Sacred Appointment",
     "meet.subtitle":
-      "Request a personal audience with Pujya Sri Gurumurthy Guruji — for Trikāla Jñāna darshan, Sanjeevini Kriya initiation, blessings, or spiritual counsel. There is never any charge.",
+      "Request a personal appointment with Pujya Sri Gurumurthy Guruji — for Trikāla Jñāna darshan, Sanjeevini Kriya initiation, blessings, or spiritual counsel. There is never any charge.",
     "meet.success.title": "Request Received",
     "meet.success.body":
-      "Your request has been received with devotion. Our team will contact you soon regarding your audience with Guruji.",
+      "Your request has been received with devotion. Our team will contact you soon regarding your appointment with Guruji.",
     "meet.success.again": "Submit Another Request",
     "meet.f.name": "Full Name *",
     "meet.f.name.ph": "E.g. Ramesh Kumar",
@@ -196,7 +197,7 @@ export const ui = {
     "meet.f.ashram.ph": "Select nearest ashram...",
     "meet.f.message": "Message to convey to Guruji (Optional)",
     "meet.f.message.ph": "Share your spiritual seeking or current challenges...",
-    "meet.submit": "Request My Free Audience",
+    "meet.submit": "Request My Free Appointment",
     "meet.submitting": "Submitting...",
     "meet.note": "For urgent matters, you can also reach out via WhatsApp.",
 
@@ -206,11 +207,11 @@ export const ui = {
     "footer.explore": "Explore",
     "footer.connect": "Connect",
     "footer.contact": "Contact",
-    "footer.free": "All audiences with Guruji are free of charge.",
+    "footer.free": "All appointments with Guruji are free of charge.",
     "footer.rights": "All rights reserved.",
     "footer.quote": "“May all beings be guided towards peace and divine grace.”",
     "footer.disclaimer":
-      "Spiritual guidance offered by Guruji complements, and does not replace, professional medical, legal, or financial advice. All audiences are offered free of charge.",
+      "Spiritual guidance offered by Guruji complements, and does not replace, professional medical, legal, or financial advice. All appointments are offered free of charge.",
 
     // ── Misc ────────────────────────────────────────────────────
     "lang.label": "ಕನ್ನಡ",
@@ -316,6 +317,7 @@ export const ui = {
     // ── Calls to action ─────────────────────────────────────────
     "cta.book": "ಉಚಿತ ದರ್ಶನ ಕಾಯ್ದಿರಿಸಿ",
     "cta.bookShort": "ಉಚಿತ ದರ್ಶನ",
+    "cta.getTrikala": "ತ್ರಿಕಾಲ ರೀಡಿಂಗ್ ಪಡೆಯಿರಿ",
     "cta.seekGuidance": "ಗುರೂಜಿಯ ಮಾರ್ಗದರ್ಶನ ಪಡೆಯಿರಿ — ಉಚಿತ",
     "cta.discoverTrikala": "ತ್ರಿಕಾಲ ಜ್ಞಾನವನ್ನು ಅರಿಯಿರಿ",
     "cta.learnTrikala": "ತ್ರಿಕಾಲ ಜ್ಞಾನದ ಬಗ್ಗೆ ತಿಳಿಯಿರಿ",
@@ -459,7 +461,7 @@ export const ui = {
     "final.body":
       "ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿಯ ಸಾನ್ನಿಧ್ಯದಲ್ಲಿ ಕುಳಿತು, ತ್ರಿಕಾಲ ಜ್ಞಾನ, ದಿವ್ಯ ಜ್ಞಾನ ಮತ್ತು ಕರುಣೆಯ ಮೂಲಕ ಜೀವನದ ಸವಾಲುಗಳಿಗೆ ಮಾರ್ಗದರ್ಶನ ಪಡೆಯಿರಿ — ಪ್ರತಿ ಪ್ರಾಮಾಣಿಕ ಸಾಧಕನಿಗೂ ಉಚಿತವಾಗಿ ನೀಡಲಾಗುತ್ತದೆ.",
 
-    // ── Meet Guruji (free-audience form) ────────────────────────
+    // ── Meet Guruji (free-appointment form) ────────────────────────
     "meet.badge": "ಯಾವಾಗಲೂ ಉಚಿತ",
     "meet.title.a": "ನಿಮ್ಮ ಉಚಿತ",
     "meet.title.b": "ದಿವ್ಯ ದರ್ಶನ ಕಾಯ್ದಿರಿಸಿ",

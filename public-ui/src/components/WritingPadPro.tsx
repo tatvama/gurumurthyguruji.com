@@ -52,7 +52,8 @@ export default function WritingPadPro({
   const curRef    = useRef(0);                       // active page index
   const undoRef   = useRef<string[]>([]);            // undo snapshots (current page)
   const drawingRef = useRef(false);
-  const lastRef   = useRef<{ x: number; y: number } | null>(null);
+  const lastRef    = useRef<{ x: number; y: number } | null>(null);
+  const lastMidRef = useRef<{ x: number; y: number } | null>(null);
   const hasPenRef = useRef(false);                   // palm rejection flag
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,6 +163,7 @@ export default function WritingPadPro({
     c.lineCap = "round";
     c.lineJoin = "round";
     c.lineWidth = w;
+    c.setLineDash([]);   // always solid — never dashed
     if (tool === "eraser") {
       c.globalCompositeOperation = "destination-out";
       c.strokeStyle = "rgba(0,0,0,1)";
@@ -189,6 +191,7 @@ export default function WritingPadPro({
     drawingRef.current = true;
     const p = pos(e);
     lastRef.current = p;
+    lastMidRef.current = p;
     applyStyle(c, strokeWidth(e));
     // dot for a tap
     c.beginPath();
@@ -205,21 +208,24 @@ export default function WritingPadPro({
     const c = ctx(); if (!c) return;
     const p = pos(e);
     const last = lastRef.current || p;
-    applyStyle(c, strokeWidth(e));
-    // quadratic smoothing through the midpoint
+    const prevMid = lastMidRef.current || last;
+    // midpoint-to-midpoint quadratic: produces gapless smooth curves
     const mx = (last.x + p.x) / 2;
     const my = (last.y + p.y) / 2;
+    applyStyle(c, strokeWidth(e));
     c.beginPath();
-    c.moveTo(last.x, last.y);
+    c.moveTo(prevMid.x, prevMid.y);
     c.quadraticCurveTo(last.x, last.y, mx, my);
     c.stroke();
     lastRef.current = p;
+    lastMidRef.current = { x: mx, y: my };
   }
 
   function onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!drawingRef.current) return;
     drawingRef.current = false;
     lastRef.current = null;
+    lastMidRef.current = null;
     const c = ctx(); if (c) c.globalAlpha = 1;
     scheduleSave();
   }

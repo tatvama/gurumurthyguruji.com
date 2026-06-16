@@ -18,7 +18,7 @@ type ServiceType = "horoscope" | "ashta_rekha" | "";
 
 interface FormData {
   fullName: string; mobile: string; whatsapp: string; email: string;
-  gender: string; occupation: string; city: string; district: string; state: string; pincode: string;
+  gender: string; occupation: string; address: string; city: string; district: string; state: string; pincode: string;
   preferredLanguage: string;
   dob: string; tob: string; pob: string; birthTimeAccuracy: string;
   fatherName: string; motherName: string; spouseName: string; childrenDetails: string;
@@ -27,7 +27,7 @@ interface FormData {
 
 const BLANK: FormData = {
   fullName: "", mobile: "", whatsapp: "", email: "",
-  gender: "", occupation: "", city: "", district: "", state: "", pincode: "",
+  gender: "", occupation: "", address: "", city: "", district: "", state: "", pincode: "",
   preferredLanguage: "",
   dob: "", tob: "", pob: "", birthTimeAccuracy: "unknown",
   fatherName: "", motherName: "", spouseName: "", childrenDetails: "",
@@ -653,12 +653,14 @@ const PROBLEM_CATEGORIES = ["Health", "Marriage", "Career", "Business", "Finance
 
 function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void }) {
   const [errs, setErrs] = useState<Partial<Record<keyof FormData, string>>>({});
-  const cityRef = useRef<HTMLInputElement>(null);
-  usePlacesAutocomplete(cityRef, (p) => {
-    if (p.city)     set("city", p.city);
-    if (p.district) set("district", p.district);
-    if (p.state)    set("state", p.state);
-    if (p.pincode)  set("pincode", p.pincode);
+  const addressRef = useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(addressRef, (p) => {
+    // One pick fills the visible address box and the hidden city/state/pincode used by the API
+    set("address", p.formatted || [p.city, p.district, p.state, p.pincode].filter(Boolean).join(", "));
+    set("city",     p.city);
+    set("district", p.district);
+    set("state",    p.state);
+    set("pincode",  p.pincode);
   });
 
   function validate() {
@@ -709,33 +711,24 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
             <input style={iBase} placeholder="Occupation *" value={form.occupation} onChange={e => set("occupation", e.target.value)} />
           </FieldBox>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-          <FieldBox hint="Start typing your city — district, state & pincode fill in">
-            <span style={{ color: KO }}><Ico.Pin /></span>
-            <input ref={cityRef} style={iBase} placeholder="City" value={form.city} autoComplete="off" onChange={e => set("city", e.target.value)} />
-          </FieldBox>
-          <FieldBox hint="Language you prefer for guidance">
-            <span style={{ color: KO, fontSize: 14 }}>🗣️</span>
-            <select style={{ ...iBase, cursor: "pointer" }} value={form.preferredLanguage} onChange={e => set("preferredLanguage", e.target.value)}>
-              <option value="">Preferred Language</option>
-              {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </FieldBox>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 kundli-grid-2">
-          <FieldBox hint="District">
-            <span style={{ color: KO }}><Ico.Pin /></span>
-            <input style={iBase} placeholder="District" value={form.district} onChange={e => set("district", e.target.value)} />
-          </FieldBox>
-          <FieldBox hint="State">
-            <span style={{ color: KO }}><Ico.Pin /></span>
-            <input style={iBase} placeholder="State" value={form.state} onChange={e => set("state", e.target.value)} />
-          </FieldBox>
-          <FieldBox hint="Pincode">
-            <span style={{ color: KO }}><Ico.Pin /></span>
-            <input style={iBase} placeholder="Pincode" inputMode="numeric" value={form.pincode} onChange={e => set("pincode", e.target.value)} />
-          </FieldBox>
-        </div>
+        <FieldBox hint="Start typing your address — city, district, state & pincode are detected automatically">
+          <span style={{ color: KO }}><Ico.Pin /></span>
+          <input
+            ref={addressRef}
+            style={iBase}
+            placeholder="Address — start typing your city or area"
+            value={form.address}
+            autoComplete="off"
+            onChange={e => set("address", e.target.value)}
+          />
+        </FieldBox>
+        <FieldBox hint="Language you prefer for guidance">
+          <span style={{ color: KO, fontSize: 14 }}>🗣️</span>
+          <select style={{ ...iBase, cursor: "pointer" }} value={form.preferredLanguage} onChange={e => set("preferredLanguage", e.target.value)}>
+            <option value="">Preferred Language</option>
+            {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </FieldBox>
 
         {/* Family Details — optional */}
         <div style={{ border: "1.5px solid rgba(200,170,130,0.35)", borderRadius: 12, padding: "14px 16px", background: "#FFFDF8" }}>
@@ -1028,6 +1021,12 @@ export default function KundliPage() {
 
   function set(k: keyof FormData, v: string) { setForm(prev => ({ ...prev, [k]: v })); }
 
+  // Gold/maroon Places-autocomplete theme while this public page is mounted
+  useEffect(() => {
+    document.body.classList.add("pac-theme-gold");
+    return () => document.body.classList.remove("pac-theme-gold");
+  }, []);
+
   function scrollToForm() {
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   }
@@ -1043,7 +1042,7 @@ export default function KundliPage() {
         email:            form.email,
         gender:           form.gender,
         occupation:       form.occupation,
-        city:             form.city || undefined,
+        city:             form.city || form.address || undefined,
         district:         form.district || undefined,
         state:            form.state || undefined,
         pincode:          form.pincode || undefined,

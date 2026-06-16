@@ -32,6 +32,49 @@ body {
   background-attachment: fixed;
 }
 
+/* ── Hero name — char-by-char reveal (left→right), then golden light sweep. Loops every 8s ── */
+.hero-name { display: inline-block; }
+.hn-char {
+  display: inline-block;
+  background-image: linear-gradient(
+    100deg,
+    #FEFCF7 0%, #FEFCF7 38%,
+    #EFCC7E 44%, #FBEFC8 50%, #EFCC7E 56%,
+    #FEFCF7 62%, #FEFCF7 100%
+  );
+  background-size: 300% 100%;
+  background-position: 100% 50%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  opacity: 0;
+  will-change: transform, opacity, background-position;
+  animation: hnCharReveal 8s ease-in-out infinite, hnShine 8s ease-in-out infinite;
+}
+@keyframes hnCharReveal {
+  0%   { opacity: 0; transform: translateY(0.7em)  scale(0.80); }
+  6%   { opacity: 1; transform: translateY(0)       scale(1);    }
+  85%  { opacity: 1; transform: translateY(0)       scale(1);    }
+  96%  { opacity: 0; transform: translateY(-0.2em) scale(0.98); }
+  100% { opacity: 0; transform: translateY(0.7em)  scale(0.80); }
+}
+@keyframes hnShine {
+  0%, 22% { background-position: 100% 50%; }
+  40%     { background-position:   0% 50%; }
+  100%    { background-position:   0% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hn-char {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    background-position: 0% 50%;
+    will-change: auto;
+  }
+}
+
 /* Custom Background Patterns & Overlays */
 .bg-chakra-texture {
   position: relative;
@@ -156,79 +199,140 @@ body {
 html { font-size: 16px; overflow-x: hidden; }
 body { line-height: 1.7; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
 
-/* ── Google Places autocomplete dropdown ─────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   Google Places autocomplete dropdown — polished, brand-matched
+   "Powered by Google" strip is hidden; custom location-pin icon.
+══════════════════════════════════════════════════════════════════ */
 .pac-container {
   z-index: 100000 !important;
   background: #ffffff;
-  border: 1.5px solid #ccfbf1;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(13,148,136,0.13), 0 2px 8px rgba(0,0,0,0.07);
-  margin-top: 6px;
+  border: 1.5px solid rgba(13,148,136,0.22);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(13,148,136,0.06),
+    0 4px 16px rgba(0,0,0,0.07),
+    0 20px 50px rgba(13,148,136,0.13);
+  margin-top: 5px;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   overflow: hidden;
-  padding: 4px 0;
+  padding: 0;
   min-width: 260px;
-  max-width: 100vw;
+  max-width: min(500px, calc(100vw - 20px));
 }
-/* hide "powered by Google" */
+
+/* Teal-to-gold accent strip at the top */
+.pac-container::before {
+  content: "";
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #0d9488 0%, #14b8a6 55%, #D8B76A 100%);
+}
+
+/* Hide "Powered by Google" */
 .pac-container::after { display: none !important; height: 0 !important; }
 
 .pac-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 11px;
+  padding: 11px 15px;
   font-size: 13px;
   color: #374151;
   cursor: pointer;
   border: none;
-  border-bottom: 1px solid #f0fdf4;
-  transition: background 0.12s;
+  border-bottom: 1px solid rgba(13,148,136,0.06);
+  transition: background 0.14s ease;
   line-height: 1.4;
 }
-.pac-item:last-child { border-bottom: none; }
+.pac-item:last-child { border-bottom: none; padding-bottom: 12px; }
+
 .pac-item:hover, .pac-item-selected {
-  background: linear-gradient(90deg, #f0fdfb, #ecfdf5) !important;
-  color: #0d9488;
+  background: linear-gradient(90deg, rgba(13,148,136,0.08), rgba(20,184,166,0.03)) !important;
 }
 .pac-item:hover .pac-item-query,
 .pac-item-selected .pac-item-query { color: #0d9488; }
 
-/* replace the default grey pin icon with a teal dot */
+/* Location pin — SVG data-URI replaces Google's sprite */
 .pac-icon {
-  width: 8px !important;
-  height: 8px !important;
-  min-width: 8px;
-  border-radius: 50%;
-  background: #0d9488 !important;
-  background-image: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px;
+  border-radius: 0 !important;
+  background: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d9488'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
   margin-top: 0 !important;
   flex-shrink: 0;
+  opacity: 0.65;
+  transition: opacity 0.14s ease;
 }
-.pac-icon-marker { background-image: none !important; }
+.pac-icon-marker {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d9488'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E") !important;
+}
+.pac-item:hover .pac-icon, .pac-item-selected .pac-icon { opacity: 1; }
 
-/* bold part of suggestion (the matching text) */
+/* Main place name */
 .pac-item-query {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #111827;
   margin-right: 4px;
+  transition: color 0.14s ease;
 }
-/* the highlighted matched portion */
-.pac-matched { color: #0d9488; }
 
-/* secondary description text */
+/* Matched characters highlight */
+.pac-matched { color: #0d9488; font-weight: 800; }
+
+/* Secondary description (region, country) */
 .pac-item span:not(.pac-item-query):not(.pac-icon) {
   font-size: 12px;
   color: #6b7280;
   font-weight: 400;
 }
 
-/* responsive — don't overflow on mobile */
-@media (max-width: 480px) {
-  .pac-container { border-radius: 10px; margin-left: 0; }
-  .pac-item { padding: 9px 12px; font-size: 12.5px; }
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .pac-container {
+    border-radius: 12px;
+    max-width: calc(100vw - 12px);
+    margin-left: 0;
+  }
+  .pac-item { padding: 10px 13px; font-size: 12.5px; gap: 9px; }
+  .pac-icon { width: 17px !important; height: 17px !important; min-width: 17px; }
+  .pac-item-query { font-size: 13px; }
 }
+
+/* ── Gold / maroon theme — public site (body.pac-theme-gold) ── */
+body.pac-theme-gold .pac-container {
+  background: #FFFDF8;
+  border: 1.5px solid rgba(216,183,106,0.45);
+  box-shadow:
+    0 0 0 1px rgba(216,183,106,0.08),
+    0 4px 16px rgba(42,28,19,0.08),
+    0 20px 50px rgba(107,18,28,0.14);
+}
+body.pac-theme-gold .pac-container::before {
+  background: linear-gradient(90deg, #B99345 0%, #D8B76A 55%, #7A1E2C 100%);
+}
+body.pac-theme-gold .pac-item {
+  color: #4a3b2e;
+  border-bottom: 1px solid rgba(216,183,106,0.12);
+}
+body.pac-theme-gold .pac-item:hover,
+body.pac-theme-gold .pac-item-selected {
+  background: linear-gradient(90deg, rgba(185,147,69,0.10), rgba(216,183,106,0.05)) !important;
+}
+body.pac-theme-gold .pac-item:hover .pac-item-query,
+body.pac-theme-gold .pac-item-selected .pac-item-query { color: #7A1E2C; }
+body.pac-theme-gold .pac-icon,
+body.pac-theme-gold .pac-icon-marker {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23B99345'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E") !important;
+}
+body.pac-theme-gold .pac-item-query { color: #2A1C13; }
+body.pac-theme-gold .pac-matched { color: #7A1E2C; font-weight: 800; }
+body.pac-theme-gold .pac-item span:not(.pac-item-query):not(.pac-icon) { color: #6b5c4d; }
 
 /* Refined display typography */
 .font-heading { letter-spacing: -0.01em; }

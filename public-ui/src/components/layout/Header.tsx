@@ -293,20 +293,14 @@ export function Header() {
               <div className="flex justify-center">
                 <LanguageToggle tone="light" />
               </div>
-              {/* GET Trikala Reading — orange CTA */}
+              {/* GET Trikala Reading — outline pill */}
               <Link
                 href="/trikala-reading"
                 onClick={closeDrawer}
-                className="flex w-full items-center justify-center gap-1.5 rounded-full font-semibold transition-all duration-200 hover:opacity-90"
-                style={{
-                  padding: "12px 20px",
-                  background: "linear-gradient(135deg, #E07318 0%, #C95F08 100%)",
-                  color: "#fff",
-                  fontSize: 14,
-                  boxShadow: "0 4px 20px rgba(224,115,24,0.40)",
-                }}
+                className="flex w-full items-center justify-center rounded-full border border-champagne/35 font-semibold text-pearl/75 transition-all duration-200 hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl"
+                style={{ padding: "12px 20px", fontSize: 14 }}
               >
-                ✦ GET Trikala Reading
+                {t("cta.getTrikala")}
               </Link>
               <Link
                 href="/meet-guruji"
@@ -516,25 +510,21 @@ export function Header() {
             {/* Desktop: language + 2 CTAs (hidden below 1240 px) */}
             <div className="hidden min-[1240px]:flex items-center gap-2">
 
-              {/* Thin champagne rule */}
-              <span className="mx-1 h-4 w-px shrink-0 bg-gradient-to-b from-transparent via-champagne/25 to-transparent" />
+              {/* Thin champagne rule — extra margin to give breathing room from nav */}
+              <span className="mx-4 h-4 w-px shrink-0 bg-gradient-to-b from-transparent via-champagne/25 to-transparent" />
 
               <LanguageToggle tone="light" />
 
-              {/* GET Trikala Reading */}
+              {/* GET Trikala Reading — outline pill, same style as Book */}
               <Link
                 href="/trikala-reading"
-                className="group relative inline-flex shrink-0 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full font-semibold transition-all duration-300 hover:-translate-y-px hover:shadow-[0_6px_22px_rgba(224,115,24,0.55)] active:translate-y-0"
+                className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-champagne/28 font-semibold text-pearl/75 transition-all duration-300 hover:-translate-y-px hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl active:translate-y-0"
                 style={{
                   fontSize: "clamp(10.5px, 0.88vw, 12.5px)",
                   padding: "7px clamp(12px, 0.95vw, 17px)",
-                  background: "linear-gradient(135deg,#EE8030 0%,#C95F08 100%)",
-                  color: "#fff",
-                  boxShadow: "0 3px 14px rgba(224,115,24,0.38)",
                 }}
               >
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/18 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
-                <span className="relative">✦ GET Trikala Reading</span>
+                {t("cta.getTrikala")}
               </Link>
 
               {/* Book Free Appointment */}

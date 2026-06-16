@@ -641,7 +641,7 @@ function mapAppointment(r: Record<string, any>): Appointment {
   };
 }
 export const APPOINTMENT_TYPES = [
-  "Trikala Consultation", "General Audience", "Phone Call", "Video Call", "Temple Meeting",
+  "Trikala Consultation", "General Appointment", "Phone Call", "Video Call", "Temple Meeting",
   "Event Invitation", "VIP Meeting", "Follow-up", "Internal Meeting", "Travel Block", "Rest / Personal Time",
 ] as const;
 export const APPOINTMENT_STATUSES = [

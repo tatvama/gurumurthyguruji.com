@@ -529,9 +529,10 @@ function DevoteeProfilePanel({
 }
 
 /* ── Reusable custom dropdown ──────────────────────────────────── */
-function FancySelect({ label, value, onChange, options, placeholder = "Select" }: {
+function FancySelect({ label, value, onChange, options, placeholder = "Select", containerStyle }: {
   label?: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[]; placeholder?: string;
+  containerStyle?: React.CSSProperties;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -543,7 +544,7 @@ function FancySelect({ label, value, onChange, options, placeholder = "Select" }
   }, [open]);
   const selected = options.find(o => o.value === value);
   return (
-    <div ref={ref} style={{ position: "relative", marginBottom: 13 }}>
+    <div ref={ref} style={{ position: "relative", marginBottom: 13, ...containerStyle }}>
       {label && <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>{label}</label>}
       <button type="button" onClick={() => setOpen(p => !p)}
         onMouseEnter={e => { (e.currentTarget).style.borderColor = "#9ca3af"; (e.currentTarget).style.background = "#f9fafb"; }}
@@ -747,7 +748,7 @@ function toLocalInput(iso?: string) {
 function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({
     devoteeName: appt?.devoteeName || "", mobile: appt?.mobile || "",
-    appointmentType: appt?.appointmentType || "General Audience", mode: appt?.mode || "in-person",
+    appointmentType: appt?.appointmentType || "General Appointment", mode: appt?.mode || "in-person",
     startTime: toLocalInput(appt?.startTime), durationMinutes: String(appt?.durationMinutes || 30),
     status: appt?.status || "Requested", priority: appt?.priority || "Normal",
     location: appt?.location || "", meetingLink: appt?.meetingLink || "",
@@ -1034,37 +1035,37 @@ function downloadPdfDirect(
   const sub   = type === "contacts" ? "CONTACT MESSAGES REPORT" : "APPOINTMENT BOOKINGS REPORT";
   const dateStr = new Date().toISOString().slice(0, 10);
 
-  /* ── Header band ── */
-  doc.setFillColor(75, 13, 19);
+  /* ── Header band (clean grayscale — light header like a printable template) ── */
+  doc.setFillColor(238, 238, 238);
   doc.rect(0, 0, PW, 28, "F");
-  doc.setDrawColor(185, 147, 74);
-  doc.setLineWidth(0.8);
+  doc.setDrawColor(130, 130, 130);
+  doc.setLineWidth(0.6);
   doc.line(0, 28, PW, 28);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
-  doc.setTextColor(245, 230, 200);
+  doc.setTextColor(17, 17, 17);
   doc.text("Gurumurthy Guruji — Admin Console", M, 11);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.setTextColor(180, 158, 128);
+  doc.setTextColor(110, 110, 110);
   doc.text(sub, M, 18.5);
 
   doc.setFontSize(7);
-  doc.setTextColor(160, 140, 110);
+  doc.setTextColor(110, 110, 110);
   doc.text("Generated: " + now, PW - M, 10, { align: "right" });
   doc.text("Records: " + data.length, PW - M, 17, { align: "right" });
 
   /* ── Summary strip ── */
-  doc.setFillColor(253, 248, 242);
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 29, PW, 8, "F");
-  doc.setDrawColor(230, 218, 200);
+  doc.setDrawColor(200, 200, 200);
   doc.setLineWidth(0.25);
   doc.line(0, 37, PW, 37);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.setTextColor(122, 74, 42);
+  doc.setTextColor(60, 60, 60);
   doc.text(title + " — " + data.length + " record" + (data.length !== 1 ? "s" : ""), M, 34);
 
   type RGB = [number, number, number];
@@ -1072,17 +1073,17 @@ function downloadPdfDirect(
   const baseStyles = {
     overflow: "linebreak" as const,
     valign: "top" as const,
-    lineColor: [232, 220, 200] as RGB,
+    lineColor: [150, 150, 150] as RGB,
     lineWidth: 0.2,
-    textColor: [59, 26, 14] as RGB,
+    textColor: [17, 17, 17] as RGB,
   };
   const headSt = {
-    fillColor: [75, 13, 19] as RGB,
-    textColor: [245, 230, 200] as RGB,
+    fillColor: [219, 219, 219] as RGB,
+    textColor: [17, 17, 17] as RGB,
     fontStyle: "bold" as const,
     cellPadding: 3,
   };
-  const altRow  = { fillColor: [253, 248, 242] as RGB };
+  const altRow  = { fillColor: [246, 246, 246] as RGB };
   const margins = { left: M, right: M, bottom: 14 };
 
   /* ── Table ── */
@@ -1098,12 +1099,12 @@ function downloadPdfDirect(
       headStyles: { ...headSt, fontSize: 8 },
       alternateRowStyles: altRow,
       columnStyles: {
-        0: { cellWidth: 8,  halign: "center", fontStyle: "bold", textColor: [185, 147, 74] as RGB },
+        0: { cellWidth: 8,  halign: "center", fontStyle: "bold", textColor: [70, 70, 70] as RGB },
         1: { cellWidth: 26, fontStyle: "bold" },
         2: { cellWidth: 38, fontSize: 7.5 },
         3: { cellWidth: 34 },
-        4: { cellWidth: 62, fontSize: 8, textColor: [91, 45, 30] as RGB },
-        5: { cellWidth: 18, halign: "center", fontSize: 7.5, textColor: [122, 74, 42] as RGB },
+        4: { cellWidth: 62, fontSize: 8, textColor: [34, 34, 34] as RGB },
+        5: { cellWidth: 18, halign: "center", fontSize: 7.5, textColor: [70, 70, 70] as RGB },
       },
       margin: margins,
     });
@@ -1121,15 +1122,15 @@ function downloadPdfDirect(
       headStyles: { ...headSt, fontSize: 7 },
       alternateRowStyles: altRow,
       columnStyles: {
-        0: { cellWidth: 7,  halign: "center", fontStyle: "bold", textColor: [185, 147, 74] as RGB },
+        0: { cellWidth: 7,  halign: "center", fontStyle: "bold", textColor: [70, 70, 70] as RGB },
         1: { cellWidth: 22, fontStyle: "bold" },
         2: { cellWidth: 18 },
         3: { cellWidth: 19 },
         4: { cellWidth: 19 },
         5: { cellWidth: 22 },
         6: { cellWidth: 19 },
-        7: { cellWidth: 42, fontSize: 7, textColor: [91, 45, 30] as RGB },
-        8: { cellWidth: 18, halign: "center", fontSize: 7, textColor: [122, 74, 42] as RGB },
+        7: { cellWidth: 42, fontSize: 7, textColor: [34, 34, 34] as RGB },
+        8: { cellWidth: 18, halign: "center", fontSize: 7, textColor: [70, 70, 70] as RGB },
       },
       margin: margins,
     });
@@ -1140,12 +1141,12 @@ function downloadPdfDirect(
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     const H = doc.internal.pageSize.height;
-    doc.setDrawColor(185, 147, 74);
+    doc.setDrawColor(150, 150, 150);
     doc.setLineWidth(0.5);
     doc.line(M, H - 10, PW - M, H - 10);
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(155, 122, 94);
+    doc.setTextColor(90, 90, 90);
     doc.text("Gurumurthy Guruji Admin Console — Confidential", M, H - 6);
     doc.text(today, PW - M, H - 6, { align: "right" });
   }
@@ -1153,7 +1154,7 @@ function downloadPdfDirect(
   /* ── Direct download — no dialog ── */
   doc.save(type === "contacts"
     ? "contact-messages-" + dateStr + ".pdf"
-    : "audience-bookings-" + dateStr + ".pdf");
+    : "appointment-bookings-" + dateStr + ".pdf");
 }
 
 
@@ -1703,33 +1704,21 @@ function AdminPanel({
             </div>
 
             {/* Role — dropdown */}
-            <div>
-              <label style={labelStyle}>Role <span style={{ color: "#dc2626" }}>*</span></label>
-              <div style={{ position: "relative" }}>
-                <ShieldCheck size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#0d9488", pointerEvents: "none" }} />
-                <select value={role} onChange={e => setRole(e.target.value)}
-                  style={{ ...inpWithIcon, appearance: "none", WebkitAppearance: "none", cursor: "pointer", paddingRight: 36, background: "#fff" }}>
-                  {ADMIN_ROLES.map(r => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-                <svg style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
+            <FancySelect
+              label="Role *"
+              value={role}
+              onChange={v => setRole(v)}
+              options={ADMIN_ROLES.map(r => ({ value: r.value, label: r.label }))}
+            />
 
             {/* Status (edit only) */}
             {isEdit && (
-              <div>
-                <label style={labelStyle}>Status</label>
-                <div style={{ position: "relative" }}>
-                  <select value={status} onChange={e => setStatus(e.target.value as "active" | "inactive")}
-                    style={{ ...inp, appearance: "none", WebkitAppearance: "none", cursor: "pointer", paddingRight: 36, color: status === "active" ? "#16a34a" : "#dc2626", fontWeight: 600 }}>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                  <svg style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
+              <FancySelect
+                label="Status"
+                value={status}
+                onChange={v => setStatus(v as "active" | "inactive")}
+                options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]}
+              />
             )}
 
           </div>
@@ -1926,17 +1915,13 @@ function FollowUps({ caseId }: { caseId: string }) {
         {/* Row 1 — Type + DateTime */}
         <div className="tdp-fu-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <div>
-            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#0d9488", textTransform: "uppercase", marginBottom: 6 }}>Type</p>
-            <div style={{ position: "relative" }}>
-              <select value={type} onChange={e => setType(e.target.value)}
-                style={{ width: "100%", height: 40, padding: "0 32px 0 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", appearance: "none", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
-                {FOLLOWUP_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
+            <FancySelect
+              label="Type"
+              value={type}
+              onChange={v => setType(v)}
+              options={FOLLOWUP_TYPES}
+              containerStyle={{ marginBottom: 0 }}
+            />
           </div>
           <div>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#0d9488", textTransform: "uppercase", marginBottom: 6 }}>Date &amp; Time</p>
@@ -2160,10 +2145,12 @@ function WritingPad({ caseId }: { caseId: string }) {
           </div>
 
           {/* Stroke size */}
-          <select value={size} onChange={e => setSize(Number(e.target.value))}
-            style={{ height: 32, padding: "0 28px 0 10px", borderRadius: 7, border: "1.5px solid #e5e7eb", fontSize: 12.5, color: "#1f2937", background: "#fff", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
-            {PAD_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
+          <FancySelect
+            value={String(size)}
+            onChange={v => setSize(Number(v))}
+            options={PAD_SIZES.map(s => ({ value: String(s.value), label: s.label }))}
+            containerStyle={{ marginBottom: 0, width: 160 }}
+          />
         </div>
 
         {/* Canvas */}
@@ -2358,6 +2345,11 @@ function GurujiVakyaTab({ reading, onSaved }: { reading: TrikalaReading; onSaved
   const [err, setErr] = useState("");
   const set = (k: string, v: any) => { setF(p => ({ ...p, [k]: v })); setDone(false); };
 
+  const remedyPlaceRef = React.useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(remedyPlaceRef, (p) => {
+    set("remedy_place", p.formatted || [p.city, p.district, p.state].filter(Boolean).join(", "));
+  }, { types: ["geocode"] });
+
   async function save(advance: boolean) {
     setSaving(true); setErr("");
     try {
@@ -2387,7 +2379,7 @@ function GurujiVakyaTab({ reading, onSaved }: { reading: TrikalaReading; onSaved
         <div style={{ marginBottom: 16 }}><label style={lbl}>Divine Remedy Advised</label><textarea rows={2} value={f.divine_remedy} onChange={e => set("divine_remedy", e.target.value)} style={ta} /></div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Duration</label><input value={f.remedy_duration} onChange={e => set("remedy_duration", e.target.value)} style={inp} placeholder="3 / 9 / 21 / 48 days" /></div>
-          <div style={{ marginBottom: 16 }}><label style={lbl}>Place</label><input value={f.remedy_place} onChange={e => set("remedy_place", e.target.value)} style={inp} placeholder="Home / temple / kshetra" /></div>
+          <div style={{ marginBottom: 16 }}><label style={lbl}>Place</label><input ref={remedyPlaceRef} value={f.remedy_place} onChange={e => set("remedy_place", e.target.value)} style={inp} placeholder="Home / temple / kshetra" /></div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Mantra / Japa</label><input value={f.mantra_japa} onChange={e => set("mantra_japa", e.target.value)} style={inp} /></div>
@@ -2651,10 +2643,12 @@ function SettingsTab({
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488" }}>Audit Log · Last {auditLimit} entries</p>
-            <select value={auditLimit} onChange={e => setAuditLimit(Number(e.target.value))}
-              style={{ padding: "5px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, color: "#1f2937", cursor: "pointer" }}>
-              {[25, 50, 100, 200].map(n => <option key={n} value={n}>Show {n}</option>)}
-            </select>
+            <FancySelect
+              value={String(auditLimit)}
+              onChange={v => setAuditLimit(Number(v))}
+              options={[25, 50, 100, 200].map(n => ({ value: String(n), label: `Show ${n}` }))}
+              containerStyle={{ marginBottom: 0, width: 140 }}
+            />
           </div>
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             {auditLoading ? (
@@ -3372,16 +3366,11 @@ function TrikalaDetailPanel({
               <span style={{ color: "#0d9488" }}><TIco.Status /></span>
               <p style={{ fontSize: 11, fontWeight: 700, color: "#3a3f48", letterSpacing: "0.06em", textTransform: "uppercase" }}>Update Status</p>
             </div>
-            <div style={{ position: "relative", marginBottom: 10 }}>
-              <select value={status} onChange={e => setStatus(e.target.value as typeof status)}
-                style={{ width: "100%", height: 40, padding: "0 32px 0 12px", borderRadius: 9, border: "1.5px solid #d4c4b0", background: "#f9fafb", fontSize: 13, color: "#1f2937", appearance: "none", cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
-                {ALL_TRIKALA_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
+            <FancySelect
+              value={status}
+              onChange={v => setStatus(v as typeof status)}
+              options={ALL_TRIKALA_STATUSES.map(s => ({ value: s, label: s }))}
+            />
             {saveErr && <p style={{ fontSize: 11.5, color: "#ef4444", marginBottom: 8 }}>{saveErr}</p>}
             <button onClick={save} disabled={saving || status === reading.status}
               style={{ width: "100%", height: 40, borderRadius: 9, border: "none", background: (saving || status === reading.status) ? "#d1fae5" : "#0d9488", color: "#fff", fontWeight: 700, fontSize: 13, cursor: (saving || status === reading.status) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: (saving || status === reading.status) ? "none" : "0 2px 8px rgba(13,148,136,0.2)" }}>
@@ -4339,7 +4328,7 @@ export default function AdminPage() {
               <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Available Now</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginBottom: 28 }}>
                 {[
-                  { icon: "📋", title: "Booking PDF",  desc: `${bookings.length} audience requests`, action: () => downloadPdfDirect("bookings", bookings), ready: true },
+                  { icon: "📋", title: "Booking PDF",  desc: `${bookings.length} appointment requests`, action: () => downloadPdfDirect("bookings", bookings), ready: true },
                   { icon: "📬", title: "Contact PDF",  desc: `${contacts.length} contact messages`,   action: () => downloadPdfDirect("contacts", contacts), ready: true },
                 ].map(r => (
                   <div key={r.title} style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>

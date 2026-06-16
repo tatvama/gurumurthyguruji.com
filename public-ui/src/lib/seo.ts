@@ -38,7 +38,7 @@ export const pageMeta: Record<string, PageMeta> = {
       kn: "ತ್ರಿಕಾಲ ಜ್ಞಾನ — ಭೂತ, ವರ್ತಮಾನ, ಭವಿಷ್ಯದ ದಿವ್ಯ ದೃಷ್ಟಿ",
     },
     description: {
-      en: "Trikāla Jñāna (Trikāla-Mukha Vidyā): Guruji's realised perception of a soul's past, present & future — rooted in the Bhagavad Gītā and Yoga Sūtras, not astrology. Free audience.",
+      en: "Trikāla Jñāna (Trikāla-Mukha Vidyā): Guruji's realised perception of a soul's past, present & future — rooted in the Bhagavad Gītā and Yoga Sūtras, not astrology. Free appointment.",
       kn: "ತ್ರಿಕಾಲ ಜ್ಞಾನ: ಆತ್ಮದ ಭೂತ, ವರ್ತಮಾನ ಮತ್ತು ಭವಿಷ್ಯವನ್ನು ಕಾಣುವ ಗುರೂಜಿಯ ದಿವ್ಯ ದೃಷ್ಟಿ — ಭಗವದ್ಗೀತೆ ಮತ್ತು ಯೋಗಸೂತ್ರಗಳಲ್ಲಿ ಬೇರೂರಿದೆ, ಜ್ಯೋತಿಷ್ಯವಲ್ಲ. ಉಚಿತ ದರ್ಶನ.",
     },
   },
@@ -94,11 +94,11 @@ export const pageMeta: Record<string, PageMeta> = {
   },
   "/meet-guruji": {
     title: {
-      en: "Meet Guruji — Book a Free Sacred Audience",
+      en: "Meet Guruji — Book a Free Sacred Appointment",
       kn: "ಗುರೂಜಿಯನ್ನು ಭೇಟಿಯಾಗಿ — ಉಚಿತ ದಿವ್ಯ ದರ್ಶನ ಕಾಯ್ದಿರಿಸಿ",
     },
     description: {
-      en: "Request a free personal audience with Pujya Sri Gurumurthy Guruji for Trikāla Jñāna darshan, Sanjeevini Kriya initiation, healing and spiritual guidance.",
+      en: "Request a free personal appointment with Pujya Sri Gurumurthy Guruji for Trikāla Jñāna darshan, Sanjeevini Kriya initiation, healing and spiritual guidance.",
       kn: "ತ್ರಿಕಾಲ ಜ್ಞಾನ ದರ್ಶನ, ಸಂಜೀವಿನಿ ಕ್ರಿಯಾ ದೀಕ್ಷೆ, ಗುಣಪಡಿಸುವಿಕೆ ಮತ್ತು ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದರ್ಶನಕ್ಕಾಗಿ ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿಯವರೊಂದಿಗೆ ಉಚಿತ ವೈಯಕ್ತಿಕ ದರ್ಶನ ಕೋರಿ.",
     },
   },

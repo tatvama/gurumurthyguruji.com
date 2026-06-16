@@ -167,10 +167,10 @@ export default function ContactPage() {
                       {t("contact.details.ashramLabel")}
                     </p>
                     <p className="text-sm font-semibold text-deep-brown mt-0.5 leading-relaxed">
-                      {t("contact.details.ashramName")}
+                      {siteConfig.ashramName}
                     </p>
                     <p className="text-xs text-deep-brown/55 mt-0.5">
-                      {t("contact.details.ashramLocation")}
+                      {siteConfig.ashramLocation}
                     </p>
                   </div>
                 </div>

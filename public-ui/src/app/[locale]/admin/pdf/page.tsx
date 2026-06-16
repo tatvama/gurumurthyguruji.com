@@ -309,57 +309,102 @@ const STYLES = `
   }
 
   @media print {
-    .pdf-toolbar { display: none !important; }
-    .pdf-wrap { padding: 0; }
-    .pdf-page {
+    /* ── Nuclear B&W reset: strip every background, force black text ── */
+    *, *::before, *::after {
+      background: #fff !important;
+      background-color: #fff !important;
+      background-image: none !important;
+      color: #111 !important;
       box-shadow: none !important;
-      width: 100% !important;
-      min-height: unset;
+      text-shadow: none !important;
+      -webkit-print-color-adjust: economy !important;
+      print-color-adjust: economy !important;
     }
 
-    /* Contacts: always show table, never cards */
-    .c-cards { display: none !important; }
-    .c-table-wrap { display: block !important; padding: 6mm 0 22mm; }
-    .c-table th { font-size: 7.5pt !important; padding: 5px 7px !important; }
-    .c-table td { font-size: 8pt !important; padding: 5px 7px !important; }
+    .pdf-toolbar { display: none !important; }
+    .pdf-wrap    { padding: 0 !important; }
+    .pdf-page    { box-shadow: none !important; width: 100% !important; min-height: unset !important; }
 
-    /* Bookings: 2-column card grid */
+    /* Watermark — keep faint */
+    .pdf-watermark { color: #bbb !important; opacity: 0.18 !important; }
+
+    /* Header — white bg, black text, thick bottom rule */
+    .pdf-header {
+      border-top: 3px solid #111 !important;
+      border-bottom: 2px solid #111 !important;
+      padding: 10px 20px 9px !important;
+    }
+    .pdf-header h1   { font-size: 14pt !important; color: #111 !important; }
+    .pdf-header-sub  { font-size: 8pt  !important; color: #444 !important; }
+    .pdf-header-meta { font-size: 7pt  !important; color: #555 !important; }
+
+    /* Summary bar */
+    .pdf-summary {
+      border-bottom: 1px solid #aaa !important;
+      color: #333 !important;
+      font-size: 8pt !important;
+      padding: 5px 0 !important;
+    }
+
+    /* ── Contact table ── */
+    .c-cards      { display: none !important; }
+    .c-table-wrap { display: block !important; padding: 6mm 0 22mm !important; }
+
+    .c-table th {
+      border: 1px solid #555 !important;
+      border-bottom: 2px solid #111 !important;
+      font-size: 7.5pt !important;
+      padding: 5px 7px !important;
+      color: #111 !important;
+      font-weight: 800 !important;
+    }
+    .c-table td {
+      border: 1px solid #ccc !important;
+      font-size: 8pt !important;
+      padding: 5px 7px !important;
+      color: #111 !important;
+    }
+    .c-table tbody tr:nth-child(even) { background: #f4f4f4 !important; }
+    .td-num  { color: #333 !important; font-weight: 700 !important; }
+    .td-date { color: #333 !important; }
+    .td-msg  { color: #222 !important; }
+
+    /* ── Booking cards ── */
     .b-grid {
       grid-template-columns: 1fr 1fr !important;
       gap: 4mm !important;
       padding: 4mm 0 22mm !important;
     }
-    .b-card { border-radius: 2mm !important; break-inside: avoid; }
-    .b-card-hdr { padding: 2.5mm 3.5mm !important; }
-    .b-card-body { padding: 2.5mm 3.5mm !important; }
-    .b-card-name { font-size: 10pt !important; }
-    .b-card-mobile { font-size: 8pt !important; margin-bottom: 3px !important; }
-    .b-fields { gap: 1px 6px !important; margin-bottom: 3px !important; }
-    .b-field-lbl { font-size: 6.5pt !important; }
-    .b-field-val { font-size: 7.5pt !important; }
-    .b-msg-lbl { font-size: 6.5pt !important; }
-    .b-msg-val { font-size: 8pt !important; }
+    .b-card {
+      border: 1px solid #888 !important;
+      border-radius: 2mm !important;
+      break-inside: avoid;
+    }
+    .b-card-hdr {
+      border-bottom: 1.5px solid #555 !important;
+      padding: 2.5mm 3.5mm !important;
+    }
+    .b-card-num    { color: #444 !important; font-weight: 800 !important; }
+    .b-card-date   { color: #666 !important; }
+    .b-card-body   { padding: 2.5mm 3.5mm !important; }
+    .b-card-name   { color: #111 !important; font-size: 10pt !important; }
+    .b-card-mobile { color: #333 !important; font-size: 8pt  !important; margin-bottom: 3px !important; font-family: monospace !important; }
+    .b-fields      { gap: 1px 6px !important; margin-bottom: 3px !important; }
+    .b-field-lbl   { color: #555 !important; font-size: 6.5pt !important; }
+    .b-field-val   { color: #111 !important; font-size: 7.5pt !important; }
+    .b-msg-lbl     { color: #555 !important; font-size: 6.5pt !important; }
+    .b-msg-val     { color: #222 !important; font-size: 8pt  !important; }
 
-    /* Footer: fixed to bottom of every printed page */
+    /* Footer */
     .pdf-footer {
+      border-top: 1px solid #555 !important;
+      color: #444 !important;
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      margin-top: 0;
+      bottom: 0; left: 0; right: 0;
       height: 10mm;
       padding: 0 12mm;
       align-items: center;
     }
-
-    /* Typography */
-    .pdf-header h1 { font-size: 14pt !important; }
-    .pdf-header-sub { font-size: 8pt !important; }
-    .pdf-header-meta { font-size: 7pt !important; }
-    .pdf-summary { font-size: 8pt !important; padding: 5px 0 !important; }
-
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 `;
 

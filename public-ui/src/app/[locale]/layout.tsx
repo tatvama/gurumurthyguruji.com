@@ -81,7 +81,7 @@ export const metadata: Metadata = {
     template: "%s | Pujya Sri Gurumurthy Guruji",
   },
   description:
-    "Spiritual Master Pujya Sri Gurumurthy Guruji — renowned for Trikāla Jñāna (divine sight of past, present & future) and Sanjeevini Kriya. Blessed by Shri Thrayambak Babaji & Shirdi Sai Baba. Receive a free spiritual audience in Karnataka.",
+    "Spiritual Master Pujya Sri Gurumurthy Guruji — renowned for Trikāla Jñāna (divine sight of past, present & future) and Sanjeevini Kriya. Blessed by Shri Thrayambak Babaji & Shirdi Sai Baba. Receive a free spiritual appointment in Karnataka.",
   keywords: [
     "Pujya Sri Gurumurthy Guruji",
     "Gurumurthy Guruji",

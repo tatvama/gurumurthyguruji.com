@@ -25,9 +25,27 @@ import {
 import {
   ArrowLeft, RefreshCw, Phone, Mail, MapPin, Clock, CheckCircle2,
   CalendarPlus, Video, MessageSquare, User, FileText, History, NotebookPen, X,
+  ChevronDown, Check,
 } from "lucide-react";
 
 type GTab = "overview" | "timeline" | "case" | "remarks" | "pad";
+
+const TODAY = new Date().toISOString().slice(0, 10);
+const MOCK_QUEUE: Appointment[] = [
+  { id: -1, devoteeName: "Ramesh Kumar",  mobile: "+91 98765 43210", appointmentType: "Trikala Consultation", mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:05:00`, startTime: `${TODAY}T09:00:00`, purpose: "Seeking guidance on family matters and career path." },
+  { id: -2, devoteeName: "Savitri Devi",  mobile: "+91 87654 32109", appointmentType: "General Appointment",  mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:22:00`, startTime: `${TODAY}T09:15:00`, purpose: "Health concerns and seeking Guruji's blessings." },
+  { id: -3, devoteeName: "Mohan Prasad",  mobile: "+91 76543 21098", appointmentType: "Follow-up",           mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:48:00`, startTime: `${TODAY}T09:45:00`, caseReference: "TK-2024-0041", purpose: "Follow-up on earlier Trikala reading." },
+  { id: -4, devoteeName: "Lakshmi Bai",   mobile: "+91 65432 10987", appointmentType: "General Appointment",  mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T10:10:00`, startTime: `${TODAY}T10:00:00`, purpose: "Seeking Sanjeevini Kriya initiation." },
+  { id: -5, devoteeName: "Venkatesh Rao", mobile: "+91 54321 09876", appointmentType: "Trikala Consultation", mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T10:35:00`, startTime: `${TODAY}T10:30:00`, purpose: "Planetary period difficulties — Sade Sati concerns." },
+];
+/* Extra contact details for mock entries (real entries get this from getDevoteeHistory) */
+const MOCK_DETAILS: Record<number, { whatsapp: string; email: string; address: string }> = {
+  [-1]: { whatsapp: "+91 98765 43210", email: "ramesh.kumar@gmail.com",   address: "Mysuru, Karnataka" },
+  [-2]: { whatsapp: "+91 87654 32109", email: "savitri.devi@gmail.com",   address: "Mandya, Karnataka" },
+  [-3]: { whatsapp: "+91 76543 21098", email: "mohan.prasad@gmail.com",   address: "Bengaluru, Karnataka" },
+  [-4]: { whatsapp: "+91 65432 10987", email: "lakshmi.bai@gmail.com",    address: "Hassan, Karnataka" },
+  [-5]: { whatsapp: "+91 54321 09876", email: "venkatesh.rao@gmail.com",  address: "Tumkur, Karnataka" },
+};
 
 const MODE_LABEL: Record<string, string> = {
   phone: "Phone Call", "in-person": "Direct Meet", video: "Video Call (Google Meet)",
@@ -36,6 +54,48 @@ const MODE_LABEL: Record<string, string> = {
 function fmtTime(iso?: string) {
   if (!iso) return "—";
   try { return new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }); } catch { return "—"; }
+}
+
+function FancySelect({ label, value, onChange, options, placeholder = "Select", containerStyle }: {
+  label?: string; value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[]; placeholder?: string;
+  containerStyle?: React.CSSProperties;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+  const selected = options.find(o => o.value === value);
+  return (
+    <div ref={ref} style={{ position: "relative", marginBottom: 13, ...containerStyle }}>
+      {label && <label style={{ fontSize: 11, fontWeight: 700, color: "#0f766e", display: "block", marginBottom: 5 }}>{label}</label>}
+      <button type="button" onClick={() => setOpen(p => !p)}
+        onMouseEnter={e => { (e.currentTarget).style.borderColor = "#9ca3af"; (e.currentTarget).style.background = "#f9fafb"; }}
+        onMouseLeave={e => { if (!open) { (e.currentTarget).style.borderColor = "#e5e7eb"; (e.currentTarget).style.background = "#fff"; } }}
+        style={{ width: "100%", height: 38, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${open ? "#9ca3af" : "#e5e7eb"}`, background: open ? "#f9fafb" : "#fff", fontSize: 13, color: selected ? "#1f2937" : "#9ca3af", fontWeight: selected ? 600 : 400, outline: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "border-color 0.15s, background 0.15s", boxSizing: "border-box" as const }}>
+        <span>{selected ? selected.label : placeholder}</span>
+        <ChevronDown size={14} color="#6b7280" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 400, background: "#fff", borderRadius: 10, border: "1.5px solid #e5e7eb", boxShadow: "0 8px 28px rgba(0,0,0,0.13)", overflow: "hidden", maxHeight: 240, overflowY: "auto" }}>
+          {options.map(opt => (
+            <button key={opt.value} type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              onMouseEnter={e => (e.currentTarget).style.background = "#f0fdfb"}
+              onMouseLeave={e => (e.currentTarget).style.background = "transparent"}
+              style={{ width: "100%", padding: "10px 14px", border: "none", background: "transparent", fontSize: 13, color: opt.value === value ? "#0d9488" : "#374151", fontWeight: opt.value === value ? 700 : 400, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "background 0.12s" }}>
+              <span>{opt.label}</span>
+              {opt.value === value && <Check size={13} color="#0d9488" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 function fmtDateTime(iso?: string) {
   if (!iso) return "—";
@@ -75,8 +135,11 @@ export default function GurujiDarshanPage() {
 
   const loadQueue = useCallback(async () => {
     setLoadingQ(true);
-    try { setQueue(await getArrivedQueue()); }
-    catch { /* ignore */ } finally { setLoadingQ(false); }
+    try {
+      const real = await getArrivedQueue();
+      setQueue(real.length > 0 ? real : MOCK_QUEUE);
+    }
+    catch { setQueue(MOCK_QUEUE); } finally { setLoadingQ(false); }
   }, []);
   useEffect(() => { if (authed) loadQueue(); }, [authed, loadQueue]);
 
@@ -263,13 +326,17 @@ export default function GurujiDarshanPage() {
                       style={{ height: 38, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", fontSize: 13, color: "#1f2937", outline: "none" }} />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#0f766e", marginBottom: 5 }}>Mode</label>
-                    <select value={bookMode} onChange={e => setBookMode(e.target.value)}
-                      style={{ height: 38, padding: "0 10px", borderRadius: 9, border: "1.5px solid #e5e7eb", fontSize: 13, color: "#1f2937", outline: "none", background: "#fff" }}>
-                      <option value="in-person">Direct Meet</option>
-                      <option value="phone">Phone Call</option>
-                      <option value="video">Video Call (Google Meet)</option>
-                    </select>
+                    <FancySelect
+                      label="Mode"
+                      value={bookMode}
+                      onChange={v => setBookMode(v)}
+                      options={[
+                        { value: "in-person", label: "Direct Meet" },
+                        { value: "phone",     label: "Phone Call" },
+                        { value: "video",     label: "Video Call (Google Meet)" },
+                      ]}
+                      containerStyle={{ marginBottom: 0, minWidth: 200 }}
+                    />
                   </div>
                   <button onClick={bookNext} disabled={!bookWhen || booking}
                     style={{ height: 38, padding: "0 18px", borderRadius: 9, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: !bookWhen || booking ? "default" : "pointer", opacity: !bookWhen || booking ? 0.5 : 1 }}>
@@ -297,17 +364,24 @@ export default function GurujiDarshanPage() {
                 {loadingH && <p style={{ fontSize: 12.5, color: "#9ca3af", marginBottom: 12 }}>Loading devotee history…</p>}
 
                 {/* OVERVIEW */}
-                {tab === "overview" && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, maxWidth: 760 }}>
-                    <InfoCard icon={<Phone size={15} />} label="Phone"    value={dev?.phone || sel.mobile} />
-                    <InfoCard icon={<MessageSquare size={15} />} label="WhatsApp" value={dev?.whatsapp} />
-                    <InfoCard icon={<Mail size={15} />} label="Email"    value={dev?.email} />
-                    <InfoCard icon={<MapPin size={15} />} label="Address" value={[dev?.city, dev?.district, dev?.state, dev?.pincode].filter(Boolean).join(", ")} />
-                    {sel.mode === "video" && sel.meetingLink && <InfoCard icon={<Video size={15} />} label="Meet Link" value={sel.meetingLink} />}
-                    {sel.purpose && <InfoCard icon={<FileText size={15} />} label="Purpose" value={sel.purpose} wide />}
-                    {sel.officeRemarks && <InfoCard icon={<MessageSquare size={15} />} label="Office Remarks (staff)" value={sel.officeRemarks} wide />}
-                  </div>
-                )}
+                {tab === "overview" && (() => {
+                  const mock = sel.id < 0 ? MOCK_DETAILS[sel.id] : null;
+                  const phone    = dev?.phone    || sel.mobile;
+                  const whatsapp = dev?.whatsapp || mock?.whatsapp || sel.mobile;
+                  const email    = dev?.email    || mock?.email;
+                  const address  = [dev?.city, dev?.district, dev?.state, dev?.pincode].filter(Boolean).join(", ") || mock?.address;
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, maxWidth: 760 }}>
+                      <InfoCard icon={<Phone size={15} />}         label="Phone"    value={phone} />
+                      <InfoCard icon={<MessageSquare size={15} />} label="WhatsApp" value={whatsapp} />
+                      <InfoCard icon={<Mail size={15} />}          label="Email"    value={email} />
+                      <InfoCard icon={<MapPin size={15} />}        label="Address"  value={address} />
+                      {sel.mode === "video" && sel.meetingLink && <InfoCard icon={<Video size={15} />} label="Meet Link" value={sel.meetingLink} />}
+                      {sel.purpose && <InfoCard icon={<FileText size={15} />} label="Purpose" value={sel.purpose} wide />}
+                      {sel.officeRemarks && <InfoCard icon={<MessageSquare size={15} />} label="Office Remarks (staff)" value={sel.officeRemarks} wide />}
+                    </div>
+                  );
+                })()}
 
                 {/* TIMELINE */}
                 {tab === "timeline" && (

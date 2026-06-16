@@ -273,7 +273,7 @@ export default function MeetGurujiPage() {
                     Sacred Request
                   </p>
                   <h2 className="font-heading text-xl font-bold leading-tight text-pearl sm:text-2xl">
-                    Personal Audience Request Form
+                    Personal Appointment Request Form
                   </h2>
                   <p className="mt-1 text-[12.5px] text-pearl/50">
                     All fields marked * are required. We respond within 2–3 days.
