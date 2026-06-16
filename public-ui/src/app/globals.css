@@ -665,9 +665,9 @@ a:focus-visible, button:focus-visible {
 
 /* ─── FROSTED PANEL ─────────────────────────────────────────────── */
 .panel-frosted {
-  background: linear-gradient(135deg, rgba(255,255,255,0.82) 0%, rgba(254,252,247,0.90) 100%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(216,183,106,0.28);
   border-radius: 18px;
   box-shadow:
