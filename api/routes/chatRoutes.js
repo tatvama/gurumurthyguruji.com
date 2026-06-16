@@ -93,7 +93,7 @@ async function buildAiReply(caseRef, userMessage) {
   const svc = c.service_type === "ashta_rekha" ? "Ashta Rekha" : "Horoscope";
   return `For **${caseRef}** (${c.full_name} · ${svc} · ${c.status}):\n\n` +
     `${c.summary ? c.summary.slice(0, 250) + "…" : "No AI summary yet — generate from Analysis tab."}\n\n` +
-    `You can ask me: *summarize, missing info, questions to ask, urgency, Guruji Vakya, status flow, devotee profile*.`;
+    `You can ask me: *summarize, missing info, questions to ask, urgency, Guruji Vakya, status flow, devotee contact*.`;
 }
 
 /* GET /:caseRef — full chat history */

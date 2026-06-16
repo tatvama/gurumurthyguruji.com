@@ -406,6 +406,18 @@ export const initDB = async () => {
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS children_details TEXT;`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS consent BOOLEAN DEFAULT false;`);
 
+    /* ── Booking comments / admin remarks (PRD §8) ──────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS booking_comments (
+        id          SERIAL PRIMARY KEY,
+        booking_id  INTEGER NOT NULL,
+        text        TEXT NOT NULL,
+        is_internal BOOLEAN DEFAULT false,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_booking_comments_booking ON booking_comments(booking_id);`);
+
     /* Seed the default super admin if not exists */
     await client.query(`
       INSERT INTO admin_users (name, mobile, role, password, sections_count, status)

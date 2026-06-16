@@ -82,10 +82,10 @@ async function seedContacts() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   3. AUDIENCE BOOKINGS
+   3. APPOINTMENTS BOOKINGS
 ════════════════════════════════════════════════════════════════════ */
 async function seedAudienceBookings() {
-  console.log("\n🙏 Seeding Audience Bookings...");
+  console.log("\n🙏 Seeding Appointments Bookings...");
   const bookings = [
     { full_name: "Vinay Kumar",     mobile: ADMIN_PHONE,  email: "vinay@example.com",  profession: "Software Engineer", city: "Bangalore",  state: "Karnataka", location: "Bangalore",  how_known: "Friend",       nearest_ashram: "Bangalore Ashram",  message: "Seeking Guruji's blessings for family wellbeing and spiritual growth" },
     { full_name: "Sanjay Mishra",   mobile: "9334455667", email: "sanjay@example.com", profession: "Teacher",           city: "Lucknow",    state: "UP",        location: "Lucknow",    how_known: "Social Media", nearest_ashram: "Delhi Ashram",       message: "Want to meet Guruji personally for career and marriage guidance" },

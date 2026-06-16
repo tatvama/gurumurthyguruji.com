@@ -85,7 +85,7 @@ export const createDevotee = async (req, res, next) => {
     }
     const d = await Devotee.create(b);
     await Devotee.addTimeline(d.id, {
-      event_type: "profile_created", title: "Devotee profile created",
+      event_type: "profile_created", title: "Devotee contact created",
       description: `${d.name} added to Devotee 360 directory`, icon: "🙏",
     });
     await logAudit({ action: "CREATE_DEVOTEE", entityType: "devotee", entityId: d.devotee_ref || String(d.id), newValue: { name: d.name, phone: d.phone } });

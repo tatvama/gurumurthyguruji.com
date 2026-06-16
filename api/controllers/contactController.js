@@ -69,7 +69,7 @@ export const convertToDevotee = async (req, res, next) => {
     res.json({
       success: true,
       message: created
-        ? `Devotee profile created: ${devotee.devotee_ref}`
+        ? `Devotee contact created: ${devotee.devotee_ref}`
         : `Linked to existing devotee: ${devotee.devotee_ref}`,
       data: { devotee, created },
     });

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import validate from "../middleware/validate.js";
 import { formLimiter } from "../middleware/rateLimiter.js";
-import { submitBooking, getAllBookings, getBookingById, updateBookingStatus } from "../controllers/audienceController.js";
+import { submitBooking, getAllBookings, getBookingById, updateBookingStatus, getBookingComments, addBookingComment, deleteBookingComment } from "../controllers/audienceController.js";
 
 const router = Router();
 
@@ -25,5 +25,8 @@ router.post("/", formLimiter, validate(bookingRules), submitBooking);
 router.get("/", getAllBookings);
 router.get("/:id", getBookingById);
 router.patch("/:id/status", validate([body("status").notEmpty().withMessage("Status is required")]), updateBookingStatus);
+router.get("/:id/comments", getBookingComments);
+router.post("/:id/comments", addBookingComment);
+router.delete("/:id/comments/:commentId", deleteBookingComment);
 
 export default router;

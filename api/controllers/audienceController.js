@@ -1,5 +1,6 @@
 import AudienceBooking from "../models/AudienceBooking.js";
 import { logAudit } from "../utils/auditLog.js";
+import { pool } from "../config/db.js";
 
 export const submitBooking = async (req, res, next) => {
   try {
@@ -49,6 +50,35 @@ export const getBookingById = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+
+export const getBookingComments = async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM booking_comments WHERE booking_id = $1 ORDER BY created_at ASC`,
+      [req.params.id]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+};
+
+export const addBookingComment = async (req, res, next) => {
+  try {
+    const { text, is_internal = false } = req.body;
+    if (!text?.trim()) return res.status(422).json({ success: false, message: "Comment text is required." });
+    const { rows } = await pool.query(
+      `INSERT INTO booking_comments (booking_id, text, is_internal) VALUES ($1, $2, $3) RETURNING *`,
+      [req.params.id, text.trim(), !!is_internal]
+    );
+    res.status(201).json({ success: true, data: rows[0] });
+  } catch (err) { next(err); }
+};
+
+export const deleteBookingComment = async (req, res, next) => {
+  try {
+    await pool.query(`DELETE FROM booking_comments WHERE id = $1 AND booking_id = $2`, [req.params.commentId, req.params.id]);
+    res.json({ success: true });
+  } catch (err) { next(err); }
 };
 
 export const updateBookingStatus = async (req, res, next) => {

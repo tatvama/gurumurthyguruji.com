@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   getAudienceBookings,
@@ -32,6 +32,8 @@ import {
   getChatMessages, sendChatMessage, clearChatHistory,
   generateWhatsAppMessage, logWhatsAppSent,
   convertBookingToAppointment,
+  getBookingComments, addBookingComment, deleteBookingComment,
+  type BookingComment,
   getAuditLogs,
   getAppSettings,
   saveAppSettings,
@@ -551,7 +553,7 @@ function FancySelect({ label, value, onChange, options, placeholder = "Select" }
         <ChevronDown size={14} color="#6b7280" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 400, background: "#fff", borderRadius: 10, border: "1.5px solid #e5e7eb", boxShadow: "0 8px 28px rgba(0,0,0,0.13)", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 400, background: "#fff", borderRadius: 10, border: "1.5px solid #e5e7eb", boxShadow: "0 8px 28px rgba(0,0,0,0.13)", overflow: "hidden", maxHeight: 240, overflowY: "auto" }}>
           {options.map(opt => (
             <button key={opt.value} type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
@@ -754,6 +756,10 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
+  const locationRef = React.useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(locationRef, (p) => {
+    set("location", p.formatted || [p.city, p.district, p.state, p.pincode].filter(Boolean).join(", "));
+  });
 
   async function save() {
     if (!f.devoteeName.trim()) { setErr("Devotee name is required"); return; }
@@ -795,18 +801,22 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
           <div style={{ marginBottom: 13 }}><label style={lbl}>Devotee Name *</label><input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} /></div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Mobile</label><input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Type</label><select value={f.appointmentType} onChange={e => set("appointmentType", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{APPOINTMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Mode</label><select value={f.mode} onChange={e => set("mode", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{APPOINTMENT_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}</select></div>
+            <FancySelect label="Type" value={f.appointmentType} onChange={v => set("appointmentType", v)}
+              options={APPOINTMENT_TYPES.map(t => ({ value: t, label: t }))} />
+            <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)}
+              options={[...APPOINTMENT_MODES]} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><input type="datetime-local" value={f.startTime} onChange={e => set("startTime", e.target.value)} style={inp} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Minutes</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Status</label><select value={f.status} onChange={e => set("status", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{APPOINTMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Priority</label><select value={f.priority} onChange={e => set("priority", e.target.value)} style={{ ...inp, padding: "0 10px" }}>{["Normal", "High", "Urgent", "VIP"].map(p => <option key={p} value={p}>{p}</option>)}</select></div>
+            <FancySelect label="Status" value={f.status} onChange={v => set("status", v)}
+              options={APPOINTMENT_STATUSES.map(s => ({ value: s, label: s }))} />
+            <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
+              options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />
           </div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input value={f.location} onChange={e => set("location", e.target.value)} style={inp} /></div>
+          <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input ref={locationRef} value={f.location} onChange={e => set("location", e.target.value)} autoComplete="off" placeholder="Start typing city or address…" style={inp} /></div>
           {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Google Meet Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} /></div>}
           <div style={{ marginBottom: 13 }}><label style={lbl}>Purpose</label><textarea value={f.purpose} onChange={e => set("purpose", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
           {appt && <div style={{ marginBottom: 13 }}><label style={lbl}>Outcome Note (after meeting)</label><textarea value={f.outcomeNote} onChange={e => set("outcomeNote", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>}
@@ -1298,6 +1308,36 @@ function DetailPanel({
   const [convertingDevotee, setConvertingDevotee] = useState(false);
   const [convertDevoteeMsg, setConvertDevoteeMsg] = useState<{ type: "ok" | "warn" | "err"; text: string } | null>(null);
 
+  /* ── Comments state (bookings only) ── */
+  const [comments, setComments] = useState<BookingComment[]>([]);
+  const [commentText, setCommentText] = useState("");
+  const [isInternal, setIsInternal] = useState(false);
+  const [sendingComment, setSendingComment] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (!isBooking) return;
+    getBookingComments((item as AudienceBooking).id).then(setComments).catch(() => {});
+  }, [(item as AudienceBooking).id, isBooking]);
+
+  async function submitComment() {
+    if (!commentText.trim()) return;
+    setSendingComment(true);
+    try {
+      const c = await addBookingComment((item as AudienceBooking).id, commentText, isInternal);
+      setComments(prev => [...prev, c]);
+      setCommentText("");
+    } catch { /* ignore */ } finally { setSendingComment(false); }
+  }
+
+  async function removeComment(id: number) {
+    setDeletingId(id);
+    try {
+      await deleteBookingComment((item as AudienceBooking).id, id);
+      setComments(prev => prev.filter(c => c.id !== id));
+    } catch { /* ignore */ } finally { setDeletingId(null); }
+  }
+
   async function convertToAppt() {
     if (!isBooking) return;
     setConverting(true); setConvertMsg(null);
@@ -1321,7 +1361,7 @@ function DetailPanel({
       setConvertDevoteeMsg({
         type: "ok",
         text: created
-          ? `Devotee profile created: ${devotee.devoteeRef}. Open Devotees tab to view.`
+          ? `Devotee contact created: ${devotee.devoteeRef}. Open Devotees tab to view.`
           : `Linked to existing devotee: ${devotee.devoteeRef}.`,
       });
     } catch (e: any) {
@@ -1331,157 +1371,211 @@ function DetailPanel({
   const name    = isBooking ? (item as AudienceBooking).fullName  : (item as ContactMessage).name;
   const initial = (name || "?")[0].toUpperCase();
   const sub     = isBooking ? (item as AudienceBooking).mobile    : (item as ContactMessage).email;
+  const [activeTab, setActiveTab] = useState<"details"|"comments">("details");
 
-  const detailRows: [string, string][] = isBooking
+  const detailRows: { icon: string; label: string; val: string }[] = isBooking
     ? [
-        ["Full Name",      (item as AudienceBooking).fullName],
-        ["Mobile",         (item as AudienceBooking).mobile],
-        ["Profession",     (item as AudienceBooking).profession],
-        ["Location",       (item as AudienceBooking).location],
-        ["Nearest Ashram", (item as AudienceBooking).nearestAshram],
-        ["How Known",      (item as AudienceBooking).howKnown],
-        ["Message",        (item as AudienceBooking).message || "—"],
+        { icon: "👤", label: "Full Name",      val: (item as AudienceBooking).fullName },
+        { icon: "📱", label: "Mobile",         val: (item as AudienceBooking).mobile },
+        { icon: "💼", label: "Profession",     val: (item as AudienceBooking).profession },
+        { icon: "📍", label: "Location",       val: (item as AudienceBooking).location },
+        { icon: "🕌", label: "Nearest Ashram", val: (item as AudienceBooking).nearestAshram },
+        { icon: "🔗", label: "How Known",      val: (item as AudienceBooking).howKnown },
+        { icon: "💬", label: "Message",        val: (item as AudienceBooking).message || "—" },
       ]
     : [
-        ["Name",    (item as ContactMessage).name],
-        ["Email",   (item as ContactMessage).email],
-        ["Subject", (item as ContactMessage).subject],
-        ["Message", (item as ContactMessage).message],
+        { icon: "👤", label: "Name",    val: (item as ContactMessage).name },
+        { icon: "📧", label: "Email",   val: (item as ContactMessage).email },
+        { icon: "📌", label: "Subject", val: (item as ContactMessage).subject },
+        { icon: "💬", label: "Message", val: (item as ContactMessage).message },
       ];
+
+  const reversedComments = [...comments].reverse();
 
   return (
     <>
-      {/* Backdrop */}
-      <motion.div
-        key="backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }}
-      />
+      <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+        onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }} />
 
-      {/* Panel */}
-      <motion.div
-        key="panel"
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{
-          position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201,
-          width: 420, maxWidth: "100vw",
-          background: "#f8fafc",
-          boxShadow: "-8px 0 40px rgba(0,0,0,0.18)",
-          display: "flex", flexDirection: "column",
-          fontFamily: "'Inter','Segoe UI',sans-serif",
-        }}
-      >
-        {/* ── Panel Header ── */}
-        <div style={{ background: COSMIC, padding: "20px 20px 18px", flexShrink: 0 }}>
+      <motion.div key="panel" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 430, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-12px 0 48px rgba(0,0,0,0.16)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+
+        {/* ── Header ── */}
+        <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "16px 18px 0", flexShrink: 0 }}>
+          {/* Top row */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#9ca3af" }}>
-              {isBooking ? "Appointment Booking" : "Contact Message"}
-            </span>
-            <button onClick={onClose}
-              style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <X size={15} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: "#fff", boxShadow: "0 2px 10px rgba(13,148,136,0.3)", flexShrink: 0 }}>
+                {initial}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{name}</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", borderRadius: 20, padding: "2px 8px", flexShrink: 0 }}>Received</span>
+                </div>
+                <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>{sub}</p>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <X size={14} />
             </button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {/* Avatar */}
-            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20, fontWeight: 800, color: "#fff", boxShadow: "0 2px 12px rgba(13,148,136,0.25)" }}>
-              {initial}
+          {/* Tabs */}
+          {isBooking && (
+            <div style={{ display: "flex", gap: 0 }}>
+              {(["details","comments"] as const).map(t => (
+                <button key={t} onClick={() => setActiveTab(t)}
+                  style={{ flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 700, border: "none", background: "transparent", cursor: "pointer", color: activeTab === t ? "#0d9488" : "#9ca3af", borderBottom: `2.5px solid ${activeTab === t ? "#0d9488" : "transparent"}`, transition: "all 0.15s", textTransform: "capitalize" }}>
+                  {t === "comments" ? `Comments${comments.length ? ` (${comments.length})` : ""}` : "Details"}
+                </button>
+              ))}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 16, fontWeight: 800, color: "#1f2937", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</p>
-              <p style={{ fontSize: 12, color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</p>
-            </div>
-            {/* Status badge */}
-            <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 700, background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 20, padding: "3px 10px" }}>
-              Received
-            </span>
-          </div>
+          )}
         </div>
 
         {/* ── Scrollable Body ── */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "18px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 16px 20px" }}>
 
-          {/* Intake / Contact Details Card */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 8 }}>
-              <ClipboardList size={14} color="#0d9488" />
-              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#6b7280" }}>
-                {isBooking ? "Intake Details" : "Message Details"}
-              </span>
-            </div>
-            <div style={{ padding: "6px 0" }}>
-              {detailRows.map(([label, val]) => (
-                <div key={label} style={{ display: "flex", padding: "9px 16px", borderBottom: "1px solid #f9f4ee" }}>
-                  <span style={{ width: 120, minWidth: 120, fontSize: 12, fontWeight: 600, color: "#6b7280" }}>{label}</span>
-                  <span style={{ flex: 1, fontSize: 13, color: "#374151", wordBreak: "break-word", lineHeight: 1.5 }}>{val || "—"}</span>
+          {/* ── DETAILS TAB ── */}
+          {(!isBooking || activeTab === "details") && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Info card */}
+              <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
+                <div style={{ padding: "11px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 7, background: "#fafafa" }}>
+                  <ClipboardList size={13} color="#0d9488" />
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "#6b7280" }}>{isBooking ? "Intake Details" : "Message Details"}</span>
                 </div>
-              ))}
-              <div style={{ display: "flex", padding: "9px 16px" }}>
-                <span style={{ width: 120, minWidth: 120, fontSize: 12, fontWeight: 600, color: "#6b7280" }}>Submitted</span>
-                <span style={{ flex: 1, fontSize: 13, color: "#374151" }}>{fmt(item.createdAt)} &nbsp;<span style={{ color: "#6b7280" }}>{fmtTime(item.createdAt)}</span></span>
+                {detailRows.map(({ icon, label, val }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "flex-start", padding: "10px 16px", borderBottom: "1px solid #f9fafb", gap: 10 }}>
+                    <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0 }}>{icon}</span>
+                    <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: "#9ca3af", paddingTop: 1 }}>{label}</span>
+                    <span style={{ flex: 1, fontSize: 13, color: "#1f2937", lineHeight: 1.55, wordBreak: "break-word" }}>{val || "—"}</span>
+                  </div>
+                ))}
+                <div style={{ display: "flex", alignItems: "center", padding: "10px 16px", gap: 10 }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>🗓️</span>
+                  <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>Submitted</span>
+                  <span style={{ flex: 1, fontSize: 13, color: "#1f2937" }}>{fmt(item.createdAt)} <span style={{ color: "#9ca3af" }}>{fmtTime(item.createdAt)}</span></span>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Status card — single "received" confirmation */}
-          <div style={{ background: "#f0fdf4", borderRadius: 14, border: "1px solid #bbf7d0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#dcfce7", border: "1.5px solid #86efac", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <CheckCircle2 size={20} color="#16a34a" />
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#15803d", marginBottom: 2 }}>
-                {isBooking ? "Booking Received" : "Message Received"}
-              </p>
-              <p style={{ fontSize: 11.5, color: "#166534" }}>
-                {fmt(item.createdAt)} at {fmtTime(item.createdAt)}
-              </p>
-            </div>
-          </div>
+              {/* Status pill */}
+              <div style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", borderRadius: 12, border: "1px solid #86efac", padding: "13px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#fff", border: "1.5px solid #86efac", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 1px 6px rgba(22,163,74,0.15)" }}>
+                  <CheckCircle2 size={18} color="#16a34a" />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#15803d" }}>{isBooking ? "Booking Received" : "Message Received"}</p>
+                  <p style={{ fontSize: 11, color: "#166534", marginTop: 1 }}>{fmt(item.createdAt)} at {fmtTime(item.createdAt)}</p>
+                </div>
+              </div>
 
-          {/* Convert to Appointment — PRD §8 */}
-          {isBooking && (
-            <div style={{ marginTop: 4 }}>
-              <button onClick={convertToAppt} disabled={converting}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: converting ? "#d1fae5" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>📅</span>
-                {converting ? "Creating appointment…" : "Convert to Appointment"}
-              </button>
-              {convertMsg && (
-                <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 500, background: convertMsg.type === "ok" ? "#f0fdf4" : convertMsg.type === "warn" ? "#fefce8" : "#fef2f2", color: convertMsg.type === "ok" ? "#15803d" : convertMsg.type === "warn" ? "#92400e" : "#b91c1c", border: `1px solid ${convertMsg.type === "ok" ? "#bbf7d0" : convertMsg.type === "warn" ? "#fde68a" : "#fecaca"}` }}>
-                  {convertMsg.text}
+              {/* Schedule Appointment */}
+              {isBooking && (
+                <div>
+                  <button onClick={convertToAppt} disabled={converting}
+                    style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: converting ? "#ccfbf1" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: converting ? "#0d9488" : "#fff", fontSize: 13, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: converting ? "none" : "0 4px 14px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>
+                    <CalendarPlus size={16} />
+                    {converting ? "Creating appointment…" : "Schedule Appointment"}
+                  </button>
+                  {convertMsg && (
+                    <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12, fontWeight: 500, background: convertMsg.type === "ok" ? "#f0fdf4" : convertMsg.type === "warn" ? "#fefce8" : "#fef2f2", color: convertMsg.type === "ok" ? "#15803d" : convertMsg.type === "warn" ? "#92400e" : "#b91c1c", border: `1px solid ${convertMsg.type === "ok" ? "#bbf7d0" : convertMsg.type === "warn" ? "#fde68a" : "#fecaca"}` }}>
+                      {convertMsg.text}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Schedule Devotee Contact */}
+              {!isBooking && (
+                <div>
+                  <button onClick={convertToDevoteeProfile} disabled={convertingDevotee}
+                    style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: convertingDevotee ? "#ede9fe" : "linear-gradient(135deg,#7c3aed,#8b5cf6)", color: convertingDevotee ? "#7c3aed" : "#fff", fontSize: 13, fontWeight: 700, cursor: convertingDevotee ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: convertingDevotee ? "none" : "0 4px 14px rgba(124,58,237,0.25)", transition: "all 0.2s" }}>
+                    <span style={{ fontSize: 15 }}>🙏</span>
+                    {convertingDevotee ? "Creating contact…" : "Schedule Devotee Contact"}
+                  </button>
+                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>Creates or links a Devotee 360 contact</p>
+                  {convertDevoteeMsg && (
+                    <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12, fontWeight: 500, background: convertDevoteeMsg.type === "ok" ? "#f0fdf4" : "#fef2f2", color: convertDevoteeMsg.type === "ok" ? "#15803d" : "#b91c1c", border: `1px solid ${convertDevoteeMsg.type === "ok" ? "#bbf7d0" : "#fecaca"}` }}>
+                      {convertDevoteeMsg.text}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Convert to Devotee Profile — PRD §8 */}
-          {!isBooking && (
-            <div style={{ marginTop: 4 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 10 }}>Quick Actions</p>
-              <button onClick={convertToDevoteeProfile} disabled={convertingDevotee}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "none", background: convertingDevotee ? "#d1fae5" : "linear-gradient(135deg,#7c3aed,#8b5cf6)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: convertingDevotee ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>🙏</span>
-                {convertingDevotee ? "Creating profile…" : "Convert to Devotee Profile"}
-              </button>
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>
-                Creates or links a Devotee 360 profile from this contact
-              </p>
-              {convertDevoteeMsg && (
-                <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 500, background: convertDevoteeMsg.type === "ok" ? "#f0fdf4" : "#fef2f2", color: convertDevoteeMsg.type === "ok" ? "#15803d" : "#b91c1c", border: `1px solid ${convertDevoteeMsg.type === "ok" ? "#bbf7d0" : "#fecaca"}` }}>
-                  {convertDevoteeMsg.text}
+          {/* ── COMMENTS TAB ── */}
+          {isBooking && activeTab === "comments" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {reversedComments.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>💬</div>
+                  <p style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500 }}>No comments yet</p>
+                  <p style={{ fontSize: 11.5, color: "#d1d5db", marginTop: 4 }}>Add the first comment below</p>
                 </div>
-              )}
+              ) : reversedComments.map(c => {
+                const isInt = c.isInternal;
+                const card  = isInt
+                  ? { bg: "#f0fdf4", border: "#86efac", pillBg: "#dcfce7", pillText: "#15803d", pillBorder: "#86efac", dot: "#22c55e", label: "Internal" }
+                  : { bg: "#eff6ff", border: "#bfdbfe", pillBg: "#dbeafe", pillText: "#1d4ed8", pillBorder: "#bfdbfe", dot: "#3b82f6", label: "Comment" };
+                return (
+                  <div key={c.id} style={{ background: card.bg, borderRadius: 12, border: `1px solid ${card.border}`, padding: "12px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                    {/* Meta row */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        {/* Colored dot + label pill */}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, fontWeight: 700, background: card.pillBg, color: card.pillText, border: `1px solid ${card.pillBorder}`, borderRadius: 20, padding: "3px 10px", letterSpacing: "0.02em" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: card.dot, flexShrink: 0, display: "inline-block" }} />
+                          {card.label}
+                        </span>
+                        <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}>
+                          {new Date(c.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" })}
+                          {" · "}
+                          {new Date(c.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <button onClick={() => removeComment(c.id)} disabled={deletingId === c.id}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "3px 5px", color: "#cbd5e1", lineHeight: 0, borderRadius: 6, transition: "all 0.12s" }}
+                        onMouseEnter={e => { e.currentTarget.style.color = "#dc2626"; e.currentTarget.style.background = "#fef2f2"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = "#cbd5e1"; e.currentTarget.style.background = "transparent"; }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                    {/* Comment text */}
+                    <p style={{ fontSize: 13.5, color: "#111827", lineHeight: 1.65, wordBreak: "break-word", fontWeight: 450, margin: 0 }}>{c.text}</p>
+                  </div>
+                );
+              })}
             </div>
           )}
-
         </div>
+
+        {/* ── Reply footer — pinned (comments tab only) ── */}
+        {isBooking && activeTab === "comments" && (
+          <div style={{ flexShrink: 0, padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
+            <textarea value={commentText} onChange={e => setCommentText(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
+              placeholder={`Reply to ${(item as AudienceBooking).fullName} — they'll get a notification.`}
+              rows={2}
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#f9fafb", fontSize: 12.5, color: "#1f2937", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.5, transition: "border-color 0.15s" }}
+              onFocus={e => (e.target.style.borderColor = "#0d9488")}
+              onBlur={e => (e.target.style.borderColor = "#e5e7eb")}
+            />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", userSelect: "none" as const }}>
+                <input type="checkbox" checked={isInternal} onChange={e => setIsInternal(e.target.checked)}
+                  style={{ width: 14, height: 14, accentColor: "#0d9488", cursor: "pointer" }} />
+                <span style={{ fontSize: 11.5, color: "#6b7280" }}>Internal remark (won't notify user)</span>
+              </label>
+              <button onClick={submitComment} disabled={sendingComment || !commentText.trim()}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 9, border: "none", background: commentText.trim() ? "linear-gradient(135deg,#0d9488,#14b8a6)" : "#e5e7eb", color: commentText.trim() ? "#fff" : "#9ca3af", fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? "pointer" : "default", boxShadow: commentText.trim() ? "0 2px 8px rgba(13,148,136,0.3)" : "none", transition: "all 0.15s" }}>
+                <ArrowRight size={13} />
+                {sendingComment ? "Sending…" : "Send reply"}
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </>
   );
@@ -3466,6 +3560,7 @@ export default function AdminPage() {
   const [loggedName, setLoggedName] = useState("");
   const [loggedMobile, setLoggedMobile] = useState("");
   const router       = useRouter();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
   const routeParams  = useParams();
   const locale       = (routeParams?.locale as string) || "en";
@@ -3822,12 +3917,18 @@ export default function AdminPage() {
           ))}
 
           {/* Guruji Darshan — opens the dedicated Guruji console (separate page) */}
-          <button onClick={() => router.push(`/${locale}/admin/guruji`)}
-            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "1.5px solid #5eead4", cursor: "pointer", marginTop: 4, marginBottom: 3, background: "linear-gradient(135deg,#f0fdfa,#ecfdf5)", transition: "all 0.15s" }}>
-            <span style={{ fontSize: 14 }}>🕉️</span>
-            <span style={{ flex: 1, fontSize: 12, fontWeight: 700, textAlign: "left", whiteSpace: "nowrap", color: "#0f766e" }}>Guruji Darshan</span>
-            <ArrowRight size={13} color="#0d9488" />
-          </button>
+          {(() => {
+            const gurujiActive = pathname?.includes("/admin/guruji") ?? false;
+            return (
+              <button
+                onPointerDown={() => router.push(`/${locale}/admin/guruji`)}
+                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginTop: 4, marginBottom: 3, background: gurujiActive ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: gurujiActive ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
+                <span style={{ fontSize: 14 }}>🕉️</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: gurujiActive ? 700 : 500, textAlign: "left", whiteSpace: "nowrap", color: gurujiActive ? "#0d9488" : "#6b7280" }}>Guruji Darshan</span>
+                <ArrowRight size={13} color={gurujiActive ? "#0d9488" : "#9ca3af"} />
+              </button>
+            );
+          })()}
 
           <div style={{ height: 1, background: "#f0f0f0", margin: "10px 0 12px" }} />
 
@@ -3836,7 +3937,7 @@ export default function AdminPage() {
             Spiritual Records
           </p>
           {([
-            { key: "devotees" as const, label: "Devotee Profiles",  icon: "🙏" },
+            { key: "devotees" as const, label: "Devotee Contacts",  icon: "🙏" },
             // { key: "reports"  as const, label: "Reports & PDFs",    icon: "📄" },
           ]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
@@ -3973,9 +4074,9 @@ export default function AdminPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                   {[
                     { label: "Open Trikala Cases", desc: "Review consultation requests", tab: "trikala" as const, icon: "⭕" },
-                    { label: "Audience Bookings",  desc: "View appointment requests",   tab: "bookings" as const, icon: "📋" },
+                    { label: "Appointments Bookings",  desc: "View appointment requests",   tab: "bookings" as const, icon: "📋" },
                     { label: "Contact Messages",   desc: "Review submitted messages",   tab: "contacts" as const, icon: "📬" },
-                    { label: "Devotee Profiles",   desc: "Search devotee records",      tab: "devotees" as const, icon: "🙏" },
+                    { label: "Devotee Contacts",   desc: "Search devotee records",      tab: "devotees" as const, icon: "🙏" },
                     // { label: "Reports & PDFs",     desc: "Generate and export reports", tab: "reports"  as const, icon: "📄" },
                   ].map(q => (
                     <button key={q.label} onClick={() => tabChange(q.tab)}
@@ -4001,7 +4102,7 @@ export default function AdminPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.fullName}</p>
-                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Audience booking · {b.nearestAshram || b.location || "—"}</p>
+                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Appointment booking · {b.nearestAshram || b.location || "—"}</p>
                       </div>
                       <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap", flexShrink: 0 }}>
                         {b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
@@ -4649,7 +4750,7 @@ export default function AdminPage() {
                     </div>
                   ) : devotees.length === 0 ? (
                     <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>
-                      No devotee profiles yet. New Trikala submissions auto-create devotees, or add one manually.
+                      No devotee contacts yet. New Trikala submissions auto-create devotees, or add one manually.
                     </div>
                   ) : (
                     <div style={{ overflowX: "auto" }}>

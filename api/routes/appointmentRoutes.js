@@ -30,7 +30,7 @@ router.patch("/:id/checkin", checkInAppointment);
 router.patch("/:id", updateAppointment);
 router.delete("/:id", deleteAppointment);
 
-/* POST /from-booking/:bookingId — one-click convert audience booking → appointment (PRD §8) */
+/* POST /from-booking/:bookingId — one-click convert Appointment booking → appointment (PRD §8) */
 router.post("/from-booking/:bookingId", async (req, res, next) => {
   try {
     const { rows } = await pool.query(`SELECT * FROM audience_bookings WHERE id = $1`, [req.params.bookingId]);

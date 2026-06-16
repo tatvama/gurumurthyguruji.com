@@ -179,6 +179,37 @@ export async function postContact(payload: {
   return data;
 }
 
+/* ── Booking Comments ────────────────────────────────────────────── */
+export interface BookingComment {
+  id: number;
+  bookingId: number;
+  text: string;
+  isInternal: boolean;
+  createdAt: string;
+}
+function mapBookingComment(r: Record<string, any>): BookingComment {
+  return { id: r.id, bookingId: r.booking_id, text: r.text, isInternal: r.is_internal, createdAt: r.created_at };
+}
+export async function getBookingComments(bookingId: string | number): Promise<BookingComment[]> {
+  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments`);
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return (data.data ?? []).map(mapBookingComment);
+}
+export async function addBookingComment(bookingId: string | number, text: string, isInternal = false): Promise<BookingComment> {
+  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, is_internal: isInternal }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return mapBookingComment(data.data);
+}
+export async function deleteBookingComment(bookingId: string | number, commentId: number): Promise<void> {
+  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments/${commentId}`, { method: "DELETE" });
+  if (!res.ok) { const d = await res.json(); throw d; }
+}
+
 export async function postAudienceBooking(payload: {
   fullName: string;
   mobile: string;
@@ -762,7 +793,7 @@ export const ADMIN_ROLES = [
   { value: "guruji",          label: "Guruji",              desc: "Guruji Vakya + Read all" },
   { value: "trikala_admin",   label: "Trikala Admin",       desc: "Manage all Trikala cases" },
   { value: "appt_manager",    label: "Appointment Manager", desc: "Manage appointments" },
-  { value: "devotee_manager", label: "Devotee Manager",     desc: "Manage devotee profiles" },
+  { value: "devotee_manager", label: "Devotee Manager",     desc: "Manage devotee contacts" },
   { value: "report_editor",   label: "Report Editor",       desc: "Generate & export reports" },
   { value: "viewer",          label: "Viewer",              desc: "Read-only access" },
   { value: "admin",           label: "Admin",               desc: "General admin access" },

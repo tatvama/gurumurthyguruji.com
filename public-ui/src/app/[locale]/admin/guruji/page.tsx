@@ -312,7 +312,7 @@ export default function GurujiDarshanPage() {
                 {/* TIMELINE */}
                 {tab === "timeline" && (
                   <div style={{ maxWidth: 720 }}>
-                    {!hist ? <p style={{ color: "#9ca3af", fontSize: 13 }}>No linked devotee profile.</p> : (
+                    {!hist ? <p style={{ color: "#9ca3af", fontSize: 13 }}>No linked devotee Contact.</p> : (
                       <>
                         <SectionTitle>Appointment History</SectionTitle>
                         {(hist.appointments || []).length === 0 ? <Empty>No earlier appointments.</Empty> :
