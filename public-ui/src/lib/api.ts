@@ -260,6 +260,7 @@ export interface TrikalaReading {
   status: string;        // one of TRIKALA_STATUSES (legacy: "AI Report" | "Published")
   /* PRD case-file fields */
   priority?: string;
+  problemCategory?: string;
   preferredLanguage?: string;
   devoteeId?: number;
   assignedAdminId?: number;
