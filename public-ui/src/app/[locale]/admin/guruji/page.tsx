@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import WritingPadPro from "@/components/WritingPadPro";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import {
   getArrivedQueue, getDevoteeHistory, updateAppointment,
   startDarshan, completeAppointment, bookFollowUp,
@@ -401,8 +402,7 @@ export default function GurujiDarshanPage() {
                 <div className="gd-booknext-form" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 12, padding: "14px 24px", background: "#f0fdfa", borderBottom: "1px solid #cbeae3" }}>
                   <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                     <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#0f766e", marginBottom: 5 }}>Date &amp; Time</label>
-                    <input type="datetime-local" value={bookWhen} onChange={e => setBookWhen(e.target.value)}
-                      style={{ height: 38, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", fontSize: 13, color: "#1f2937", outline: "none", width: "100%", maxWidth: "100%", boxSizing: "border-box" }} />
+                    <DateTimePicker value={bookWhen} onChange={setBookWhen} />
                   </div>
                   <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                     <FancySelect

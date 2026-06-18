@@ -334,6 +334,86 @@ body.pac-theme-gold .pac-item-query { color: #2A1C13; }
 body.pac-theme-gold .pac-matched { color: #7A1E2C; font-weight: 800; }
 body.pac-theme-gold .pac-item span:not(.pac-item-query):not(.pac-icon) { color: #6b5c4d; }
 
+/* ══════════════════════════════════════════════════════════════════
+   Native date / time pickers — brand-tinted to match the site.
+   The popup calendar layout is browser-drawn (not stylable), but
+   `accent-color` recolors the selected day / time highlight, and the
+   trigger icon is replaced with a brand-tinted SVG. Admin = teal;
+   public site (body.pac-theme-gold) = gold.
+══════════════════════════════════════════════════════════════════ */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  accent-color: #0d9488;   /* tints the selected day & time in the popup */
+  color-scheme: light;     /* keep the picker on a clean light surface */
+}
+
+/* Teal calendar trigger icon (date & datetime-local) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  width: 17px;
+  height: 17px;
+  padding: 3px;
+  border-radius: 6px;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px;
+  transition: background-color 0.18s ease, opacity 0.18s ease;
+}
+/* Teal clock trigger icon (time) */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  width: 17px;
+  height: 17px;
+  padding: 3px;
+  border-radius: 6px;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px;
+  transition: background-color 0.18s ease, opacity 0.18s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: rgba(13,148,136,0.12);
+}
+
+/* Public site (gold/maroon theme) — gold accent + gold icons */
+body.pac-theme-gold input[type="date"],
+body.pac-theme-gold input[type="time"],
+body.pac-theme-gold input[type="datetime-local"],
+body.pac-theme-gold input[type="month"],
+body.pac-theme-gold input[type="week"] {
+  accent-color: #B99345;
+}
+body.pac-theme-gold input[type="date"]::-webkit-calendar-picker-indicator,
+body.pac-theme-gold input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B99345' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+}
+body.pac-theme-gold input[type="time"]::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B99345' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E");
+}
+body.pac-theme-gold input[type="date"]::-webkit-calendar-picker-indicator:hover,
+body.pac-theme-gold input[type="time"]::-webkit-calendar-picker-indicator:hover,
+body.pac-theme-gold input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  background-color: rgba(185,147,69,0.14);
+}
+
+/* Custom DateTimePicker — thin teal scrollbar on hour/minute columns */
+.dtp-scroll { scrollbar-width: thin; scrollbar-color: rgba(13,148,136,0.35) transparent; }
+.dtp-scroll::-webkit-scrollbar { width: 6px; }
+.dtp-scroll::-webkit-scrollbar-track { background: transparent; }
+.dtp-scroll::-webkit-scrollbar-thumb { background: rgba(13,148,136,0.32); border-radius: 6px; }
+.dtp-scroll::-webkit-scrollbar-thumb:hover { background: rgba(13,148,136,0.55); }
+
 /* Refined display typography */
 .font-heading { letter-spacing: -0.01em; }
 .tracking-refined { letter-spacing: 0.14em; }

@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { DateTimePicker } from "@/components/DateTimePicker";
 import { useRouter, useSearchParams, useParams, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -691,8 +692,7 @@ function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreate
               options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }, { value: "Other", label: "Other" }]} />
             <div style={{ marginBottom: 13 }}>
               <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Date of Birth</label>
-              <input type="date" value={f.dob} onChange={e => set("dob", e.target.value)} max={new Date().toISOString().slice(0, 10)}
-                style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
+              <DateTimePicker mode="date" value={f.dob} onChange={v => set("dob", v)} maxDate={new Date().toISOString().slice(0, 10)} placeholder="Select date of birth" />
             </div>
           </div>
 
@@ -757,10 +757,6 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
-  const locationRef = React.useRef<HTMLInputElement>(null);
-  usePlacesAutocomplete(locationRef, (p) => {
-    set("location", p.formatted || [p.city, p.district, p.state, p.pincode].filter(Boolean).join(", "));
-  });
 
   async function save() {
     if (!f.devoteeName.trim()) { setErr("Devotee name is required"); return; }
@@ -828,7 +824,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
               options={[...APPOINTMENT_MODES]} />
           </div>
           <div className="apf-grid-dt">
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><input type="datetime-local" value={f.startTime} onChange={e => set("startTime", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Minutes</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
           </div>
           <div className="apf-grid-2" style={{ alignItems: "start" }}>
@@ -841,7 +837,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
             <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
               options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />
           </div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input ref={locationRef} value={f.location} onChange={e => set("location", e.target.value)} autoComplete="off" placeholder="Start typing city or address…" style={inp} /></div>
+          <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input value={f.location} readOnly disabled title="Location cannot be changed" placeholder="—" style={{ ...inp, background: "#f9fafb", color: "#6b7280", cursor: "not-allowed" }} /></div>
           {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Google Meet Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} /></div>}
           <div style={{ marginBottom: 13 }}><label style={lbl}>Purpose</label><textarea value={f.purpose} onChange={e => set("purpose", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
           {appt && <div style={{ marginBottom: 13 }}><label style={lbl}>Outcome Note (after meeting)</label><textarea value={f.outcomeNote} onChange={e => set("outcomeNote", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>}
@@ -1543,12 +1539,7 @@ function DetailPanel({
                         <div style={{ padding: "20px 20px 16px" }}>
                           <div style={{ marginBottom: 14 }}>
                             <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date &amp; Time *</label>
-                            <input
-                              type="datetime-local"
-                              value={scheduleDateTime}
-                              onChange={e => setScheduleDateTime(e.target.value)}
-                              style={{ width: "100%", height: 42, padding: "0 13px", borderRadius: 9, border: "1.5px solid #d1d5db", background: "#f9fafb", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" as const }}
-                            />
+                            <DateTimePicker value={scheduleDateTime} onChange={setScheduleDateTime} />
                           </div>
                           <div style={{ marginBottom: 6 }}>
                             <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Mode</label>
@@ -2022,8 +2013,7 @@ function FollowUps({ caseId }: { caseId: string }) {
           </div>
           <div>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#0d9488", textTransform: "uppercase", marginBottom: 6 }}>Date &amp; Time</p>
-            <input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)}
-              style={{ width: "100%", height: 40, padding: "0 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+            <DateTimePicker value={dateTime} onChange={setDateTime} />
           </div>
         </div>
 
