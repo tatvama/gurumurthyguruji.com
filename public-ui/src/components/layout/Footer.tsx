@@ -28,8 +28,8 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-deep-brown px-4 pb-8 pt-16 md:px-8" style={{ color: "rgba(255,220,170,0.75)" }}>
-      <div className="mx-auto mb-12 flex max-w-7xl flex-col items-center justify-between gap-10 pb-12 sm:flex-row sm:items-center">
+    <footer className="bg-deep-brown px-4 pb-6 pt-10 md:px-8" style={{ color: "rgba(255,220,170,0.75)" }}>
+      <div className="mx-auto mb-5 flex max-w-7xl flex-col items-center justify-between gap-6 pb-5 sm:flex-row sm:items-center">
 
         {/* Brand & mission */}
         <div className="flex flex-col items-center gap-5 sm:items-start">
@@ -46,7 +46,7 @@ export function Footer() {
               Gurumurthy <span style={{ color: "#D8B76A" }}>Guruji</span>
             </h2>
           </Link>
-          <p className="max-w-sm text-center text-sm leading-relaxed sm:text-left" style={{ color: "rgba(255,220,170,0.75)" }}>
+          <p className="text-center text-sm leading-relaxed sm:whitespace-nowrap sm:text-left" style={{ color: "rgba(255,220,170,0.75)" }}>
             {t("footer.tagline")}
           </p>
         </div>
@@ -60,10 +60,10 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={s.label}
-              className="flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 hover:shadow-[0_0_18px_rgba(249,115,22,0.50)]"
+              className="flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 hover:shadow-[0_0_18px_rgba(255,220,170,0.40)]"
               style={{
-                border: "1.5px solid rgba(249,115,22,0.65)",
-                color: "#F97316",
+                border: "1.5px solid rgba(255,220,170,0.75)",
+                color: "rgba(255,220,170,0.75)",
               }}
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-[20px] w-[20px]" aria-hidden="true">

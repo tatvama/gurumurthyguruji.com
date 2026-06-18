@@ -5,10 +5,10 @@ import {
   Cormorant_Garamond,
   Caveat,
   Noto_Sans_Kannada,
-  Noto_Serif_Kannada,
   Cinzel,
   DM_Serif_Display,
   Nunito,
+  Montserrat,
 } from "next/font/google";
 import "../globals.css";
 import { siteConfig } from "@/lib/data";
@@ -51,6 +51,13 @@ const dmSerifDisplay = DM_Serif_Display({
   preload: false,
 });
 
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  preload: false,
+});
+
 // Trikala reading form hint font
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -67,12 +74,6 @@ const notoKannada = Noto_Sans_Kannada({
   preload: false,
 });
 
-const notoKannadaSerif = Noto_Serif_Kannada({
-  variable: "--font-kannada-serif",
-  subsets: ["kannada"],
-  weight: ["400", "500", "600", "700"],
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -144,7 +145,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${notoKannadaSerif.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} ${montserrat.variable} h-full scroll-smooth antialiased`}
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col overflow-x-hidden bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
         <NavProgress />

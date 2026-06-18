@@ -1,6 +1,7 @@
 import Devotee from "../models/Devotee.js";
 import { pool } from "../config/db.js";
 import { logAudit } from "../utils/auditLog.js";
+import DevoteeAttention from "../models/DevoteeAttention.js";
 
 /* GET /api/devotees — directory list (search + relationship filter) */
 export const getDevotees = async (req, res, next) => {
@@ -32,16 +33,18 @@ export const getDevoteeHistory = async (req, res, next) => {
     const d = await Devotee.findById(id);
     if (!d) return res.status(404).json({ success: false, message: "Devotee not found." });
 
-    const [cases, appts, remedies, timeline, bookings] = await Promise.all([
+    const [cases, appts, remedies, timeline, bookings, attention] = await Promise.all([
       pool.query(`SELECT id, case_reference, service_type, problem_category, status, priority, created_at
                   FROM trikala_readings WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
-      pool.query(`SELECT id, appointment_ref, appointment_type, status, start_time, mode, outcome_note
+      pool.query(`SELECT id, appointment_ref, appointment_type, status, start_time, mode, outcome_note,
+                         schedule_attempt_count, max_attempts, parent_appointment_id
                   FROM appointments WHERE devotee_id = $1 ORDER BY start_time DESC NULLS LAST`, [id]),
       pool.query(`SELECT id, remedy_name, category, status, start_date, end_date, case_reference
                   FROM case_remedies WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
       Devotee.getTimeline(id),
       pool.query(`SELECT id, nearest_ashram, location, status, created_at
                   FROM audience_bookings WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
+      DevoteeAttention.getByDevotee(id),
     ]);
 
     res.json({
@@ -53,6 +56,7 @@ export const getDevoteeHistory = async (req, res, next) => {
         remedies: remedies.rows,
         timeline,
         bookings: bookings.rows,
+        attention: attention || null,
       },
     });
   } catch (err) { next(err); }

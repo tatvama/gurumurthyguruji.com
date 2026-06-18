@@ -297,15 +297,16 @@ export function Header() {
               <Link
                 href="/trikala-reading"
                 onClick={closeDrawer}
-                className="flex w-full items-center justify-center rounded-full border border-champagne/35 font-semibold text-pearl/75 transition-all duration-200 hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl"
-                style={{ padding: "12px 20px", fontSize: 14 }}
+                className="flex w-full items-center justify-center whitespace-nowrap rounded-full border border-champagne/35 font-semibold text-pearl/75 transition-all duration-200 hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl"
+                style={{ padding: "12px 20px", fontSize: 13 }}
               >
                 {t("cta.getTrikala")}
               </Link>
               <Link
                 href="/meet-guruji"
                 onClick={closeDrawer}
-                className="btn-gold-pill flex w-full justify-center"
+                className="btn-gold-pill flex w-full items-center justify-center whitespace-nowrap"
+                style={{ fontSize: 13, textAlign: "center" }}
               >
                 {t("cta.book")}
               </Link>
@@ -367,7 +368,7 @@ export function Header() {
                 <span className="text-champagne">Guruji</span>
               </span>
               <span
-                className="whitespace-nowrap font-sans font-semibold uppercase tracking-[0.2em] text-champagne/35"
+                className="whitespace-nowrap font-sans font-semibold uppercase tracking-[0.2em] text-champagne/35 mt-1"
                 style={{ fontSize: "clamp(6.5px, 0.55vw, 8px)" }}
               >
                 {t("nav.trust")}
@@ -522,6 +523,7 @@ export function Header() {
                 style={{
                   fontSize: "clamp(10.5px, 0.88vw, 12.5px)",
                   padding: "7px clamp(12px, 0.95vw, 17px)",
+                  textAlign: "center",
                 }}
               >
                 {t("cta.getTrikala")}
@@ -530,10 +532,11 @@ export function Header() {
               {/* Book Free Appointment */}
               <Link
                 href="/meet-guruji"
-                className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-champagne/28 font-semibold text-pearl/75 transition-all duration-300 hover:-translate-y-px hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl active:translate-y-0"
+                className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-champagne/28 font-semibold text-pearl/75 transition-all duration-300 hover:-translate-y-px hover:border-champagne/55 hover:bg-white/[0.07] hover:text-pearl active:translate-y-0"
                 style={{
                   fontSize: "clamp(10.5px, 0.88vw, 12.5px)",
                   padding: "7px clamp(12px, 0.95vw, 17px)",
+                  textAlign: "center",
                 }}
               >
                 {t("cta.bookShort")}

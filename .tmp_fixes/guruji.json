@@ -1,0 +1,112 @@
+[
+  {
+    "section": "Darshan Queue row — devotee name",
+    "lineRange": "327-329",
+    "issueType": "ellipsis-truncation",
+    "severity": "high",
+    "description": "The devotee NAME is truncated with whiteSpace:nowrap + textOverflow:ellipsis instead of wrapping; long names get cut off, violating the no-ellipsis-on-content rule.",
+    "currentCode": "<p style={{ fontSize: 13.5, fontWeight: 600, color: \"#111827\", overflow: \"hidden\", textOverflow: \"ellipsis\", whiteSpace: \"nowrap\" }}>\n                      {a.devoteeName || \"—\"}\n                    </p>",
+    "suggestedFix": "<p style={{ fontSize: 13.5, fontWeight: 600, color: \"#111827\", wordBreak: \"break-word\", overflowWrap: \"anywhere\" }}>\n                      {a.devoteeName || \"—\"}\n                    </p>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Darshan Queue row — subtitle (time · type)",
+    "lineRange": "330-332",
+    "issueType": "ellipsis-truncation",
+    "severity": "med",
+    "description": "Subtitle line carrying appointmentType (real content) uses whiteSpace:nowrap + textOverflow:ellipsis; appointment type text gets clipped at narrow widths instead of wrapping.",
+    "currentCode": "<p style={{ fontSize: 10.5, color: \"#9ca3af\", marginTop: 2, whiteSpace: \"nowrap\", overflow: \"hidden\", textOverflow: \"ellipsis\" }}>\n                      {fmtTime(a.checkedInAt)} · {a.appointmentType}\n                    </p>",
+    "suggestedFix": "<p style={{ fontSize: 10.5, color: \"#9ca3af\", marginTop: 2, wordBreak: \"break-word\", overflowWrap: \"anywhere\" }}>\n                      {fmtTime(a.checkedInAt)} · {a.appointmentType}\n                    </p>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Book-next inline form — datetime-local input",
+    "lineRange": "404-405",
+    "issueType": "missing-box-sizing",
+    "severity": "high",
+    "description": "The date/time input has no width:100% and no box-sizing:border-box. The media query forces width:100% but without box-sizing the 12px horizontal padding + 1.5px borders push it past its container at 250px, causing overflow. Its wrapping <div> also has no width.",
+    "currentCode": "<input type=\"datetime-local\" value={bookWhen} onChange={e => setBookWhen(e.target.value)}\n                      style={{ height: 38, padding: \"0 12px\", borderRadius: 9, border: \"1.5px solid #e5e7eb\", fontSize: 13, color: \"#1f2937\", outline: \"none\" }} />",
+    "suggestedFix": "<input type=\"datetime-local\" value={bookWhen} onChange={e => setBookWhen(e.target.value)}\n                      style={{ height: 38, padding: \"0 12px\", borderRadius: 9, border: \"1.5px solid #e5e7eb\", fontSize: 13, color: \"#1f2937\", outline: \"none\", width: \"100%\", maxWidth: \"100%\", boxSizing: \"border-box\" }} />\n// and give the wrapping <div> at line 402 style={{ flex: 1, minWidth: 0 }}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Book-next inline form — Mode FancySelect minWidth",
+    "lineRange": "417",
+    "issueType": "minwidth-too-large",
+    "severity": "high",
+    "description": "containerStyle sets minWidth:200 on the Mode dropdown. At a 250px viewport (inner content < 250px after the 14px form padding) a 200px min-width plus the date input and Book button forces horizontal overflow; the dropdown cannot shrink to stack.",
+    "currentCode": "containerStyle={{ marginBottom: 0, minWidth: 200 }}",
+    "suggestedFix": "containerStyle={{ marginBottom: 0, minWidth: 0, width: \"100%\", flex: 1 }}\n// and wrap the FancySelect's parent <div> (line 407) with style={{ flex: 1, minWidth: 0, width: \"100%\" }}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Book-next inline form — wrapping divs not flexible",
+    "lineRange": "402-419",
+    "issueType": "flex-no-wrap",
+    "severity": "med",
+    "description": "Inside the .gd-booknext-form flex row, the two field wrapper <div>s (date input wrapper at 402, FancySelect wrapper at 407) have no flex/min-width:0, so even though the form wraps via media query, the children retain intrinsic widths and the 200px select + date input can overflow 250px. Children need flex:1 / min-width:0 to actually shrink.",
+    "currentCode": "<div className=\"gd-booknext-form\" style={{ display: \"flex\", alignItems: \"flex-end\", gap: 12, padding: \"14px 24px\", background: \"#f0fdfa\", borderBottom: \"1px solid #cbeae3\" }}>\n                  <div>\n                    <label style={{ display: \"block\", fontSize: 11, fontWeight: 700, color: \"#0f766e\", marginBottom: 5 }}>Date &amp; Time</label>",
+    "suggestedFix": "Add flex-wrap to the row and make children shrinkable: container style add flexWrap:\"wrap\"; wrap each field <div> with style={{ flex: \"1 1 160px\", minWidth: 0 }}. (Container already gets flex-wrap via the media query, but add minWidth:0 to the child divs so they shrink below 250px.)",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "CASE / VISIT tab — DOB/TOB/POB 3-column grid",
+    "lineRange": "500-504",
+    "issueType": "grid-no-stack",
+    "severity": "high",
+    "description": "gridTemplateColumns: '1fr 1fr 1fr' with no media-query stack. Three fields side-by-side (Date/Time/Place of Birth) cannot fit at 250px; each track collapses to ~75px and field values overflow / squash.",
+    "currentCode": "<div style={{ display: \"grid\", gridTemplateColumns: \"1fr 1fr 1fr\", gap: 12 }}>\n                          <Field label=\"Date of Birth\" value={linkedCase.dob} />\n                          <Field label=\"Time of Birth\" value={linkedCase.tob} />\n                          <Field label=\"Place of Birth\" value={linkedCase.pob} />",
+    "suggestedFix": "<div style={{ display: \"grid\", gridTemplateColumns: \"repeat(auto-fit, minmax(140px, 1fr))\", gap: 12 }}>\n// or add a media query at <=480px setting grid-template-columns:1fr",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "CASE / VISIT tab — Remedy Duration/Place 2-column grid",
+    "lineRange": "510-513",
+    "issueType": "grid-no-stack",
+    "severity": "med",
+    "description": "gridTemplateColumns: '1fr 1fr' with no responsive stack. At 250px the two remedy fields are forced into two ~115px columns, squashing values instead of stacking.",
+    "currentCode": "<div style={{ display: \"grid\", gridTemplateColumns: \"1fr 1fr\", gap: 12 }}>\n                          <Field label=\"Remedy Duration\" value={linkedCase.remedy_duration} />\n                          <Field label=\"Remedy Place\"    value={linkedCase.remedy_place} />",
+    "suggestedFix": "<div style={{ display: \"grid\", gridTemplateColumns: \"repeat(auto-fit, minmax(150px, 1fr))\", gap: 12 }}>\n// or media query at <=480px -> grid-template-columns:1fr",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Detail tabs strip",
+    "lineRange": "431",
+    "issueType": "overflow-x-scroll",
+    "severity": "med",
+    "description": "The tab bar uses overflowX:'auto' with whiteSpace:'nowrap' tab buttons (line 436), producing horizontal sideways scrolling of the 5 tabs at narrow widths instead of wrapping. Rule 1 forbids overflowX:auto producing horizontal scroll.",
+    "currentCode": "<div style={{ display: \"flex\", gap: 4, padding: \"0 18px\", background: \"#fff\", borderBottom: \"1px solid #e5e7eb\", flexShrink: 0, overflowX: \"auto\" }}>",
+    "suggestedFix": "<div style={{ display: \"flex\", flexWrap: \"wrap\", gap: 4, padding: \"0 14px\", background: \"#fff\", borderBottom: \"1px solid #e5e7eb\", flexShrink: 0 }}>\n// remove overflowX:auto; let tabs wrap to a second line",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Devotee header",
+    "lineRange": "363",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Desktop padding '16px 24px' is reduced by the media query to '12px 14px' (line 259), so this is handled. Noting only that the gap:16 is not reduced; minor, header wraps via media query. Low priority — no real overflow.",
+    "currentCode": "<div className=\"gd-devotee-header\" style={{ display: \"flex\", alignItems: \"center\", gap: 16, padding: \"16px 24px\", background: \"#fff\", borderBottom: \"1px solid #e5e7eb\", flexShrink: 0 }}>",
+    "suggestedFix": "In the @media (max-width:768px) block, .gd-devotee-header already sets padding 12px 14px and gap 8px — confirm gap override is applied (it is). No change strictly required; optionally lower gap further. Safe to leave.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  },
+  {
+    "section": "Tab body container padding",
+    "lineRange": "443",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Desktop padding '22px 24px' but the media query (.gd-tab-body padding 14px 14px, line 264) reduces it at <=768px. Handled — listed for completeness, not a defect.",
+    "currentCode": "<div className=\"gd-tab-body\" style={{ flex: 1, overflowY: \"auto\", padding: \"22px 24px\", minHeight: 0 }}>",
+    "suggestedFix": "No change needed; media query already reduces to 14px 14px.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\guruji\\page.tsx",
+    "chunk": "guruji/page.tsx (full)"
+  }
+]

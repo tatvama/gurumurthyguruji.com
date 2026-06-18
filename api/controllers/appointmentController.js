@@ -1,12 +1,28 @@
 import Appointment from "../models/Appointment.js";
 import Devotee from "../models/Devotee.js";
+import AppointmentTimeline from "../models/AppointmentTimeline.js";
+import AppointmentNote from "../models/AppointmentNote.js";
+import DevoteeAttention from "../models/DevoteeAttention.js";
 import { logAudit } from "../utils/auditLog.js";
 import { autoNotify } from "../utils/notifyWhatsApp.js";
+import * as wf from "../services/appointmentWorkflowService.js";
 
 const VALID_STATUSES = [
   "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Arrived", "In Darshan", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
 ];
+
+/* Fields a generic PATCH /:id may edit. Status is NOT here — status changes
+   must go through the workflow action endpoints (Flow §17.2, §34). */
+const EDITABLE_FIELDS = [
+  "devotee_name", "mobile", "appointment_type", "mode", "start_time", "end_time",
+  "duration_minutes", "priority", "location", "meeting_link", "purpose",
+  "outcome_note", "assigned_to", "guruji_remarks", "office_remarks",
+];
+
+/* Resolve the acting staff/guruji name from the request */
+const getActor = (req) =>
+  req.body?.actor || req.headers["x-admin-name"] || req.query?.actor || "Office Staff";
 
 /* GET /api/appointments — list with status / date-range filters */
 export const getAppointments = async (req, res, next) => {
@@ -36,6 +52,13 @@ export const getAppointment = async (req, res, next) => {
 export const createAppointment = async (req, res, next) => {
   try {
     const a = await Appointment.create(req.body);
+    await AppointmentTimeline.create({
+      appointment_id: a.id, devotee_id: a.devotee_id || null, case_reference: a.case_reference || null,
+      event_type: "appointment_created", to_status: a.status,
+      title: `${a.appointment_type} created`,
+      description: a.start_time ? new Date(a.start_time).toLocaleString("en-IN") : "Awaiting staff scheduling.",
+      created_by: getActor(req),
+    });
     if (a.devotee_id) {
       await Devotee.addTimeline(a.devotee_id, {
         event_type: "appointment_created",
@@ -43,8 +66,12 @@ export const createAppointment = async (req, res, next) => {
         description: a.start_time ? new Date(a.start_time).toLocaleString("en-IN") : "Slot to be fixed",
         related_entity_type: "appointment", related_entity_id: String(a.id), icon: "📅",
       });
+      /* New active request flags the devotee until it progresses */
+      if (a.status === "Requested") {
+        await DevoteeAttention.set({ devotee_id: a.devotee_id, appointment_id: a.id, attention_status: "active_requested", highlight_message: null, requires_follow_up: false }).catch(() => {});
+      }
     }
-    await logAudit({ action: "CREATE_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: { type: a.appointment_type, status: a.status } });
+    await logAudit({ userName: getActor(req), action: "CREATE_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: { type: a.appointment_type, status: a.status } });
 
     /* Auto-notify devotee on WhatsApp */
     if (a.mobile) {
@@ -67,23 +94,17 @@ export const createAppointment = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-/* PATCH /api/appointments/:id — update / status flow / outcome capture */
+/* PATCH /api/appointments/:id — edit non-status fields only */
 export const updateAppointment = async (req, res, next) => {
   try {
-    if (req.body.status && !VALID_STATUSES.includes(req.body.status)) {
-      return res.status(422).json({ success: false, message: `Status must be one of: ${VALID_STATUSES.join(", ")}.` });
+    if ("status" in req.body) {
+      return res.status(422).json({ success: false, message: "Status changes must use a workflow action (schedule, confirm, check-in, complete, cancel, …)." });
     }
-    const a = await Appointment.update(req.params.id, req.body);
+    const patch = {};
+    for (const k of EDITABLE_FIELDS) if (k in req.body) patch[k] = req.body[k];
+    const a = await Appointment.update(req.params.id, patch);
     if (!a) return res.status(404).json({ success: false, message: "Appointment not found." });
-    await logAudit({ action: "UPDATE_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: req.body.status || Object.keys(req.body) });
-    if (req.body.status === "Completed" && a.devotee_id) {
-      await Devotee.addTimeline(a.devotee_id, {
-        event_type: "appointment_completed",
-        title: `${a.appointment_type} completed`,
-        description: a.outcome_note || "",
-        related_entity_type: "appointment", related_entity_id: String(a.id), icon: "✅",
-      });
-    }
+    await logAudit({ userName: getActor(req), action: "UPDATE_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: Object.keys(patch) });
     res.json({ success: true, data: a });
   } catch (err) { next(err); }
 };
@@ -92,12 +113,12 @@ export const updateAppointment = async (req, res, next) => {
 export const deleteAppointment = async (req, res, next) => {
   try {
     await Appointment.remove(req.params.id);
-    await logAudit({ action: "DELETE_APPOINTMENT", entityType: "appointment", entityId: req.params.id });
+    await logAudit({ userName: getActor(req), action: "DELETE_APPOINTMENT", entityType: "appointment", entityId: req.params.id });
     res.json({ success: true });
   } catch (err) { next(err); }
 };
 
-/* GET /api/appointments/queue/arrived — Guruji darshan queue (checked-in today, arrival order) */
+/* GET /api/appointments/queue/arrived — Guruji darshan queue */
 export const getArrivedToday = async (_req, res, next) => {
   try {
     const rows = await Appointment.findCheckedInToday();
@@ -105,39 +126,91 @@ export const getArrivedToday = async (_req, res, next) => {
   } catch (err) { next(err); }
 };
 
-/* PATCH /api/appointments/:id/checkin — office staff verifies devotee & marks arrival (PRD §6)
-   Body: { devotee: {name,phone,whatsapp,email,city,state,photo}, office_remarks } */
+/* ── Workflow action endpoints (Flow §17.2) ────────────────────────────── */
+/* Each wraps a workflow-service function; the service enforces transitions,
+   writes the timeline + audit + attention flag, and fires notifications. */
+const action = (fn, key) => async (req, res, next) => {
+  try {
+    const result = await fn(req.params.id, req.body || {}, getActor(req));
+    res.json({ success: true, data: result?.appointment ? result.appointment : result, meta: result?.appointment ? result : undefined });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
+
+export const scheduleAppointment  = action(wf.scheduleAppointment);
+export const rescheduleAppointment = action(wf.rescheduleAppointment);
+export const confirmAppointment    = action(wf.confirmAppointment);
+export const sendReminder          = action(wf.sendReminder);
+export const startDarshan          = action(wf.startDarshan);
+export const completeAppointment   = action(wf.completeAppointment);
+export const cancelAppointment     = action(wf.cancelAppointment);
+export const markNoShow            = action(wf.markNoShow);
+
+export const closeAppointment = async (req, res, next) => {
+  try {
+    const result = await wf.closeAppointmentLead(req.params.id, req.body?.reason || "Closed by staff", getActor(req));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
+
+export const bookFollowUp = async (req, res, next) => {
+  try {
+    const child = await wf.bookFollowUp(req.params.id, req.body || {}, getActor(req));
+    res.status(201).json({ success: true, data: child });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
+
+/* PATCH /api/appointments/:id/checkin — office staff verify + mark Arrived */
 export const checkInAppointment = async (req, res, next) => {
   try {
-    const { devotee: devoteePatch = {}, office_remarks } = req.body;
+    const result = await wf.checkInAppointment(req.params.id, req.body || {}, getActor(req));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ success: false, message: err.message });
+    next(err);
+  }
+};
 
-    /* 1. Mark the appointment as Arrived + record verification + office remarks */
-    const a = await Appointment.update(req.params.id, {
-      status:           "Arrived",
-      checked_in_at:    new Date().toISOString(),
-      details_verified: true,
-      office_remarks:   office_remarks ?? null,
+/* ── Notes & timeline ──────────────────────────────────────────────────── */
+export const addNote = async (req, res, next) => {
+  try {
+    const appt = await Appointment.findById(req.params.id);
+    if (!appt) return res.status(404).json({ success: false, message: "Appointment not found." });
+    const note = await AppointmentNote.create({
+      appointment_id: appt.id, devotee_id: appt.devotee_id || null,
+      note_type: req.body.note_type, note_text: req.body.note_text,
+      is_private: req.body.is_private, created_by: getActor(req),
     });
-    if (!a) return res.status(404).json({ success: false, message: "Appointment not found." });
-
-    /* 2. Update the linked Devotee 360 contact details + photo (only provided fields) */
-    let devotee = null;
-    if (a.devotee_id) {
-      const patch = {};
-      for (const k of ["name", "phone", "whatsapp", "email", "city", "district", "state", "pincode", "photo"]) {
-        if (devoteePatch[k] !== undefined && devoteePatch[k] !== null && devoteePatch[k] !== "") patch[k] = devoteePatch[k];
-      }
-      if (Object.keys(patch).length) devotee = await Devotee.update(a.devotee_id, patch);
-
-      await Devotee.addTimeline(a.devotee_id, {
-        event_type: "checked_in",
-        title: "Arrived for darshan — details verified",
-        description: office_remarks || "",
-        related_entity_type: "appointment", related_entity_id: String(a.id), icon: "🙏",
-      });
-    }
-
-    await logAudit({ action: "CHECKIN_APPOINTMENT", entityType: "appointment", entityId: a.appointment_ref || String(a.id), newValue: { verified: true } });
-    res.json({ success: true, data: { appointment: a, devotee } });
+    await AppointmentTimeline.create({
+      appointment_id: appt.id, devotee_id: appt.devotee_id || null,
+      event_type: "note_added", title: `${note.note_type} note added`,
+      description: note.note_text, created_by: getActor(req),
+    });
+    await logAudit({ userName: getActor(req), action: "ADD_APPOINTMENT_NOTE", entityType: "appointment", entityId: appt.appointment_ref || String(appt.id) });
+    res.status(201).json({ success: true, data: note });
   } catch (err) { next(err); }
 };
+
+export const getNotes = async (req, res, next) => {
+  try {
+    const rows = await AppointmentNote.listByAppointment(req.params.id);
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+};
+
+export const getTimeline = async (req, res, next) => {
+  try {
+    const rows = await AppointmentTimeline.listByAppointment(req.params.id);
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+};
+
+export { VALID_STATUSES };

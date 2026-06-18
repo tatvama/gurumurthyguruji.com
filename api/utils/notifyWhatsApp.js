@@ -20,6 +20,22 @@ const TEMPLATES = {
     `📅 Date: ${d.date || "—"}\n⏰ Time: ${d.time || "—"}\n📍 ${d.location || "Guruji Ashram"}\n\n` +
     `Please arrive 15 minutes early. Bring any relevant documents.\n\n🕉️ Jay Guruji\n— Seva Team`,
 
+  appointment_scheduled: (d) =>
+    `🙏 Namaskara ${d.name || ""},\n\nYour appointment with Pujya Sri Gurumurthy Guruji has been scheduled.\n\n` +
+    `📅 ${d.date || "—"}\n📍 ${d.venue || "Guruji Ashram"}\n\n` +
+    `Please arrive 15 minutes early with any relevant documents.\n\n🕉️ Jay Guruji\n— Seva Team`,
+
+  appointment_rescheduled: (d) =>
+    `🙏 Namaskara ${d.name || ""},\n\nYour appointment with Guruji has been rescheduled.\n\n` +
+    `⏪ Earlier: ${d.old_date_time || "—"}\n⏩ New: ${d.new_date_time || "—"}\n` +
+    `${d.reason ? `📝 Reason: ${d.reason}\n` : ""}` +
+    `\nWe look forward to your darshan.\n\n🕉️ Jay Guruji`,
+
+  appointment_cancelled: (d) =>
+    `🙏 Namaskara ${d.name || ""},\n\nYour appointment with Guruji has been cancelled.\n\n` +
+    `${d.reason ? `📝 Reason: ${d.reason}\n` : ""}` +
+    `\nOur office may contact you for follow-up if required.\n\n🕉️ Jay Guruji`,
+
   case_submitted: (d) =>
     `🙏 Namaskara ${d.name || ""},\n\nYour Trikala consultation request has been received.\n\n` +
     `📋 Case Ref: ${d.caseRef || "—"}\n📖 Service: ${d.serviceType || "Trikala"}\n\n` +

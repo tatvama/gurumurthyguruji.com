@@ -1,20 +1,18 @@
 import { pool } from "../config/db.js";
 
 const TrikalaReading = {
-  async create({ case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, dob, tob, birth_time_accuracy, pob, father_name, mother_name, spouse_name, children_details, service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id, consent }) {
+  async create({ case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, dob, tob, pob, service_type, guidance_query, palm_image, priority, preferred_language, devotee_id, consent }) {
     const { rows } = await pool.query(
       `INSERT INTO trikala_readings
-         (case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, dob, tob, birth_time_accuracy, pob,
-          father_name, mother_name, spouse_name, children_details,
-          service_type, guidance_query, palm_image, problem_category, priority, preferred_language, devotee_id, consent)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+         (case_reference, full_name, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, dob, tob, pob,
+          service_type, guidance_query, palm_image, priority, preferred_language, devotee_id, consent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
        RETURNING *`,
       [case_reference, full_name, mobile, whatsapp || null, email, gender, occupation, city || null,
        district || null, state || null, pincode || null,
-       dob, tob || null, birth_time_accuracy || null, pob,
-       father_name || null, mother_name || null, spouse_name || null, children_details || null,
+       dob, tob || null, pob,
        service_type, guidance_query, palm_image || null,
-       problem_category || null, priority || "Normal", preferred_language || null, devotee_id || null, consent || false]
+       priority || "Normal", preferred_language || null, devotee_id || null, consent || false]
     );
     return rows[0];
   },

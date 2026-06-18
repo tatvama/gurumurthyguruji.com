@@ -32,7 +32,7 @@ function StatCard({ icon, value, label, iconBg, iconColor }: {
   icon: string; value: number; label: string; iconBg: string; iconColor: string;
 }) {
   return (
-    <div style={{ background:"#fff", borderRadius:12, border:"1px solid #E5E7EB", padding:"20px 22px", display:"flex", alignItems:"center", gap:16, boxShadow:"0 1px 4px rgba(0,0,0,0.06)" }}>
+    <div className="statcard" style={{ background:"#fff", borderRadius:12, border:"1px solid #E5E7EB", padding:"20px 22px", display:"flex", alignItems:"center", gap:16, boxShadow:"0 1px 4px rgba(0,0,0,0.06)" }}>
       <div style={{ width:48, height:48, borderRadius:12, background:iconBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
         <span style={{ color:iconColor, fontSize:22 }}>{icon}</span>
       </div>
@@ -105,7 +105,7 @@ function DetailPanel({
         style={{ position:"fixed", top:0, right:0, bottom:0, zIndex:201, width:460, maxWidth:"100vw", background:"#F9FAFB", boxShadow:"-8px 0 40px rgba(0,0,0,0.15)", display:"flex", flexDirection:"column", fontFamily:"'Inter','Segoe UI',sans-serif" }}
       >
         {/* Header */}
-        <div style={{ background:"linear-gradient(135deg,#1e0800,#2a1000)", padding:"20px 22px 18px", flexShrink:0 }}>
+        <div className="dp-header" style={{ background:"linear-gradient(135deg,#1e0800,#2a1000)", padding:"20px 22px 18px", flexShrink:0 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
             <span style={{ fontSize:9, fontWeight:700, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(255,220,170,0.55)" }}>
               Trikala Reading Request
@@ -119,8 +119,8 @@ function DetailPanel({
               {reading.fullName[0]?.toUpperCase()}
             </div>
             <div style={{ flex:1, minWidth:0 }}>
-              <p style={{ fontSize:16, fontWeight:800, color:"rgba(255,220,170,0.95)", marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{reading.fullName}</p>
-              <p style={{ fontSize:11.5, color:"rgba(255,220,170,0.55)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{reading.email}</p>
+              <p style={{ fontSize:16, fontWeight:800, color:"rgba(255,220,170,0.95)", marginBottom:2, wordBreak:"break-word", overflowWrap:"anywhere", lineHeight:1.3 }}>{reading.fullName}</p>
+              <p style={{ fontSize:11.5, color:"rgba(255,220,170,0.55)", wordBreak:"break-all", overflowWrap:"anywhere", lineHeight:1.4 }}>{reading.email}</p>
             </div>
             <span style={{ ...STATUS_CFG[reading.status], flexShrink:0, fontSize:10.5, fontWeight:700, borderRadius:20, padding:"3px 10px", background:STATUS_CFG[reading.status]?.bg, color:STATUS_CFG[reading.status]?.color }}>
               {reading.status}
@@ -139,7 +139,7 @@ function DetailPanel({
             </div>
             {rows.map(([label, val]) => (
               <div key={label} style={{ display:"flex", padding:"9px 16px", borderBottom:"1px solid #F9FAFB" }}>
-                <span style={{ width:130, minWidth:130, fontSize:12, fontWeight:600, color:"#9CA3AF" }}>{label}</span>
+                <span className="dp-label" style={{ width:130, minWidth:130, fontSize:12, fontWeight:600, color:"#9CA3AF" }}>{label}</span>
                 <span style={{ flex:1, fontSize:13, color:"#1F2937", wordBreak:"break-word", lineHeight:1.5 }}>{val || "—"}</span>
               </div>
             ))}
@@ -267,7 +267,7 @@ export default function TrikalaReadingsAdmin() {
         </Link>
 
         {/* Search */}
-        <div style={{ flex:1, maxWidth:440, position:"relative" }}>
+        <div className="nav-search" style={{ flex:1, minWidth:0, maxWidth:440, position:"relative" }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}>
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -283,7 +283,7 @@ export default function TrikalaReadingsAdmin() {
           </svg>
         </button>
 
-        <div style={{ flex:1 }} />
+        <div className="nav-spacer" style={{ flex:1 }} />
 
         {/* Refresh */}
         <button onClick={load} title="Refresh"
@@ -348,7 +348,7 @@ export default function TrikalaReadingsAdmin() {
 
         {/* Table card */}
         <div style={{ background:"#fff", borderRadius:14, border:"1px solid #E5E7EB", boxShadow:"0 1px 8px rgba(0,0,0,0.06)", overflow:"hidden" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 22px", borderBottom:"1px solid #F3F4F6" }}>
+          <div className="tablecard-head" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:6, padding:"16px 22px", borderBottom:"1px solid #F3F4F6" }}>
             <p style={{ fontSize:15, fontWeight:700, color:"#111827" }}>
               {activeTab === "All Cases" ? "All Cases" : activeTab}
             </p>
@@ -369,13 +369,17 @@ export default function TrikalaReadingsAdmin() {
               <button onClick={load} style={{ padding:"8px 20px", borderRadius:8, border:"1px solid #EF4444", background:"#fff", color:"#EF4444", cursor:"pointer", fontSize:13, fontWeight:600 }}>Retry</button>
             </div>
           ) : (
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <div style={{ maxWidth:"100%" }}>
+              <table className="resp-table" style={{ width:"100%", borderCollapse:"collapse" }}>
                 <thead>
                   <tr style={{ background:"#F9FAFB", borderBottom:"1px solid #F3F4F6" }}>
-                    {["CASE ID","DEVOTEE","MOBILE","SERVICE","STATUS","SUBMITTED",""].map(h => (
-                      <th key={h} style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>{h}</th>
-                    ))}
+                    <th style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>CASE ID</th>
+                    <th style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>DEVOTEE</th>
+                    <th className="col-hide-sm" style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>MOBILE</th>
+                    <th className="col-hide-sm" style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>SERVICE</th>
+                    <th className="col-hide-sm" style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>STATUS</th>
+                    <th className="col-hide-sm" style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}>SUBMITTED</th>
+                    <th style={{ padding:"11px 16px", fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#9CA3AF", textAlign:"left", whiteSpace:"nowrap" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -385,8 +389,9 @@ export default function TrikalaReadingsAdmin() {
                     const svc = SVC_CFG[c.serviceType] ?? SVC_CFG["horoscope"];
                     const sts = STATUS_CFG[c.status]   ?? STATUS_CFG["Submitted"];
                     return (
-                      <tr key={c.id}
-                        style={{ borderBottom:"1px solid #F9FAFB", transition:"background 0.1s" }}
+                      <tr key={c.id} className="resp-row"
+                        onClick={() => setDetail(c)}
+                        style={{ borderBottom:"1px solid #F9FAFB", transition:"background 0.1s", cursor:"pointer" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
                         onMouseLeave={e => (e.currentTarget.style.background = "")}>
 
@@ -398,23 +403,23 @@ export default function TrikalaReadingsAdmin() {
                         </td>
 
                         {/* Devotee */}
-                        <td style={{ padding:"14px 16px" }}>
-                          <p style={{ fontSize:14, fontWeight:600, color:"#111827", marginBottom:1 }}>{c.fullName}</p>
-                          <p style={{ fontSize:12, color:"#9CA3AF" }}>{c.email}</p>
+                        <td style={{ padding:"14px 16px", minWidth:0 }}>
+                          <p style={{ fontSize:14, fontWeight:600, color:"#111827", marginBottom:1, wordBreak:"break-word", overflowWrap:"anywhere" }}>{c.fullName}</p>
+                          <p style={{ fontSize:12, color:"#9CA3AF", wordBreak:"break-all", overflowWrap:"anywhere" }}>{c.email}</p>
                         </td>
 
                         {/* Mobile */}
-                        <td style={{ padding:"14px 16px", fontSize:13, color:"#374151", fontFamily:"monospace", whiteSpace:"nowrap" }}>{c.mobile}</td>
+                        <td className="col-hide-sm" style={{ padding:"14px 16px", fontSize:13, color:"#374151", fontFamily:"monospace", whiteSpace:"nowrap" }}>{c.mobile}</td>
 
                         {/* Service */}
-                        <td style={{ padding:"14px 16px", whiteSpace:"nowrap" }}>
+                        <td className="col-hide-sm" style={{ padding:"14px 16px", whiteSpace:"nowrap" }}>
                           <span style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 11px", borderRadius:20, background:svc.bg, border:`1px solid ${svc.border}`, fontSize:12.5, fontWeight:600, color:svc.color }}>
                             <span style={{ fontSize:13 }}>{svc.icon}</span>{svc.label}
                           </span>
                         </td>
 
                         {/* Status */}
-                        <td style={{ padding:"14px 16px", whiteSpace:"nowrap" }}>
+                        <td className="col-hide-sm" style={{ padding:"14px 16px", whiteSpace:"nowrap" }}>
                           <span style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 11px", borderRadius:20, background:sts.bg, fontSize:12.5, fontWeight:600, color:sts.color }}>
                             <span style={{ width:6, height:6, borderRadius:"50%", background:sts.dot, display:"inline-block", flexShrink:0 }} />
                             {c.status}
@@ -422,17 +427,20 @@ export default function TrikalaReadingsAdmin() {
                         </td>
 
                         {/* Submitted */}
-                        <td style={{ padding:"14px 16px", fontSize:13, color:"#6B7280", whiteSpace:"nowrap" }}>{fmtDate(c.createdAt)}</td>
+                        <td className="col-hide-sm" style={{ padding:"14px 16px", fontSize:13, color:"#6B7280", whiteSpace:"nowrap" }}>{fmtDate(c.createdAt)}</td>
 
                         {/* Open */}
-                        <td style={{ padding:"14px 16px", whiteSpace:"nowrap" }}>
-                          <button onClick={() => setDetail(c)}
+                        <td style={{ padding:"14px 16px", whiteSpace:"nowrap", textAlign:"right" }}>
+                          <button onClick={(e) => { e.stopPropagation(); setDetail(c); }} className="col-hide-sm"
                             style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"6px 14px", borderRadius:8, border:"1px solid #E5E7EB", background:"#fff", cursor:"pointer", fontSize:13, fontWeight:600, color:"#374151", boxShadow:"0 1px 3px rgba(0,0,0,0.06)" }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                             Open
                           </button>
+                          <svg className="col-show-sm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign:"middle" }}>
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
                         </td>
                       </tr>
                     );
@@ -457,12 +465,41 @@ export default function TrikalaReadingsAdmin() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive table collapse helpers (desktop: chevron hidden) */
+        .col-show-sm { display: none !important; }
+
         @media (max-width: 900px) {
           main { padding: 20px 16px 40px !important; }
           div[style*="repeat(4,1fr)"] { grid-template-columns: repeat(2,1fr) !important; }
         }
+
+        /* Collapse the data table to a clean single-column list */
+        @media (max-width: 768px) {
+          .col-hide-sm { display: none !important; }
+          .col-show-sm { display: inline-flex !important; }
+          .resp-table { display: block !important; width: 100% !important; }
+          .resp-table thead { display: none !important; }
+          .resp-table tbody { display: block !important; width: 100% !important; }
+          .resp-row { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 10px !important; width: 100% !important; box-sizing: border-box !important; }
+          .resp-row > td { padding: 12px 14px !important; }
+          .resp-row > td:first-child { flex: 0 0 auto !important; }
+          .resp-row > td:nth-child(2) { flex: 1 1 auto !important; min-width: 0 !important; }
+          .resp-row > td:last-child { flex: 0 0 auto !important; padding-left: 0 !important; }
+        }
+
         @media (max-width: 560px) {
-          header { padding: 0 14px !important; gap: 8px !important; }
+          header { flex-wrap: wrap !important; height: auto !important; padding: 10px 14px !important; gap: 8px !important; row-gap: 8px !important; }
+          .nav-search { flex-basis: 100% !important; order: 3 !important; max-width: 100% !important; }
+          .nav-spacer { display: none !important; }
+          div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr !important; }
+          .statcard { padding: 14px !important; gap: 10px !important; }
+          .tablecard-head { padding: 12px 14px !important; }
+        }
+
+        @media (max-width: 520px) {
+          .dp-header { padding: 16px 14px !important; }
+          .dp-label { width: auto !important; min-width: 90px !important; }
         }
       `}</style>
     </div>

@@ -1,0 +1,233 @@
+[
+  {
+    "section": "GurujiVakyaTab — Duration/Place input grid",
+    "lineRange": "2399-2402",
+    "issueType": "grid-no-stack",
+    "severity": "med",
+    "description": "Two-column grid (1fr 1fr) for Duration/Place inputs never collapses to one column; at ~250px each cell is ~100px, forcing the inputs and their placeholders ('3 / 9 / 21 / 48 days', 'Home / temple / kshetra') into a cramped, unreadable two-up layout instead of stacking.",
+    "currentCode": "        <div style={{ display: \"grid\", gridTemplateColumns: \"1fr 1fr\", gap: 12 }}>\n          <div style={{ marginBottom: 16 }}><label style={lbl}>Duration</label><input value={f.remedy_duration} onChange={e => set(\"remedy_duration\", e.target.value)} style={inp} placeholder=\"3 / 9 / 21 / 48 days\" /></div>\n          <div style={{ marginBottom: 16 }}><label style={lbl}>Place</label><input ref={remedyPlaceRef} value={f.remedy_place} onChange={e => set(\"remedy_place\", e.target.value)} style={inp} placeholder=\"Home / temple / kshetra\" /></div>\n        </div>",
+    "suggestedFix": "Give this grid a className (e.g. className=\"gv-grid\") and add a media query that stacks it: @media (max-width: 480px) { .gv-grid { grid-template-columns: 1fr !important; } }  — or inline a responsive track via CSS class. Desktop keeps 1fr 1fr; narrow widths get a single column.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "GurujiVakyaTab — Mantra/Seva input grid",
+    "lineRange": "2403-2406",
+    "issueType": "grid-no-stack",
+    "severity": "med",
+    "description": "Second two-column grid (1fr 1fr) for Mantra/Japa and Seva/Daana inputs has no media-query stack; at ~250px each input column is ~100px wide, making the fields too narrow to use.",
+    "currentCode": "        <div style={{ display: \"grid\", gridTemplateColumns: \"1fr 1fr\", gap: 12 }}>\n          <div style={{ marginBottom: 16 }}><label style={lbl}>Mantra / Japa</label><input value={f.mantra_japa} onChange={e => set(\"mantra_japa\", e.target.value)} style={inp} /></div>\n          <div style={{ marginBottom: 16 }}><label style={lbl}>Seva / Daana</label><input value={f.seva_daana} onChange={e => set(\"seva_daana\", e.target.value)} style={inp} /></div>\n        </div>",
+    "suggestedFix": "Add the same responsive class as the Duration/Place grid (e.g. className=\"gv-grid\") and stack at narrow width: @media (max-width: 480px) { .gv-grid { grid-template-columns: 1fr !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "AiAnalysisTab — empty-state copy max-width",
+    "lineRange": "2308-2311",
+    "issueType": "fixed-width",
+    "severity": "low",
+    "description": "Empty-state paragraph uses maxWidth: 360 inside a centered flex column; this is a max (caps width on desktop and shrinks below 360) so it does not overflow at 250px, but pairs with the parent minHeight: 240 which is a fixed height and does not scale.",
+    "currentCode": "          <div style={{ display: \"flex\", flexDirection: \"column\", alignItems: \"center\", justifyContent: \"center\", minHeight: 240, color: \"#878d98\", textAlign: \"center\", gap: 14 }}>\n            <span style={{ fontSize: 42 }}>🔍</span>\n            <p style={{ fontSize: 13.5, lineHeight: 1.7, maxWidth: 360 }}>No AI pre-analysis yet. Generate a structured Guruji Review Sheet",
+    "suggestedFix": "maxWidth:360 is fine (it shrinks). Optionally make the wrapper height fluid: change minHeight: 240 to minHeight: \"min(240px, 50vh)\" so the empty state does not reserve excess vertical space on small screens. No horizontal-overflow risk here.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "AiAnalysisTab — content body padding",
+    "lineRange": "2303",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Body wrapper uses a fixed padding of '20px 24px' with no responsive reduction; 48px horizontal padding on a 250px viewport leaves only ~202px for content. Children are fluid so nothing overflows, but the padding eats usable width on narrow screens.",
+    "currentCode": "      <div style={{ padding: \"20px 24px\" }}>\n        {err && <p style={{ fontSize: 12.5, color: \"#dc2626\", marginBottom: 12 }}>{err}</p>}",
+    "suggestedFix": "Move to a class and reduce on small screens, e.g. .ai-body { padding: 20px 24px; } @media (max-width: 480px) { .ai-body { padding: 14px 12px !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "GurujiVakyaTab — form body padding",
+    "lineRange": "2395",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Form body uses fixed padding '20px 24px' (48px horizontal) with no responsive reduction; combined with the two 1fr 1fr grids inside, narrow viewports lose substantial width. Inputs are box-sized so no overflow, but padding should scale down.",
+    "currentCode": "      <div style={{ padding: \"20px 24px\" }}>\n        <div style={{ marginBottom: 16 }}><label style={lbl}>Guruji&apos;s Observation</label><textarea rows={3} value={f.guruji_observation} onChange={e => set(\"guruji_observation\", e.target.value)} style={ta} placeholder=\"What Guruji understood about the devotee's situation…\" /></div>",
+    "suggestedFix": "Apply a class with a media-query reduction, e.g. @media (max-width: 480px) { .gv-body { padding: 14px 12px !important; } }, instead of the fixed inline '20px 24px'.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "GurujiVakyaTab — header padding",
+    "lineRange": "2388",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Section header uses fixed padding '16px 22px' with no small-screen reduction; 44px horizontal padding squeezes the title/subtitle stack at 250px (though text wraps, so no horizontal overflow).",
+    "currentCode": "      <div style={{ display: \"flex\", alignItems: \"center\", gap: 9, padding: \"16px 22px\", borderBottom: \"1px solid #F2F3F5\", background: \"#f8fafc\" }}>\n        <span style={{ fontSize: 18 }}>🪔</span>",
+    "suggestedFix": "Reduce padding at narrow widths via a class, e.g. @media (max-width: 480px) { .gv-hdr { padding: 12px 14px !important; } }.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "AiAnalysisTab — action button bar padding",
+    "lineRange": "2333",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Action button footer uses fixed padding '14px 22px' (44px horizontal) with no responsive reduction. The buttons use flex:1 + minWidth (140/160) inside a flex-wrap container so they stack and fit, but the fixed padding still narrows available space on tiny screens.",
+    "currentCode": "      <div style={{ borderTop: \"1px solid #F2F3F5\", padding: \"14px 22px\", display: \"flex\", gap: 10, flexWrap: \"wrap\" }}>\n        <button\n          onClick={() => setStatus(\"Incomplete\")}",
+    "suggestedFix": "Reduce footer padding on small screens via a class, e.g. @media (max-width: 480px) { .ai-actions { padding: 12px 12px !important; } }.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2081-2600 (AiAnalysisTab, settings)"
+  },
+  {
+    "section": "Settings & Audit body wrapper padding",
+    "lineRange": "2618",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "The settings body uses a fixed horizontal padding of 28px with no responsive reduction; at 250px viewport this eats 56px of width.",
+    "currentCode": "<div style={{ padding: \"24px 28px 32px\", display: \"flex\", flexDirection: \"column\", gap: 24 }}>",
+    "suggestedFix": "Reduce padding via a responsive class/clamp, e.g. style={{ padding: \"clamp(14px,4vw,24px) clamp(12px,4vw,28px) 32px\", display: \"flex\", flexDirection: \"column\", gap: 24 }}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "System Overview counts grid",
+    "lineRange": "2622",
+    "issueType": "grid-no-stack",
+    "severity": "high",
+    "description": "Three fixed equal columns (repeat(3,1fr)) with no media-query stack; at 250px each card is ~75px wide and its 44px icon + 13px gap + number/label overflow horizontally.",
+    "currentCode": "<div style={{ display: \"grid\", gridTemplateColumns: \"repeat(3,1fr)\", gap: 12 }}>",
+    "suggestedFix": "Use auto-fit so cards wrap/stack: style={{ display: \"grid\", gridTemplateColumns: \"repeat(auto-fit,minmax(140px,1fr))\", gap: 12 }} (or a media query setting gridTemplateColumns:'1fr' below ~480px)",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Role Matrix header grid",
+    "lineRange": "2639",
+    "issueType": "grid-no-stack",
+    "severity": "high",
+    "description": "Fixed 180px first track + 1fr leaves only ~70px for the permissions column at 250px; the 16px side padding plus 180px label column exceeds the viewport, causing overflow.",
+    "currentCode": "<div style={{ display: \"grid\", gridTemplateColumns: \"180px 1fr\", background: \"#F8F2EA\", padding: \"10px 16px\", borderBottom: \"1px solid #EDE8DD\" }}>",
+    "suggestedFix": "Stack at narrow widths via a media query (gridTemplateColumns:'1fr') or use minmax: gridTemplateColumns:'minmax(0,180px) minmax(0,1fr)' combined with a small-screen single-column rule",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Role Matrix data rows grid",
+    "lineRange": "2644",
+    "issueType": "grid-no-stack",
+    "severity": "high",
+    "description": "Each role row repeats the fixed 180px + 1fr layout with no stack; role label/desc cannot fit two columns at 250px and the desc text gets squeezed/overflows.",
+    "currentCode": "<div key={r.value} style={{ display: \"grid\", gridTemplateColumns: \"180px 1fr\", padding: \"12px 16px\", borderBottom: i < ROLES_TABLE.length - 1 ? \"1px solid #e5e7eb\" : \"none\" }}>",
+    "suggestedFix": "Collapse to a single column on narrow screens via media query (gridTemplateColumns:'1fr', gap:4) so label stacks above description",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Audit Log limit FancySelect",
+    "lineRange": "2669",
+    "issueType": "fixed-width",
+    "severity": "med",
+    "description": "FancySelect is given a fixed width of 140px; combined with the header label in a space-between flex row that has no flex-wrap, the row overflows at narrow widths.",
+    "currentCode": "containerStyle={{ marginBottom: 0, width: 140 }}",
+    "suggestedFix": "Use a responsive width: containerStyle={{ marginBottom: 0, width: \"100%\", maxWidth: 140 }} and add flexWrap:'wrap' to the parent header row",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Audit Log header row (label + select)",
+    "lineRange": "2663",
+    "issueType": "flex-no-wrap",
+    "severity": "med",
+    "description": "Flex space-between row holds a long uppercase label and a 140px select with no flex-wrap; at 250px the two children cannot sit side by side and overflow.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", marginBottom: 14 }}>",
+    "suggestedFix": "Add flexWrap and gap: style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", gap: 8, flexWrap: \"wrap\", marginBottom: 14 }}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Audit Log table",
+    "lineRange": "2680-2681",
+    "issueType": "table-no-mobile-collapse",
+    "severity": "high",
+    "description": "Audit log renders a 5-column table inside overflowX:auto with no mobile-collapse to a stacked list; on narrow viewports it scrolls sideways instead of collapsing, violating the no-horizontal-scroll rule.",
+    "currentCode": "<div style={{ overflowX: \"auto\" }}>\n                <table style={{ width: \"100%\", borderCollapse: \"collapse\", fontSize: 12 }}>",
+    "suggestedFix": "Below ~640px, hide the <table> and render each log as a stacked card (Timestamp + Action badge + Entity label on their own wrapped lines); remove overflowX:auto so no sideways scroll remains",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "Audit Log table header cells",
+    "lineRange": "2685",
+    "issueType": "nowrap-longtext",
+    "severity": "low",
+    "description": "Header cells use whiteSpace:'nowrap' on column labels like 'Entity Type' which forces the table wide; acceptable only because these are tiny header labels, but combined with overflowX:auto it drives horizontal scroll.",
+    "currentCode": "<th key={h} style={{ padding: \"10px 14px\", textAlign: \"left\", fontSize: 10.5, fontWeight: 700, color: \"#6b7280\", textTransform: \"uppercase\", letterSpacing: \"0.1em\", whiteSpace: \"nowrap\" }}>{h}</th>",
+    "suggestedFix": "Acceptable on header labels, but resolve via the table collapse in the parent finding; if table is kept, allow wrapping at narrow widths by dropping whiteSpace:'nowrap' inside the mobile media query",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "ApptCalendar month nav padding",
+    "lineRange": "2744",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Month-nav bar uses fixed 24px horizontal padding with no responsive reduction; consumes 48px at 250px viewport.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", padding: \"16px 24px\", borderBottom: \"1px solid #e5e7eb\" }}>",
+    "suggestedFix": "Reduce padding on small screens, e.g. padding: \"16px clamp(12px,4vw,24px)\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "ApptCalendar day-detail section padding",
+    "lineRange": "2791",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Day-detail panel uses fixed 24px horizontal padding with no responsive reduction at narrow widths.",
+    "currentCode": "<div style={{ borderTop: \"1px solid #e5e7eb\", padding: \"16px 24px\" }}>",
+    "suggestedFix": "Use responsive horizontal padding, e.g. padding: \"16px clamp(12px,4vw,24px)\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "AiChatTab quick-prompts strip",
+    "lineRange": "2945-2948",
+    "issueType": "overflow-x-scroll",
+    "severity": "med",
+    "description": "The persistent quick-prompts strip uses overflowX:auto with non-wrapping (flexShrink:0, whiteSpace:'nowrap') chips, producing horizontal sideways scrolling instead of wrapping to multiple rows.",
+    "currentCode": "<div style={{ padding: \"8px 22px 0\", borderTop: \"1px solid #e5e7eb\", display: \"flex\", gap: 6, overflowX: \"auto\", flexShrink: 0 }}>",
+    "suggestedFix": "Allow chips to wrap instead of scroll: style={{ padding: \"8px clamp(12px,4vw,22px) 0\", borderTop: \"1px solid #e5e7eb\", display: \"flex\", flexWrap: \"wrap\", gap: 6, flexShrink: 0 }} and drop flexShrink:0/whiteSpace:nowrap on the chip buttons (these are tiny badge-like buttons so nowrap on the label itself is acceptable, but remove the horizontal scroll container)",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "AiChatTab header padding",
+    "lineRange": "2870",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Chat header uses fixed 22px horizontal padding with no responsive reduction at narrow widths.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", padding: \"14px 22px\", borderBottom: \"1px solid #F2F3F5\", flexShrink: 0 }}>",
+    "suggestedFix": "Use responsive horizontal padding, e.g. padding: \"14px clamp(12px,4vw,22px)\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "AiChatTab message list padding",
+    "lineRange": "2886",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Message list uses fixed 22px horizontal padding with no responsive reduction; reduces usable bubble width at 250px.",
+    "currentCode": "<div style={{ flex: 1, overflowY: \"auto\", padding: \"18px 22px\", display: \"flex\", flexDirection: \"column\", gap: 14, minHeight: 0 }}>",
+    "suggestedFix": "Use responsive horizontal padding, e.g. padding: \"18px clamp(12px,4vw,22px)\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  },
+  {
+    "section": "AiChatTab input area padding",
+    "lineRange": "2956",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "Input area uses fixed 22px horizontal padding with no responsive reduction at narrow widths.",
+    "currentCode": "<div style={{ padding: \"12px 22px 16px\", borderTop: \"1px solid #F2F3F5\", flexShrink: 0, display: \"flex\", gap: 10, alignItems: \"flex-end\" }}>",
+    "suggestedFix": "Use responsive horizontal padding, e.g. padding: \"12px clamp(12px,4vw,22px) 16px\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 2601-3120 (notifications, helpers)"
+  }
+]

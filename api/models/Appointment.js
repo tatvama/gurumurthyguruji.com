@@ -5,26 +5,52 @@ import { pool } from "../config/db.js";
    Manages ALL Guruji appointments — not only Trikala.
 ────────────────────────────────────────────────────────────────────────── */
 
-const COLS = `id, appointment_ref, devotee_id, case_reference, booking_id, devotee_name,
-  mobile, appointment_type, mode, start_time, end_time, duration_minutes, status,
+const COLS = `id, appointment_ref, devotee_id, case_reference, booking_id, parent_appointment_id,
+  devotee_name, mobile, appointment_type, mode, start_time, end_time, duration_minutes, status,
   priority, location, meeting_link, purpose, outcome_note, assigned_to,
-  checked_in_at, details_verified, office_remarks, guruji_remarks, created_at, updated_at`;
+  checked_in_at, checked_in_by, details_verified, members_count, arrival_photo_url,
+  office_remarks, guruji_remarks, darshan_summary,
+  scheduled_by, last_scheduled_at, schedule_attempt_count, reschedule_count, max_attempts,
+  confirmed_at, confirmed_by, confirmation_method,
+  reminder_sent_at, reminder_failed, reminder_failure_reason,
+  darshan_started_at, completed_at, completed_by,
+  cancelled_at, cancelled_by, cancellation_reason, cancellation_source,
+  no_show_at, no_show_marked_by, no_show_reason,
+  closed_at, closed_by, closed_reason, created_at, updated_at`;
+
+/* Columns the workflow service / generic update may write */
+const UPDATABLE = [
+  "devotee_id","case_reference","booking_id","parent_appointment_id","devotee_name","mobile",
+  "appointment_type","mode","start_time","end_time","duration_minutes","status",
+  "priority","location","meeting_link","purpose","outcome_note","assigned_to",
+  "checked_in_at","checked_in_by","details_verified","members_count","arrival_photo_url",
+  "office_remarks","guruji_remarks","darshan_summary",
+  "scheduled_by","last_scheduled_at","schedule_attempt_count","reschedule_count","max_attempts",
+  "confirmed_at","confirmed_by","confirmation_method",
+  "reminder_sent_at","reminder_failed","reminder_failure_reason",
+  "darshan_started_at","completed_at","completed_by",
+  "cancelled_at","cancelled_by","cancellation_reason","cancellation_source",
+  "no_show_at","no_show_marked_by","no_show_reason",
+  "closed_at","closed_by","closed_reason",
+];
 
 const Appointment = {
   async create(a) {
     const { rows } = await pool.query(
       `INSERT INTO appointments
-         (devotee_id, case_reference, booking_id, devotee_name, mobile, appointment_type,
-          mode, start_time, end_time, duration_minutes, status, priority, location,
-          meeting_link, purpose, assigned_to)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,COALESCE($11,'Requested'),
-               COALESCE($12,'Normal'),$13,$14,$15,$16)
+         (devotee_id, case_reference, booking_id, parent_appointment_id, devotee_name, mobile,
+          appointment_type, mode, start_time, end_time, duration_minutes, status, priority, location,
+          meeting_link, purpose, assigned_to, schedule_attempt_count)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,COALESCE($12,'Requested'),
+               COALESCE($13,'Normal'),$14,$15,$16,$17,$18)
        RETURNING ${COLS}`,
-      [a.devotee_id || null, a.case_reference || null, a.booking_id || null,
+      [a.devotee_id || null, a.case_reference || null, a.booking_id || null, a.parent_appointment_id || null,
        a.devotee_name || null, a.mobile || null, a.appointment_type || "General Audience",
        a.mode || null, a.start_time || null, a.end_time || null, a.duration_minutes || null,
        a.status, a.priority, a.location || null, a.meeting_link || null,
-       a.purpose || null, a.assigned_to || null]
+       a.purpose || null, a.assigned_to || null,
+       /* if created already scheduled with a slot, that counts as attempt 1 */
+       (a.status === "Scheduled" && a.start_time) ? 1 : 0]
     );
     const created = rows[0];
     const year = new Date(created.created_at).getFullYear();
@@ -66,12 +92,16 @@ const Appointment = {
     return rows;
   },
 
-  /* Guruji darshan queue — devotees who have checked in today, in arrival order */
+  /* Guruji darshan queue — devotees who are in today's darshan flow
+     (Arrived / In Darshan / Completed), VIP/Urgent first then arrival order. */
   async findCheckedInToday() {
     const { rows } = await pool.query(
       `SELECT ${COLS} FROM appointments
        WHERE checked_in_at::date = CURRENT_DATE
-       ORDER BY checked_in_at ASC`
+         AND status IN ('Arrived','In Darshan','Completed')
+       ORDER BY
+         CASE WHEN priority IN ('VIP','Urgent') THEN 0 ELSE 1 END,
+         checked_in_at ASC`
     );
     return rows;
   },
@@ -80,11 +110,7 @@ const Appointment = {
     const fields = [];
     const params = [];
     const set = (c, v) => { params.push(v); fields.push(`${c} = $${params.length}`); };
-    for (const k of ["devotee_id","case_reference","booking_id","devotee_name","mobile",
-      "appointment_type","mode","start_time","end_time","duration_minutes","status",
-      "priority","location","meeting_link","purpose","outcome_note","assigned_to",
-      "checked_in_at","details_verified","office_remarks","guruji_remarks"])
-      if (k in a) set(k, a[k]);
+    for (const k of UPDATABLE) if (k in a) set(k, a[k]);
     if (!fields.length) return this.findById(id);
     params.push(id);
     const { rows } = await pool.query(

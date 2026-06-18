@@ -243,6 +243,123 @@ export const initDB = async () => {
     await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS office_remarks  TEXT;`);
     await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS guruji_remarks  TEXT;`);
 
+    /* ── Appointment lifecycle / state-machine fields (Appointment Flow plan) ──────
+       The full lead+visit record: scheduling attempt history, confirmation,
+       reminder, darshan, cancellation, no-show and lead-closure metadata.
+       start_time stays the canonical "scheduled time"; last_scheduled_at keeps
+       the previous slot for reschedule history.                                    */
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS parent_appointment_id   INTEGER;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS scheduled_by            VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS last_scheduled_at       TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS schedule_attempt_count  INTEGER DEFAULT 0;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reschedule_count        INTEGER DEFAULT 0;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS max_attempts            INTEGER DEFAULT 3;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmed_at            TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmed_by            VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmation_method     VARCHAR(50);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent_at        TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_failed         BOOLEAN DEFAULT false;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_failure_reason TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS checked_in_by           VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS members_count           INTEGER DEFAULT 1;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS arrival_photo_url        TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS darshan_started_at       TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS darshan_summary          TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS completed_at             TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS completed_by             VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancelled_at             TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancelled_by             VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancellation_reason      TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancellation_source      VARCHAR(50);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS no_show_at               TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS no_show_marked_by        VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS no_show_reason           TEXT;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS closed_at                TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS closed_by                VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS closed_reason            TEXT;`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appointments_status   ON appointments(status);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appointments_devotee  ON appointments(devotee_id);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appointments_checkin  ON appointments(checked_in_at);`);
+
+    /* ── Appointment timeline — everything that happened to a lead (Flow §16.2) ── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS appointment_timeline (
+        id              SERIAL PRIMARY KEY,
+        appointment_id  INTEGER NOT NULL,
+        devotee_id      INTEGER,
+        case_reference  VARCHAR(24),
+        event_type      VARCHAR(60) NOT NULL,
+        from_status     VARCHAR(40),
+        to_status       VARCHAR(40),
+        title           VARCHAR(255) NOT NULL,
+        description     TEXT,
+        metadata_json   JSONB,
+        created_by      VARCHAR(120),
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appt_timeline_appt ON appointment_timeline(appointment_id);`);
+
+    /* ── Appointment notes (office / guruji / system / follow-up …) (Flow §16.3) ── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS appointment_notes (
+        id              SERIAL PRIMARY KEY,
+        appointment_id  INTEGER NOT NULL,
+        devotee_id      INTEGER,
+        note_type       VARCHAR(50) NOT NULL DEFAULT 'office',
+        note_text       TEXT NOT NULL,
+        is_private      BOOLEAN DEFAULT false,
+        created_by      VARCHAR(120),
+        created_at      TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appt_notes_appt ON appointment_notes(appointment_id);`);
+
+    /* ── Appointment check-in records — arrival verification snapshot (Flow §16.4) ── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS appointment_checkins (
+        id               SERIAL PRIMARY KEY,
+        appointment_id   INTEGER NOT NULL,
+        devotee_id       INTEGER,
+        photo_url        TEXT,
+        members_count    INTEGER DEFAULT 1,
+        member_names     JSONB,
+        contact_verified BOOLEAN DEFAULT false,
+        address_verified BOOLEAN DEFAULT false,
+        details_verified BOOLEAN DEFAULT false,
+        verified_name    VARCHAR(255),
+        verified_phone   VARCHAR(30),
+        verified_whatsapp VARCHAR(30),
+        verified_email   VARCHAR(255),
+        verified_city    VARCHAR(100),
+        verified_district VARCHAR(100),
+        verified_state   VARCHAR(100),
+        verified_pincode VARCHAR(20),
+        verified_address TEXT,
+        office_remarks   TEXT,
+        created_by       VARCHAR(120),
+        created_at       TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_appt_checkins_appt ON appointment_checkins(appointment_id);`);
+
+    /* ── Devotee 360 appointment-attention flag — highlight leads needing follow-up
+          (cleared once the devotee reaches a Confirmed appointment) (Flow §15, §23) ── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS devotee_appointment_attention (
+        id                       SERIAL PRIMARY KEY,
+        devotee_id               INTEGER NOT NULL UNIQUE,
+        appointment_id           INTEGER,
+        attention_status         VARCHAR(100) NOT NULL,
+        highlight_message        TEXT,
+        requires_follow_up       BOOLEAN DEFAULT true,
+        cleared_by_appointment_id INTEGER,
+        cleared_at               TIMESTAMPTZ,
+        created_at               TIMESTAMPTZ DEFAULT NOW(),
+        updated_at               TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     /* ── Devotee chronological timeline (PRD §7) ──────────────────────── */
     await client.query(`
       CREATE TABLE IF NOT EXISTS devotee_timeline (
@@ -358,6 +475,12 @@ export const initDB = async () => {
 
     /* ── RBAC: widen role column for 8 PRD roles (PRD §11) ────────── */
     await client.query(`ALTER TABLE admin_users ALTER COLUMN role TYPE VARCHAR(40);`);
+    /* ── Normalize legacy roles → 3-role system (superadmin, guruji, admin) ── */
+    await client.query(`
+      UPDATE admin_users
+      SET role = 'admin'
+      WHERE role NOT IN ('superadmin', 'guruji', 'admin');
+    `);
 
     /* ── Per-case AI chat messages (PRD §4-C) ────────────────────── */
     await client.query(`
@@ -393,18 +516,21 @@ export const initDB = async () => {
       );
     `);
 
-    /* ── trikala_readings: family details + birth accuracy + consent + whatsapp ── */
+    /* ── trikala_readings: birth accuracy + consent + whatsapp ── */
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS city VARCHAR(100);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
-    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS birth_time_accuracy VARCHAR(20);`);
-    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS father_name VARCHAR(120);`);
-    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS mother_name VARCHAR(120);`);
-    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS spouse_name VARCHAR(120);`);
-    await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS children_details TEXT;`);
     await client.query(`ALTER TABLE trikala_readings ADD COLUMN IF NOT EXISTS consent BOOLEAN DEFAULT false;`);
+    /* ── drop columns removed from product ── */
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS birth_time_accuracy;`);
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS problem_category;`);
+    /* ── drop family detail columns (removed from product) ── */
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS father_name;`);
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS mother_name;`);
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS spouse_name;`);
+    await client.query(`ALTER TABLE trikala_readings DROP COLUMN IF EXISTS children_details;`);
 
     /* ── Booking comments / admin remarks (PRD §8) ──────────────── */
     await client.query(`

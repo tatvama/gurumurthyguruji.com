@@ -3,12 +3,14 @@
 export const dynamic = "force-dynamic";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { postTrikalaReading } from "@/lib/api";
 import { usePlacesAutocomplete } from "@/lib/googlePlaces";
+import { useLanguage } from "@/lib/i18n";
 
 /* ═══════════════════════════════════════════════════════
    TYPES
@@ -20,18 +22,16 @@ interface FormData {
   fullName: string; mobile: string; whatsapp: string; email: string;
   gender: string; occupation: string; address: string; city: string; district: string; state: string; pincode: string;
   preferredLanguage: string;
-  dob: string; tob: string; pob: string; birthTimeAccuracy: string;
-  fatherName: string; motherName: string; spouseName: string; childrenDetails: string;
-  service: ServiceType; problemCategory: string; guidance: string;
+  dob: string; tob: string; pob: string;
+  service: ServiceType; guidance: string;
 }
 
 const BLANK: FormData = {
   fullName: "", mobile: "", whatsapp: "", email: "",
   gender: "", occupation: "", address: "", city: "", district: "", state: "", pincode: "",
   preferredLanguage: "",
-  dob: "", tob: "", pob: "", birthTimeAccuracy: "unknown",
-  fatherName: "", motherName: "", spouseName: "", childrenDetails: "",
-  service: "", problemCategory: "", guidance: "",
+  dob: "", tob: "", pob: "",
+  service: "", guidance: "",
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -74,6 +74,8 @@ const Ico = {
   Check:  () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   Camera: () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
   ChevDown: () => <svg width="18" height="10" viewBox="0 0 18 10" fill="none"><path d="M1 1L9 9L17 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Globe:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  SpeakLang: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="8" r="3"/><path d="M2 20v-1a6 6 0 0 1 6-6h0a6 6 0 0 1 3.38 1.04"/><path d="M15 9.5a2.5 2.5 0 0 0 0-4" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/><path d="M18 12a6 6 0 0 0 0-9" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/></svg>,
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -81,6 +83,7 @@ const Ico = {
    Same structure as reference: left text + right portrait
 ═══════════════════════════════════════════════════════ */
 function KundliHero({ onBegin }: { onBegin: () => void }) {
+  const { t } = useLanguage();
   const MOTES = [
     { top: "18%", left: "12%", d: 8  },
     { top: "72%", left: "18%", d: 11 },
@@ -180,7 +183,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             {/* Badge */}
             <div className="badge-dark mx-auto mb-7 w-fit lg:mx-0">
               <span style={{ color: GOLD, fontSize: 9 }}>●</span>
-              <span style={{ fontSize: 10.5, letterSpacing: "0.2em" }}>TRUSTED COSMIC GUIDANCE</span>
+              <span style={{ fontSize: 10.5, letterSpacing: "0.2em" }}>{t("reading.hero.eyebrow")}</span>
             </div>
 
             {/* OM symbol — DM Serif Display, warm orange */}
@@ -207,13 +210,13 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
                 letterSpacing: "0.015em",
               }}
             >
-              <span style={{ display: "block", color: "#FFFFFF" }}>Your Stars</span>
+              <span style={{ display: "block", color: "#FFFFFF" }}>{t("reading.hero.title1")}</span>
               <span style={{ display: "block", color: "#FFFFFF" }}>
-                Have a{" "}
+                {t("reading.hero.title2")}{" "}
                 <span style={{
                   color: GOLD,
                   textShadow: "0 0 32px rgba(216,183,106,0.55), 0 0 8px rgba(216,183,106,0.30)",
-                }}>Story</span>
+                }}>{t("reading.hero.titleAccent")}</span>
               </span>
             </h1>
 
@@ -230,7 +233,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               }}
               className="lg:!mx-0"
             >
-              Guruji studies your celestial blueprint and reveals the sacred wisdom written in the cosmos — just for you.
+              {t("reading.hero.subtitle")}
             </p>
 
             {/* Trust pills — proper case, frosted glass, wraps & centers on small screens */}
@@ -243,9 +246,9 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
               className="justify-center lg:justify-start"
             >
               {[
-                { icon: "🔒", label: "100% Confidential" },
-                { icon: "⭐", label: "4.9 / 5 Rating" },
-                { icon: "∞",  label: "12+ Years of Practice" },
+                { icon: "🔒", label: t("reading.hero.pill1") },
+                { icon: "⭐", label: t("reading.hero.pill2") },
+                { icon: "∞",  label: t("reading.hero.pill3") },
               ].map(p => (
                 <div
                   key={p.label}
@@ -324,7 +327,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
         className="scroll-indicator absolute bottom-8 left-1/2 z-10 -translate-x-1/2 flex flex-col items-center gap-1.5"
         style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(254,252,247,0.50)" }}
       >
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase" }}>BEGIN</span>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase" }}>{t("reading.begin")}</span>
         <Ico.ChevDown />
       </button>
     </section>
@@ -335,6 +338,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
    STATS BAR — dark floating pill card, matches reference
 ═══════════════════════════════════════════════════════ */
 function StatsBar() {
+  const { t } = useLanguage();
   const [counts, setCounts] = useState({ readings: 0, years: 0, hrs: 0 });
 
   useEffect(() => {
@@ -358,16 +362,15 @@ function StatsBar() {
   }, []);
 
   const items = [
-    { value: `${counts.readings}+`, label: "Readings Given" },
-    { value: "4.9★",                label: "Avg Rating" },
-    { value: `${counts.years}`,     label: "Years of Wisdom" },
-    { value: `${counts.hrs}`,       label: "Hrs Avg Delivery" },
+    { value: `${counts.readings}+`, label: t("reading.stats.readings") },
+    { value: "4.9★",                label: t("reading.stats.rating")   },
+    { value: `${counts.years}`,     label: t("reading.stats.wisdom")   },
+    { value: `${counts.hrs}`,       label: t("reading.stats.delivery") },
   ];
   return (
     /* light section bg + orange top divider — card floats centered on it */
     <div
       style={{
-        background: "linear-gradient(180deg,#F0E6D8 0%,#EAD9C5 100%)",
         padding: "0 16px 0",
         display: "flex",
         justifyContent: "center",
@@ -435,16 +438,16 @@ function StatsBar() {
 /* ═══════════════════════════════════════════════════════
    STEP HEADER
 ═══════════════════════════════════════════════════════ */
-const STEP_META: Record<number, { title: string; sub: string }> = {
-  1: { title: "WHO ARE YOU?",          sub: "Step 1 of 4 — Identity" },
-  2: { title: "YOUR CELESTIAL ORIGIN", sub: "Step 2 of 4 — Birth Details — Date, time & place" },
-  3: { title: "CHOOSE YOUR PATH",      sub: "Step 3 of 4 — Service — Pick your reading type" },
-  4: { title: "YOUR SACRED QUESTION",  sub: "Step 4 of 4 — Palm Upload — For Ashta Rekha" },
-};
-
 function StepHeader({ phase }: { phase: Phase }) {
+  const { t } = useLanguage();
   if (phase === "done") return null;
   const step = phase as number;
+  const STEP_META: Record<number, { title: string; sub: string }> = {
+    1: { title: t("reading.step1.meta"), sub: t("reading.step1.metasub") },
+    2: { title: t("reading.step2.meta"), sub: t("reading.step2.metasub") },
+    3: { title: t("reading.step3.meta"), sub: t("reading.step3.metasub") },
+    4: { title: t("reading.step4.meta"), sub: t("reading.step4.metasub") },
+  };
   const { title, sub } = STEP_META[step];
 
   return (
@@ -458,10 +461,10 @@ function StepHeader({ phase }: { phase: Phase }) {
             <React.Fragment key={n}>
               <div style={{
                 width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                background: done ? KO : active ? KO : "#FDF6E8",
+                background: done ? "#22a84a" : active ? KO : "#FDF6E8",
                 border: done ? "none" : active ? "none" : `1.5px solid rgba(210,175,125,0.60)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: active ? `0 4px 18px ${KOG}` : done ? `0 3px 10px ${KOG}` : "none",
+                boxShadow: active ? `0 4px 18px ${KOG}` : done ? "0 3px 10px rgba(34,168,74,0.35)" : "none",
                 transition: "all 0.3s",
               }}>
                 {done
@@ -497,20 +500,93 @@ function StepHeader({ phase }: { phase: Phase }) {
    SHARED INPUT STYLES
 ═══════════════════════════════════════════════════════ */
 const iBase: React.CSSProperties = {
-  flex: 1, border: "none", outline: "none", fontSize: 13.5,
-  color: "#2A1C13", background: "transparent", fontFamily: "inherit", minWidth: 0,
+  flex: 1, border: "none", outline: "none", fontSize: 13.5, fontWeight: 600,
+  color: "#2A1C13", background: "transparent",
+  fontFamily: "var(--font-nunito), Nunito, 'Segoe UI', sans-serif", minWidth: 0,
 };
 const fieldWrap: React.CSSProperties = {
   border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12,
   padding: "16px 16px", background: "#fff",
   display: "flex", alignItems: "center", gap: 10,
+  boxSizing: "border-box", width: "100%", minWidth: 0,
   boxShadow: "0 1px 6px rgba(42,28,19,0.05)", transition: "border-color 0.15s",
 };
 
-function FieldBox({ hint, children, error }: { hint?: string; children: React.ReactNode; error?: string }) {
+function FieldBox({ hint, children, error, label, value, icon }: {
+  hint?: string; children: React.ReactNode; error?: string;
+  label?: string; value?: string;
+  /** Pass the icon element here (separate from children) when using a floating label */
+  icon?: React.ReactNode;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const active   = focused;
+  const floating = !!label && (!!value || focused);
+  const borderColor = error ? "#fca5a5" : active ? KO : hovered ? "rgba(107,18,28,0.38)" : "rgba(200,170,130,0.50)";
+  const shadow = active
+    ? `0 0 0 3px rgba(107,18,28,0.11), 0 2px 10px rgba(42,28,19,0.07)`
+    : hovered
+    ? `0 2px 12px rgba(107,18,28,0.09)`
+    : "0 1px 6px rgba(42,28,19,0.05)";
+
+  /* Label left = 16px pad + 20px fixed icon slot + 12px gap = 48px (with icon)
+     Without icon it starts at the same left as the input text = 16px           */
+  const labelLeft = label ? (icon !== undefined ? 48 : 16) : 0;
+
   return (
-    <div>
-      <div style={{ ...fieldWrap, borderColor: error ? "#fca5a5" : "rgba(200,170,130,0.50)" }}>{children}</div>
+    <div
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={() => setFocused(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        ref={containerRef}
+        onClick={() => containerRef.current?.querySelector<HTMLElement>("input, textarea, select")?.focus()}
+        style={{
+          position: "relative",
+          border: `1.5px solid ${borderColor}`,
+          borderRadius: 12,
+          /* extra top padding reserves space for the floating label */
+          padding: label ? "22px 16px 10px" : "12px 16px",
+          background: hovered && !active ? "#FFFCF7" : "#fff",
+          boxShadow: shadow,
+          transition: "border-color 0.18s, box-shadow 0.18s, background 0.18s",
+          display: "flex", alignItems: "center", gap: 12,
+          cursor: "text",
+        }}>
+        {/* Fixed-width icon slot so label offset is exact */}
+        {label && icon && (
+          <span style={{ width: 20, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: KO }}>
+            {icon}
+          </span>
+        )}
+
+        {/* Absolutely positioned floating label — smooth CSS transition */}
+        {label && (
+          <span style={{
+            position: "absolute",
+            left: labelLeft,
+            top: floating ? 6 : "50%",
+            transform: floating ? "none" : "translateY(-50%)",
+            fontSize: floating ? 9.5 : 13.5,
+            fontWeight: floating ? 800 : 400,
+            letterSpacing: floating ? "0.14em" : 0,
+            textTransform: floating ? "uppercase" : "none",
+            color: floating ? KO : "rgba(42,28,19,0.38)",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+            lineHeight: 1.2,
+            transition: "top 0.2s ease, transform 0.2s ease, font-size 0.18s ease, color 0.18s ease, letter-spacing 0.18s ease",
+          }}>
+            {label}
+          </span>
+        )}
+
+        {/* Input (children). Old-style icon+input combo still works when label is absent */}
+        {children}
+      </div>
       {hint && !error && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
       {error         && <p style={{ fontSize: 11.5, color: "#ef4444", marginTop: 5, marginLeft: 2 }}>{error}</p>}
     </div>
@@ -518,18 +594,35 @@ function FieldBox({ hint, children, error }: { hint?: string; children: React.Re
 }
 
 function LabeledBox({ label, hint, icon, iconRight, onIconRightClick, children }: { label: string; hint?: string; icon: React.ReactNode; iconRight?: boolean; onIconRightClick?: () => void; children: React.ReactNode }) {
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const active = focused;
+  const borderColor = active ? KO : hovered ? "rgba(107,18,28,0.38)" : "rgba(200,170,130,0.50)";
+  const shadow = active
+    ? `0 0 0 3px rgba(107,18,28,0.11), 0 2px 10px rgba(42,28,19,0.07)`
+    : hovered
+    ? `0 2px 12px rgba(107,18,28,0.09)`
+    : "0 1px 6px rgba(42,28,19,0.05)";
   return (
-    <div>
-      <div style={{ border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12, padding: "13px 14px", background: "#fff", boxShadow: "0 1px 6px rgba(42,28,19,0.05)" }}>
+    <div
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={() => setFocused(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        border: `1.5px solid ${borderColor}`,
+        borderRadius: 12, padding: "13px 14px",
+        background: hovered && !active ? "#FFFCF7" : "#fff",
+        boxShadow: shadow,
+        transition: "border-color 0.18s, box-shadow 0.18s, background 0.18s",
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Left icon */}
           <span style={{ color: KO, flexShrink: 0, display: "flex" }}>{icon}</span>
-          {/* Label + input stacked */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: KO, margin: "0 0 2px" }}>{label}</p>
             {children}
           </div>
-          {/* Right icon (date/time only) — clickable button that opens picker */}
           {iconRight && (
             <button
               type="button"
@@ -547,14 +640,181 @@ function LabeledBox({ label, hint, icon, iconRight, onIconRightClick, children }
 }
 
 /* ═══════════════════════════════════════════════════════
+   CUSTOM SELECT FIELD — styled dropdown like Places autocomplete
+═══════════════════════════════════════════════════════ */
+interface SelectOption { value: string; label: string; icon: string; sub?: string; }
+
+function SelectField({
+  fieldIcon, options, value, onChange, placeholder, hint, error, scrollRows, pinLastOption,
+}: {
+  fieldIcon: React.ReactNode;
+  options: SelectOption[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  hint?: string;
+  error?: string;
+  /** Max rows visible before scroll kicks in */
+  scrollRows?: number;
+  /** Pin the last option outside the scroll area, fixed at the bottom */
+  pinLastOption?: boolean;
+}) {
+  const [open, setOpen]       = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [pos, setPos]         = useState({ top: 0, left: 0, width: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropRef    = useRef<HTMLDivElement>(null);
+  const selected   = options.find(o => o.value === value);
+
+  const borderColor = error ? "#fca5a5" : open ? KO : hovered ? "rgba(107,18,28,0.38)" : "rgba(200,170,130,0.50)";
+  const shadow = open
+    ? `0 0 0 3px rgba(107,18,28,0.11), 0 2px 10px rgba(42,28,19,0.07)`
+    : hovered ? `0 2px 12px rgba(107,18,28,0.09)` : "0 1px 6px rgba(42,28,19,0.05)";
+
+  function handleToggle() {
+    if (!open && triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: r.left, width: r.width });
+    }
+    setOpen(p => !p);
+  }
+
+  useEffect(() => {
+    function outside(e: MouseEvent) {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || dropRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    function onScroll(e: Event) {
+      // Only close when the scroll happens outside the dropdown (e.g. page scroll)
+      if (dropRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", outside);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, []);
+
+  /* Split options when pinLastOption is set */
+  const mainOpts  = pinLastOption ? options.slice(0, -1) : options;
+  const pinnedOpt = pinLastOption ? options[options.length - 1] : null;
+  /* Each row: 32px icon + 12px pad top + 12px pad bottom = 56px; +1px border = 57px */
+  const ITEM_H = 57;
+
+  function renderRow(opt: SelectOption, idx: number, topBorder = idx > 0) {
+    const isSel = value === opt.value;
+    return (
+      <div
+        key={opt.value}
+        onClick={() => { onChange(opt.value); setOpen(false); }}
+        style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "12px 16px", cursor: "pointer",
+          borderTop: topBorder ? "1px solid rgba(200,170,130,0.15)" : "none",
+          background: isSel ? "#FFF4EC" : "transparent",
+          transition: "background 0.12s",
+        }}
+        onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "#FFF8F2"; }}
+        onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = isSel ? "#FFF4EC" : "transparent"; }}
+      >
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+          background: isSel ? KO : "rgba(107,18,28,0.08)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
+        }}>
+          <span style={{ filter: isSel ? "brightness(10)" : "none" }}>{opt.icon}</span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: isSel ? KO : "#2A1C13" }}>{opt.label}</span>
+          {opt.sub && <span style={{ fontSize: 11.5, color: "rgba(42,28,19,0.42)", marginLeft: 8 }}>{opt.sub}</span>}
+        </div>
+        {isSel && <span style={{ color: KO, fontSize: 14, fontWeight: 700 }}>✓</span>}
+      </div>
+    );
+  }
+
+  /* Dropdown rendered at document.body via portal — immune to parent
+     overflow / transform / stacking-context issues               */
+  const dropdown = open ? (
+    <div ref={dropRef} style={{
+      position: "fixed",
+      top: pos.top, left: pos.left, width: pos.width,
+      zIndex: 9999,
+      background: "#fff", borderRadius: 12,
+      border: "1px solid rgba(200,170,130,0.35)",
+      boxShadow: "0 8px 32px rgba(42,28,19,0.14), 0 2px 8px rgba(42,28,19,0.06)",
+      overflow: "hidden",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* Scrollable list — capped at scrollRows if provided */}
+      <div style={{
+        overflowY: "auto",
+        maxHeight: scrollRows ? scrollRows * ITEM_H : undefined,
+        /* thin scrollbar on webkit */
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(107,18,28,0.20) transparent",
+      } as React.CSSProperties}>
+        {mainOpts.map((opt, i) => renderRow(opt, i))}
+      </div>
+
+      {/* Pinned last option — sits outside the scroll area */}
+      {pinnedOpt && (
+        <div style={{ flexShrink: 0, borderTop: "1.5px solid rgba(200,170,130,0.30)" }}>
+          {renderRow(pinnedOpt, 0, false)}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  return (
+    <div>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleToggle}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            border: `1.5px solid ${borderColor}`, borderRadius: 12,
+            padding: "16px 16px", background: hovered && !open ? "#FFFCF7" : "#fff",
+            boxShadow: shadow, cursor: "pointer", fontFamily: "inherit",
+            transition: "border-color 0.18s, box-shadow 0.18s, background 0.18s",
+          }}
+        >
+          <span style={{ color: KO, flexShrink: 0, display: "flex" }}>{fieldIcon}</span>
+          <span style={{ flex: 1, textAlign: "left", fontSize: 13.5, color: selected ? "#2A1C13" : "rgba(42,28,19,0.38)" }}>
+            {selected ? selected.label : placeholder}
+          </span>
+          <span style={{
+            color: KO, opacity: 0.55, fontSize: 10, display: "inline-block",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s",
+          }}>▼</span>
+        </button>
+      </div>
+      {/* Portal: renders outside any positioned/transformed ancestor */}
+      {typeof document !== "undefined" && createPortal(dropdown, document.body)}
+      {hint  && !error && <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>{hint}</p>}
+      {error && <p style={{ fontSize: 11.5, color: "#ef4444", marginTop: 5, marginLeft: 2 }}>{error}</p>}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
    TRUST BADGES + TESTIMONIAL
 ═══════════════════════════════════════════════════════ */
 function TrustBadges() {
+  const { t } = useLanguage();
   const badges = [
-    { icon: "🔒", text: "SSL Secured" },
-    { icon: "🧾", text: "Fully Confidential" },
-    { icon: "✦",  text: "Verified Guruji" },
-    { icon: "⏰", text: "48hr Response" },
+    { icon: "🔒", text: t("reading.trust.ssl")      },
+    { icon: "🧾", text: t("reading.trust.conf")     },
+    { icon: "✦",  text: t("reading.trust.guruji")   },
+    { icon: "⏰", text: t("reading.trust.response") },
   ];
   return (
     <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px 20px", padding: "14px 16px" }}>
@@ -572,6 +832,7 @@ function TrustBadges() {
 }
 
 function Testimonial() {
+  const { t } = useLanguage();
   return (
     <div style={{ background: "linear-gradient(135deg, #FFFDF5 0%, #FFF6E0 50%, #FFF2D4 100%)", border: "1px solid rgba(216,183,106,0.45)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 18px rgba(216,183,106,0.18)" }}>
       <div className="flex gap-4 items-start">
@@ -579,9 +840,9 @@ function Testimonial() {
         <div>
           <p style={{ color: KO, fontSize: 14, marginBottom: 6 }}>★★★★★</p>
           <p style={{ fontSize: 13, color: "rgba(42,28,19,0.72)", lineHeight: 1.72, fontStyle: "italic" }}>
-            &ldquo;Guruji&apos;s reading was truly eye-opening. He described my life situation with uncanny accuracy. I feel guided and at peace after receiving my report.&rdquo;
+            &ldquo;{t("reading.testimonial.quote")}&rdquo;
           </p>
-          <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.38)", marginTop: 8 }}>— Priya S., Mumbai</p>
+          <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.38)", marginTop: 8 }}>{t("reading.testimonial.by")}</p>
         </div>
       </div>
     </div>
@@ -630,8 +891,9 @@ function BackBtn({ onClick }: { onClick: () => void }) {
 }
 
 function SkipBtn({ onClick }: { onClick: () => void }) {
+  const { t } = useLanguage();
   return (
-    <button onClick={onClick} style={{ padding: "0 18px", height: 50, borderRadius: 11, flexShrink: 0, border: "1.5px solid rgba(200,170,130,0.45)", background: "#fff", cursor: "pointer", color: "rgba(42,28,19,0.55)", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(42,28,19,0.05)" }}>✕ Skip</button>
+    <button onClick={onClick} style={{ padding: "0 18px", height: 50, borderRadius: 11, flexShrink: 0, border: "1.5px solid rgba(200,170,130,0.45)", background: "#fff", cursor: "pointer", color: "rgba(42,28,19,0.55)", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(42,28,19,0.05)" }}>{t("reading.btn.skip")}</button>
   );
 }
 
@@ -649,13 +911,12 @@ const orangeBtnDisabled: React.CSSProperties = { ...orangeBtn, background: "rgba
    STEP 1 — IDENTITY
 ═══════════════════════════════════════════════════════ */
 const LANGUAGES = ["Kannada", "English", "Hindi", "Telugu", "Tamil", "Malayalam", "Marathi", "Bengali", "Other"];
-const PROBLEM_CATEGORIES = ["Health", "Marriage", "Career", "Business", "Finance", "Legal", "Spiritual", "Family", "Unknown / General"];
 
 function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void }) {
+  const { t } = useLanguage();
   const [errs, setErrs] = useState<Partial<Record<keyof FormData, string>>>({});
   const addressRef = useRef<HTMLInputElement>(null);
   usePlacesAutocomplete(addressRef, (p) => {
-    // One pick fills the visible address box and the hidden city/state/pincode used by the API
     set("address", p.formatted || [p.city, p.district, p.state, p.pincode].filter(Boolean).join(", "));
     set("city",     p.city);
     set("district", p.district);
@@ -665,86 +926,77 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
 
   function validate() {
     const e: typeof errs = {};
-    if (!form.fullName.trim())            e.fullName   = "Full name is required";
-    if (!/^\d{10}$/.test(form.mobile))    e.mobile     = "Valid 10-digit number required";
-    if (!/\S+@\S+\.\S+/.test(form.email)) e.email      = "Valid email required";
-    if (!form.gender)                     e.gender     = "Please select gender";
-    if (!form.occupation.trim())          e.occupation = "Occupation is required";
+    if (!form.fullName.trim())            e.fullName   = t("reading.s1.fullname.err");
+    if (!/^\d{10}$/.test(form.mobile))    e.mobile     = t("reading.s1.mobile.err");
+    if (!/\S+@\S+\.\S+/.test(form.email)) e.email      = t("reading.s1.email.err");
+    if (!form.gender)                     e.gender     = t("reading.s1.gender.err");
+    if (!form.occupation.trim())          e.occupation = t("reading.s1.occupation.err");
     setErrs(e); return Object.keys(e).length === 0;
   }
 
   return (
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>🙏</StepIcon>
-      <StepTitle title="Who Are You, Seeker?" sub="Your identity helps Guruji connect with your cosmic energy" />
+      <StepTitle title={t("reading.s1.title")} sub={t("reading.s1.sub")} />
       <div className="flex flex-col gap-4">
-        <FieldBox hint="To personalize your cosmic journey" error={errs.fullName}>
-          <span style={{ color: KO }}><Ico.User /></span>
-          <input style={iBase} placeholder="Full Name *" value={form.fullName} onChange={e => set("fullName", e.target.value)} />
+        <FieldBox hint={t("reading.s1.fullname.hint")} error={errs.fullName} label={t("reading.s1.fullname")} value={form.fullName} icon={<Ico.User />}>
+          <input style={iBase} placeholder="" value={form.fullName} onChange={e => set("fullName", e.target.value)} />
         </FieldBox>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-          <FieldBox hint="To route your Kundli PDF securely" error={errs.mobile}>
-            <span style={{ color: KO }}><Ico.Phone /></span>
-            <input style={iBase} placeholder="Mobile Number *" inputMode="numeric" maxLength={10} value={form.mobile} onChange={e => set("mobile", e.target.value.replace(/\D/g, ""))} />
+        <div className="kundli-grid-2">
+          <FieldBox hint={t("reading.s1.mobile.hint")} error={errs.mobile} label={t("reading.s1.mobile")} value={form.mobile} icon={<Ico.Phone />}>
+            <input style={iBase} placeholder="" inputMode="numeric" maxLength={10} value={form.mobile} onChange={e => set("mobile", e.target.value.replace(/\D/g, ""))} />
           </FieldBox>
-          <FieldBox hint="For WhatsApp delivery of your report">
-            <span style={{ color: KO, fontSize: 16 }}>💬</span>
-            <input style={iBase} placeholder="WhatsApp Number (if different)" inputMode="numeric" maxLength={10} value={form.whatsapp} onChange={e => set("whatsapp", e.target.value.replace(/\D/g, ""))} />
+          <FieldBox hint={t("reading.s1.whatsapp.hint")} label={t("reading.s1.whatsapp")} value={form.whatsapp} icon={<span style={{ fontSize: 16 }}>💬</span>}>
+            <input style={iBase} placeholder="" inputMode="numeric" maxLength={10} value={form.whatsapp} onChange={e => set("whatsapp", e.target.value.replace(/\D/g, ""))} />
           </FieldBox>
         </div>
-        <FieldBox hint="For backup access to your spiritual report" error={errs.email}>
-          <span style={{ color: KO }}><Ico.Mail /></span>
-          <input style={iBase} type="email" placeholder="Email Address *" value={form.email} onChange={e => set("email", e.target.value)} />
+        <FieldBox hint={t("reading.s1.email.hint")} error={errs.email} label={t("reading.s1.email")} value={form.email} icon={<Ico.Mail />}>
+          <input style={iBase} type="email" placeholder="" value={form.email} onChange={e => set("email", e.target.value)} />
         </FieldBox>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-          <FieldBox hint="Astrological calculations vary by gender paths" error={errs.gender}>
-            <span style={{ color: KO }}><Ico.Gender /></span>
-            <select style={{ ...iBase, cursor: "pointer" }} value={form.gender} onChange={e => set("gender", e.target.value)}>
-              <option value="">Gender *</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </FieldBox>
-          <FieldBox hint="Helps Guruji understand your career houses" error={errs.occupation}>
-            <span style={{ color: KO }}><Ico.Brief /></span>
-            <input style={iBase} placeholder="Occupation *" value={form.occupation} onChange={e => set("occupation", e.target.value)} />
+        <div className="kundli-grid-2">
+          <SelectField
+            fieldIcon={<Ico.Gender />}
+            options={[
+              { value: "male",   label: t("reading.s1.gender.male"),   icon: "♂", sub: t("reading.s1.gender.male.sub")   },
+              { value: "female", label: t("reading.s1.gender.female"), icon: "♀", sub: t("reading.s1.gender.female.sub") },
+              { value: "other",  label: t("reading.s1.gender.other"),  icon: "⚧", sub: t("reading.s1.gender.other.sub")  },
+            ]}
+            value={form.gender}
+            onChange={v => set("gender", v)}
+            placeholder={t("reading.s1.gender")}
+            hint={t("reading.s1.gender.hint")}
+            error={errs.gender}
+          />
+          <FieldBox hint={t("reading.s1.occupation.hint")} error={errs.occupation} label={t("reading.s1.occupation")} value={form.occupation} icon={<Ico.Brief />}>
+            <input style={iBase} placeholder="" value={form.occupation} onChange={e => set("occupation", e.target.value)} />
           </FieldBox>
         </div>
-        <FieldBox hint="Start typing your address — city, district, state & pincode are detected automatically">
-          <span style={{ color: KO }}><Ico.Pin /></span>
+        <FieldBox hint={t("reading.s1.address.hint")} label="Address" value={form.address} icon={<Ico.Pin />}>
           <input
             ref={addressRef}
             style={iBase}
-            placeholder="Address — start typing your city or area"
+            placeholder=""
             value={form.address}
             autoComplete="off"
             onChange={e => set("address", e.target.value)}
           />
         </FieldBox>
-        <FieldBox hint="Language you prefer for guidance">
-          <span style={{ color: KO, fontSize: 14 }}>🗣️</span>
-          <select style={{ ...iBase, cursor: "pointer" }} value={form.preferredLanguage} onChange={e => set("preferredLanguage", e.target.value)}>
-            <option value="">Preferred Language</option>
-            {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-          </select>
-        </FieldBox>
+        <SelectField
+          fieldIcon={<Ico.SpeakLang />}
+          options={LANGUAGES.map(l => ({
+            value: l, label: l, icon: "🌐",
+          }))}
+          value={form.preferredLanguage}
+          onChange={v => set("preferredLanguage", v)}
+          placeholder={t("reading.s1.language")}
+          hint={t("reading.s1.language.hint")}
+          scrollRows={3}
+          pinLastOption
+        />
 
-        {/* Family Details — optional */}
-        <div style={{ border: "1.5px solid rgba(200,170,130,0.35)", borderRadius: 12, padding: "14px 16px", background: "#FFFDF8" }}>
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: KO, marginBottom: 12 }}>
-            Family Details <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "rgba(42,28,19,0.38)" }}>(optional)</span>
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👨</span><input style={iBase} placeholder="Father's Name" value={form.fatherName} onChange={e => set("fatherName", e.target.value)} /></FieldBox>
-            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👩</span><input style={iBase} placeholder="Mother's Name" value={form.motherName} onChange={e => set("motherName", e.target.value)} /></FieldBox>
-            <FieldBox><span style={{ color: KO, fontSize: 14 }}>💑</span><input style={iBase} placeholder="Spouse's Name" value={form.spouseName} onChange={e => set("spouseName", e.target.value)} /></FieldBox>
-            <FieldBox><span style={{ color: KO, fontSize: 14 }}>👶</span><input style={iBase} placeholder="Children (names / ages)" value={form.childrenDetails} onChange={e => set("childrenDetails", e.target.value)} /></FieldBox>
-          </div>
-        </div>
       </div>
       <button onClick={() => validate() && next()} style={{ ...orangeBtn, width: "100%", marginTop: 26, padding: "15px", flex: "none" }}>
-        Continue <span style={{ fontSize: 18 }}>→</span>
+        {t("reading.btn.continue")} <span style={{ fontSize: 18 }}>→</span>
       </button>
     </div>
   );
@@ -753,7 +1005,7 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
 /* ═══════════════════════════════════════════════════════
    PLACE OF BIRTH — Google Places autocomplete (fills the place text)
 ═══════════════════════════════════════════════════════ */
-function PlaceAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function PlaceAutocomplete({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   const ref = useRef<HTMLInputElement>(null);
   usePlacesAutocomplete(ref, (p) => {
     onChange(p.formatted || [p.city, p.district, p.state, p.country].filter(Boolean).join(", "));
@@ -762,7 +1014,7 @@ function PlaceAutocomplete({ value, onChange }: { value: string; onChange: (v: s
     <input
       ref={ref}
       style={{ ...iBase, fontSize: 13, width: "100%" }}
-      placeholder="Town / city of birth"
+      placeholder={placeholder}
       value={value}
       onChange={e => onChange(e.target.value)}
       autoComplete="off"
@@ -774,52 +1026,36 @@ function PlaceAutocomplete({ value, onChange }: { value: string; onChange: (v: s
    STEP 2 — BIRTH DETAILS
 ═══════════════════════════════════════════════════════ */
 function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void; back: () => void }) {
+  const { t } = useLanguage();
   const [err, setErr] = useState("");
   const dobRef = useRef<HTMLInputElement>(null);
   const tobRef = useRef<HTMLInputElement>(null);
 
   function validate() {
-    if (!form.dob || !form.pob.trim()) { setErr("Date and place of birth are required"); return false; }
+    if (!form.dob || !form.pob.trim()) { setErr(t("reading.s2.err")); return false; }
     setErr(""); return true;
   }
   return (
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>🌟</StepIcon>
-      <StepTitle title="Your Celestial Origin" sub="Birth details allow Guruji to map your unique cosmic chart" />
+      <StepTitle title={t("reading.s2.title")} sub={t("reading.s2.sub")} />
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 kundli-grid-2">
-          <LabeledBox label="Date of Birth *" hint="The foundation of your natal chart" icon={<Ico.Cal />} iconRight onIconRightClick={() => { try { (dobRef.current as any)?.showPicker(); } catch { dobRef.current?.click(); } }}>
+        <div className="kundli-grid-2">
+          <LabeledBox label={t("reading.s2.dob")} hint={t("reading.s2.dob.hint")} icon={<Ico.Cal />} iconRight onIconRightClick={() => { try { (dobRef.current as any)?.showPicker(); } catch { dobRef.current?.click(); } }}>
             <input ref={dobRef} type="date" style={{ ...iBase, fontSize: 13, WebkitAppearance: "none" as const }} value={form.dob} onChange={e => set("dob", e.target.value)} />
           </LabeledBox>
-          <LabeledBox label="Time of Birth *" hint="Crucial for determining your Ascendant (Lagna)" icon={<Ico.Clock />} iconRight onIconRightClick={() => { try { (tobRef.current as any)?.showPicker(); } catch { tobRef.current?.click(); } }}>
+          <LabeledBox label={t("reading.s2.tob")} hint={t("reading.s2.tob.hint")} icon={<Ico.Clock />} iconRight onIconRightClick={() => { try { (tobRef.current as any)?.showPicker(); } catch { tobRef.current?.click(); } }}>
             <input ref={tobRef} type="time" style={{ ...iBase, fontSize: 13, WebkitAppearance: "none" as const }} value={form.tob} onChange={e => set("tob", e.target.value)} />
           </LabeledBox>
         </div>
-        <LabeledBox label="Place of Birth *" hint="Required to map the exact planetary alignments" icon={<Ico.Pin />}>
-          <PlaceAutocomplete value={form.pob} onChange={v => set("pob", v)} />
+        <LabeledBox label={t("reading.s2.pob")} hint={t("reading.s2.pob.hint")} icon={<Ico.Pin />}>
+          <PlaceAutocomplete value={form.pob} onChange={v => set("pob", v)} placeholder={t("reading.s2.pob.placeholder")} />
         </LabeledBox>
-        {/* Birth time accuracy */}
-        <div>
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase", color: KO, marginBottom: 8 }}>Birth Time Accuracy</p>
-          <div style={{ display: "flex", gap: 10 }}>
-            {(["exact", "approximate", "unknown"] as const).map(opt => {
-              const labels = { exact: "Exact", approximate: "Approximate", unknown: "Unknown" };
-              const sel = form.birthTimeAccuracy === opt;
-              return (
-                <button key={opt} type="button" onClick={() => set("birthTimeAccuracy", opt)}
-                  style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: `1.5px solid ${sel ? KO : "rgba(200,170,130,0.40)"}`, background: sel ? KOL : "#fff", color: sel ? KO : "rgba(42,28,19,0.55)", fontSize: 12.5, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
-                  {labels[opt]}
-                </button>
-              );
-            })}
-          </div>
-          <p style={{ fontSize: 11, color: "rgba(42,28,19,0.38)", marginTop: 5, paddingLeft: 2 }}>Helps Guruji calibrate lagna and planetary positions accurately</p>
-        </div>
         {err && <p style={{ fontSize: 12, color: "#ef4444", textAlign: "center" }}>{err}</p>}
       </div>
       <div className="flex gap-3 mt-7">
         <BackBtn onClick={back} />
-        <button onClick={() => validate() && next()} style={orangeBtn}>Continue <span style={{ fontSize: 18 }}>→</span></button>
+        <button onClick={() => validate() && next()} style={orangeBtn}>{t("reading.btn.continue")} <span style={{ fontSize: 18 }}>→</span></button>
       </div>
     </div>
   );
@@ -828,71 +1064,56 @@ function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
 /* ═══════════════════════════════════════════════════════
    STEP 3 — CHOOSE PATH
 ═══════════════════════════════════════════════════════ */
-const SERVICES = [
-  { id: "horoscope",   icon: "✨", title: "General Horoscope", desc: "In-depth life path reading based on planetary alignments" },
-  { id: "ashta_rekha", icon: "🖐️", title: "Ashta Rekha",       desc: "Palm reading combining celestial & physical life lines" },
-] as const;
 
 function Step3({ form, set, next, back }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void; back: () => void }) {
+  const { t } = useLanguage();
   const ready = !!form.service && form.guidance.trim().length >= 5;
   const [err, setErr] = useState("");
 
+  const SERVICES = [
+    { id: "horoscope",   icon: "✨", title: t("reading.s3.horoscope.title"), desc: t("reading.s3.horoscope.desc") },
+    { id: "ashta_rekha", icon: "🖐️", title: t("reading.s3.ashta.title"),     desc: t("reading.s3.ashta.desc")    },
+  ];
+
   function go() {
-    if (!form.service) { setErr("Please select a service type"); return; }
-    if (form.guidance.trim().length < 5) { setErr("Please describe your query in at least 5 characters"); return; }
+    if (!form.service) { setErr(t("reading.s3.err.service")); return; }
+    if (form.guidance.trim().length < 5) { setErr(t("reading.s3.err.guidance")); return; }
     setErr(""); next();
   }
 
   return (
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>🕉️</StepIcon>
-      <StepTitle title="Choose Your Path" sub="Select your heavenly reading and specify your sacred query" />
+      <StepTitle title={t("reading.s3.title")} sub={t("reading.s3.sub")} />
 
-      {/* Problem Category */}
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: KO, marginBottom: 8 }}>Problem Category <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "rgba(42,28,19,0.40)" }}>(optional)</span></p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-          {PROBLEM_CATEGORIES.map(cat => {
-            const sel = form.problemCategory === cat;
-            return (
-              <button key={cat} type="button" onClick={() => set("problemCategory", sel ? "" : cat)}
-                style={{ padding: "7px 13px", borderRadius: 20, border: `1.5px solid ${sel ? KO : "rgba(200,170,130,0.40)"}`, background: sel ? KOL : "#fff", color: sel ? KO : "rgba(42,28,19,0.55)", fontSize: 12, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4 kundli-card-grid">
+      <div className="mb-4 kundli-card-grid">
         {SERVICES.map(s => {
           const sel = form.service === s.id;
           return (
             <button key={s.id} onClick={() => set("service", s.id)} style={{ padding: "22px 14px 18px", borderRadius: 16, textAlign: "center", cursor: "pointer", border: `2px solid ${sel ? KO : "rgba(200,170,130,0.38)"}`, background: sel ? KOL : "#FFFAF5", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 4px 18px rgba(107,18,28,0.18)` : "0 2px 8px rgba(42,28,19,0.06)" }}>
               {sel && <div style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: KO, display: "flex", alignItems: "center", justifyContent: "center" }}><Ico.Check /></div>}
-              {/* Icon box — warm peach, rounded square */}
               <div style={{ width: 58, height: 58, borderRadius: 16, margin: "0 auto 13px", background: sel ? "linear-gradient(135deg,#FFE0B8,#FFCF96)" : "linear-gradient(135deg,#FFF0E0,#FFE5D0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, boxShadow: sel ? `0 3px 12px rgba(107,18,28,0.20)` : "0 2px 6px rgba(42,28,19,0.08)" }}>{s.icon}</div>
-              {/* Title — always Cinzel orange */}
               <p style={{ fontFamily: "var(--font-cinzel), serif", fontSize: 14, fontWeight: 700, marginBottom: 7, color: KO, lineHeight: 1.25 }}>{s.title}</p>
               <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.44)", lineHeight: 1.55, textAlign: "center" }}>{s.desc}</p>
             </button>
           );
         })}
       </div>
-      {/* Textarea — with orange hint text matching other fields */}
+      {/* Textarea */}
       <div style={{ border: "1.5px solid rgba(200,170,130,0.45)", borderRadius: 12, padding: "12px 14px", background: "#fff", boxShadow: "0 1px 6px rgba(42,28,19,0.05)" }}>
         <div className="flex gap-3">
           <span style={{ color: KO, marginTop: 2, fontSize: 15, flexShrink: 0 }}>🧎</span>
-          <textarea style={{ ...iBase, resize: "vertical", minHeight: 96, lineHeight: 1.7 }} placeholder="What guidance are you seeking? *" value={form.guidance} onChange={e => set("guidance", e.target.value)} />
+          <textarea style={{ ...iBase, resize: "vertical", minHeight: 96, lineHeight: 1.7 }} placeholder={t("reading.s3.guidance")} value={form.guidance} onChange={e => set("guidance", e.target.value)} />
         </div>
       </div>
-      <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>Focus your intention so Guruji can seek specific divine guidance</p>
+      <p style={{ fontSize: 11.52, fontFamily: "var(--font-nunito), Nunito, sans-serif", color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 14 }}>{t("reading.s3.guidance.hint")}</p>
       {err && <p style={{ fontSize: 12, color: "#ef4444", textAlign: "center", marginTop: 10 }}>{err}</p>}
       <p style={{ textAlign: "center", color: "rgba(200,170,130,0.55)", fontSize: 18, letterSpacing: "10px", margin: "13px 0 6px" }}>+ + +</p>
       <div className="flex gap-3">
         <BackBtn onClick={back} />
         <button onClick={go} style={ready ? { ...orangeBtn, letterSpacing: "0.06em", fontSize: 13.5 } : { ...orangeBtnDisabled, letterSpacing: "0.06em", fontSize: 13.5 }}>
-          <span style={{ fontSize: 15 }}>⚙️</span> GENERATE 1ST STAGE REPORT
+          <span style={{ fontSize: 15 }}>⚙️</span> {t("reading.s3.generate")}
         </button>
       </div>
     </div>
@@ -906,6 +1127,7 @@ function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConse
   back: () => void; next: () => void; skip: () => void; loading?: boolean; submitErr?: string;
   onImage: (b64: string | null) => void; consent: boolean; onConsent: (v: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -933,8 +1155,8 @@ function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConse
   return (
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>✦</StepIcon>
-      <StepTitle title="Enhance Your Reading" sub="Upload your palm photo for an advanced Ashta Rekha analysis (Optional)" />
-      <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase", color: KO, marginBottom: 12 }}>🖐️ Upload Palm Image</p>
+      <StepTitle title={t("reading.s4.title")} sub={t("reading.s4.sub")} />
+      <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase", color: KO, marginBottom: 12 }}>{t("reading.s4.upload.title")}</p>
       <div
         onClick={() => fileRef.current?.click()}
         style={{ border: `1.8px dashed ${KO}`, borderRadius: 12, padding: "42px 24px", textAlign: "center", cursor: "pointer", background: KOL, marginBottom: 20, transition: "background 0.2s" }}
@@ -947,8 +1169,8 @@ function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConse
         ) : (
           <>
             <div style={{ color: "rgba(42,28,19,0.40)", marginBottom: 12 }}><Ico.Camera /></div>
-            <p style={{ fontSize: 13.5, fontWeight: 500, color: "#2A1C13", marginBottom: 4 }}>Tap to upload your palm photo</p>
-            <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.40)" }}>Clear image of dominant hand · JPG, PNG, WEBP</p>
+            <p style={{ fontSize: 13.5, fontWeight: 500, color: "#2A1C13", marginBottom: 4 }}>{t("reading.s4.upload.tap")}</p>
+            <p style={{ fontSize: 11.5, color: "rgba(42,28,19,0.40)" }}>{t("reading.s4.upload.hint")}</p>
           </>
         )}
       </div>
@@ -961,17 +1183,17 @@ function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConse
           {consent && <Ico.Check />}
         </div>
         <p style={{ fontSize: 12.5, color: "rgba(42,28,19,0.72)", lineHeight: 1.65, margin: 0 }}>
-          I consent to the processing of my personal and family details for the purpose of spiritual guidance by Guruji. My information will be kept strictly confidential and not shared with any third party. <span style={{ color: KO, fontWeight: 700 }}>*</span>
+          {t("reading.s4.consent")} <span style={{ color: KO, fontWeight: 700 }}>*</span>
         </p>
       </div>
-      {consentErr && <p style={{ fontSize: 12, color: "#ef4444", marginBottom: 10 }}>Please provide your consent to continue</p>}
+      {consentErr && <p style={{ fontSize: 12, color: "#ef4444", marginBottom: 10 }}>{t("reading.s4.consent.err")}</p>}
 
       {submitErr && <p style={{ fontSize: 12.5, color: "#ef4444", textAlign: "center", marginBottom: 10, padding: "9px 14px", background: "#fef2f2", borderRadius: 8, border: "1px solid #fecaca" }}>{submitErr}</p>}
       <div className="flex gap-3">
         <BackBtn onClick={back} />
         <SkipBtn onClick={attemptSkip} />
         <button onClick={attemptSubmit} disabled={loading} style={{ ...orangeBtn, opacity: loading ? 0.7 : 1 }}>
-          {loading ? "Submitting…" : <><span>Submit</span><span style={{ fontSize: 18 }}>→</span></>}
+          {loading ? t("reading.btn.submitting") : <><span>{t("reading.btn.submit")}</span><span style={{ fontSize: 18 }}>→</span></>}
         </button>
       </div>
     </div>
@@ -982,6 +1204,7 @@ function Step4({ back, next, skip, loading, submitErr, onImage, consent, onConse
    SUCCESS SCREEN
 ═══════════════════════════════════════════════════════ */
 function SuccessScreen({ caseRef, reset }: { caseRef: string; reset: () => void }) {
+  const { t } = useLanguage();
   return (
     <div style={{ padding: "50px 24px 46px", textAlign: "center" }}>
       <div style={{ fontSize: 44, marginBottom: 20, lineHeight: 1, position: "relative", display: "inline-block" }}>
@@ -989,17 +1212,17 @@ function SuccessScreen({ caseRef, reset }: { caseRef: string; reset: () => void 
         ✦
         <span style={{ position: "absolute", top: -10, right: -14, fontSize: 20, opacity: 0.55 }}>✦</span>
       </div>
-      <h2 className="font-heading" style={{ fontSize: 31, fontWeight: 700, color: KO, marginBottom: 14, lineHeight: 1.2 }}>Connection Established!</h2>
+      <h2 className="font-heading" style={{ fontSize: 31, fontWeight: 700, color: KO, marginBottom: 14, lineHeight: 1.2 }}>{t("reading.success.title")}</h2>
       <p style={{ fontSize: 14, color: "rgba(42,28,19,0.58)", lineHeight: 1.78, maxWidth: 370, margin: "0 auto 30px", fontStyle: "italic" }}>
-        Your cosmic details have been received. Guruji will personally prepare your sacred reading with divine care and wisdom.
+        {t("reading.success.body")}
       </p>
       <div style={{ display: "inline-block", border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 14, padding: "16px 36px", background: "#FFFBF6", marginBottom: 32, boxShadow: "0 4px 20px rgba(107,18,28,0.10)" }}>
-        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase", color: "rgba(42,28,19,0.42)", marginBottom: 8 }}>Your Case Reference</p>
+        <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.20em", textTransform: "uppercase", color: "rgba(42,28,19,0.42)", marginBottom: 8 }}>{t("reading.success.ref")}</p>
         <p className="font-heading" style={{ fontSize: 22, fontWeight: 700, color: KO, letterSpacing: "0.06em" }}>{caseRef}</p>
       </div>
       <div>
         <button onClick={reset} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 30px", borderRadius: 50, border: `2px solid ${KO}`, background: "#fff", color: KO, fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
-          ✚ Submit Another Request
+          {t("reading.btn.again")}
         </button>
       </div>
     </div>
@@ -1010,6 +1233,7 @@ function SuccessScreen({ caseRef, reset }: { caseRef: string; reset: () => void 
    MAIN PAGE
 ═══════════════════════════════════════════════════════ */
 export default function KundliPage() {
+  const { t } = useLanguage();
   const formRef  = useRef<HTMLDivElement>(null);
   const [phase,   setPhase]   = useState<Phase>(1);
   const [form,    setForm]    = useState<FormData>(BLANK);
@@ -1049,14 +1273,10 @@ export default function KundliPage() {
         preferredLanguage: form.preferredLanguage || undefined,
         dob:              form.dob,
         tob:              form.tob || undefined,
-        birthTimeAccuracy: form.birthTimeAccuracy || undefined,
+
         pob:              form.pob,
-        fatherName:       form.fatherName || undefined,
-        motherName:       form.motherName || undefined,
-        spouseName:       form.spouseName || undefined,
-        childrenDetails:  form.childrenDetails || undefined,
         serviceType:      form.service,
-        problemCategory:  form.problemCategory || undefined,
+
         guidanceQuery:    form.guidance,
         palmImage:        palmImage || undefined,
         consent:          consent,
@@ -1068,7 +1288,7 @@ export default function KundliPage() {
       const fieldErrors = Array.isArray(err?.errors)
         ? err.errors.map((e: any) => e.message).join(". ")
         : null;
-      const msg = fieldErrors || err?.message || "Submission failed. Please try again.";
+      const msg = fieldErrors || err?.message || t("reading.s4.err");
       setSubmitErr(msg);
     } finally {
       setLoading(false);
@@ -1092,13 +1312,31 @@ export default function KundliPage() {
             style={{ minHeight: "60vh", background: "linear-gradient(180deg,#FFFDF8 0%,#FFF7EE 100%)", fontFamily: "var(--font-inter,system-ui,sans-serif)" }}
           >
             <style>{`
-              @media (max-width: 420px) {
-                .kundli-grid-2    { grid-template-columns: 1fr !important; }
-                .kundli-card-grid { grid-template-columns: 1fr !important; }
+              .kundli-grid-2 {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+                min-width: 0;
+              }
+              .kundli-grid-2 > * { min-width: 0; }
+              @media (min-width: 560px) {
+                .kundli-grid-2 { grid-template-columns: repeat(2, 1fr); }
+              }
+              .kundli-card-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+                min-width: 0;
+              }
+              .kundli-card-grid > * { min-width: 0; }
+              @media (min-width: 560px) {
+                .kundli-card-grid { grid-template-columns: repeat(2, 1fr); }
               }
               input[type="date"]::-webkit-calendar-picker-indicator,
               input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
               input[type="date"], input[type="time"] { cursor: pointer; }
+              select:focus { outline: none !important; box-shadow: none !important; }
+              select { -webkit-appearance: none; appearance: none; }
             `}</style>
 
             <div className="mx-auto px-4 py-10 pb-16" style={{ maxWidth: 760 }}>

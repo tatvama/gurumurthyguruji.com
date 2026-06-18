@@ -259,7 +259,6 @@ export interface TrikalaReading {
   guidanceQuery: string;
   status: string;        // one of TRIKALA_STATUSES (legacy: "AI Report" | "Published")
   /* PRD case-file fields */
-  problemCategory?: string;
   priority?: string;
   preferredLanguage?: string;
   devoteeId?: number;
@@ -294,7 +293,6 @@ function mapReading(r: Record<string, any>): TrikalaReading {
     serviceType:    r.service_type    ?? r.serviceType,
     guidanceQuery:  r.guidance_query  ?? r.guidanceQuery,
     status:         r.status,
-    problemCategory:   r.problem_category   ?? r.problemCategory,
     priority:          r.priority,
     preferredLanguage: r.preferred_language ?? r.preferredLanguage,
     devoteeId:         r.devotee_id         ?? r.devoteeId,
@@ -329,14 +327,9 @@ export async function postTrikalaReading(payload: {
   preferredLanguage?: string;
   dob: string;
   tob?: string;
-  birthTimeAccuracy?: string;
+
   pob: string;
-  fatherName?: string;
-  motherName?: string;
-  spouseName?: string;
-  childrenDetails?: string;
   serviceType: string;
-  problemCategory?: string;
   guidanceQuery: string;
   palmImage?: string;
   consent?: boolean;
@@ -474,8 +467,14 @@ async function getJson(path: string): Promise<any> {
   return res.json();
 }
 async function sendJson(path: string, method: string, body?: any): Promise<any> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  /* Attribute workflow actions / audit logs to the logged-in admin */
+  if (typeof window !== "undefined") {
+    const who = sessionStorage.getItem("admin_name");
+    if (who) headers["x-admin-name"] = who;
+  }
   const res = await fetch(`${BASE}${path}`, {
-    method, headers: { "Content-Type": "application/json" },
+    method, headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   let data: any = {}; try { data = await res.json(); } catch {}
@@ -578,6 +577,10 @@ export async function getDevotee(id: number): Promise<Devotee> {
   const json = await getJson(`/api/devotees/${id}`);
   return mapDevotee(json.data);
 }
+export interface DevoteeAttention {
+  devoteeId: number; appointmentId?: number; attentionStatus: string;
+  highlightMessage?: string; requiresFollowUp: boolean; updatedAt?: string;
+}
 export interface DevoteeHistory {
   devotee: Devotee;
   cases: any[];
@@ -585,10 +588,12 @@ export interface DevoteeHistory {
   remedies: any[];
   timeline: TimelineEvent[];
   bookings: any[];
+  attention?: DevoteeAttention | null;
 }
 export async function getDevoteeHistory(id: number): Promise<DevoteeHistory> {
   const json = await getJson(`/api/devotees/${id}/history`);
   const d = json.data;
+  const at = d.attention;
   return {
     devotee: mapDevotee(d.devotee),
     cases: d.cases ?? [],
@@ -596,6 +601,10 @@ export async function getDevoteeHistory(id: number): Promise<DevoteeHistory> {
     remedies: d.remedies ?? [],
     timeline: (d.timeline ?? []).map(mapTimeline),
     bookings: d.bookings ?? [],
+    attention: at ? {
+      devoteeId: at.devotee_id, appointmentId: at.appointment_id, attentionStatus: at.attention_status,
+      highlightMessage: at.highlight_message, requiresFollowUp: at.requires_follow_up, updatedAt: at.updated_at,
+    } : null,
   };
 }
 export async function checkDuplicateDevotee(payload: { phone?: string; whatsapp?: string; email?: string; name?: string; city?: string }): Promise<Devotee[]> {
@@ -618,25 +627,47 @@ export async function updateDevotee(id: number, payload: Partial<Devotee>): Prom
 ══════════════════════════════════════════════════════════════════ */
 export interface Appointment {
   id: number; appointmentRef?: string; devoteeId?: number; caseReference?: string; bookingId?: number;
+  parentAppointmentId?: number;
   devoteeName?: string; mobile?: string; appointmentType?: string; mode?: string;
   startTime?: string; endTime?: string; durationMinutes?: number; status: string;
   priority?: string; location?: string; meetingLink?: string; purpose?: string;
   outcomeNote?: string; assignedTo?: string;
-  checkedInAt?: string; detailsVerified?: boolean; officeRemarks?: string; gurujiRemarks?: string;
+  checkedInAt?: string; checkedInBy?: string; detailsVerified?: boolean;
+  membersCount?: number; arrivalPhotoUrl?: string;
+  officeRemarks?: string; gurujiRemarks?: string; darshanSummary?: string;
+  /* lifecycle / state-machine */
+  scheduleAttemptCount?: number; rescheduleCount?: number; maxAttempts?: number;
+  lastScheduledAt?: string; confirmedAt?: string; confirmationMethod?: string;
+  reminderSentAt?: string; darshanStartedAt?: string; completedAt?: string;
+  cancelledAt?: string; cancellationReason?: string;
+  noShowAt?: string; noShowReason?: string; closedAt?: string; closedReason?: string;
   createdAt?: string; updatedAt?: string;
 }
 function mapAppointment(r: Record<string, any>): Appointment {
   return {
     id: r.id, appointmentRef: r.appointment_ref ?? r.appointmentRef, devoteeId: r.devotee_id ?? r.devoteeId,
     caseReference: r.case_reference ?? r.caseReference, bookingId: r.booking_id ?? r.bookingId,
+    parentAppointmentId: r.parent_appointment_id ?? r.parentAppointmentId,
     devoteeName: r.devotee_name ?? r.devoteeName, mobile: r.mobile,
     appointmentType: r.appointment_type ?? r.appointmentType, mode: r.mode,
     startTime: r.start_time ?? r.startTime, endTime: r.end_time ?? r.endTime,
     durationMinutes: r.duration_minutes ?? r.durationMinutes, status: r.status, priority: r.priority,
     location: r.location, meetingLink: r.meeting_link ?? r.meetingLink, purpose: r.purpose,
     outcomeNote: r.outcome_note ?? r.outcomeNote, assignedTo: r.assigned_to ?? r.assignedTo,
-    checkedInAt: r.checked_in_at ?? r.checkedInAt, detailsVerified: r.details_verified ?? r.detailsVerified,
+    checkedInAt: r.checked_in_at ?? r.checkedInAt, checkedInBy: r.checked_in_by ?? r.checkedInBy,
+    detailsVerified: r.details_verified ?? r.detailsVerified,
+    membersCount: r.members_count ?? r.membersCount, arrivalPhotoUrl: r.arrival_photo_url ?? r.arrivalPhotoUrl,
     officeRemarks: r.office_remarks ?? r.officeRemarks, gurujiRemarks: r.guruji_remarks ?? r.gurujiRemarks,
+    darshanSummary: r.darshan_summary ?? r.darshanSummary,
+    scheduleAttemptCount: r.schedule_attempt_count ?? r.scheduleAttemptCount,
+    rescheduleCount: r.reschedule_count ?? r.rescheduleCount, maxAttempts: r.max_attempts ?? r.maxAttempts,
+    lastScheduledAt: r.last_scheduled_at ?? r.lastScheduledAt, confirmedAt: r.confirmed_at ?? r.confirmedAt,
+    confirmationMethod: r.confirmation_method ?? r.confirmationMethod,
+    reminderSentAt: r.reminder_sent_at ?? r.reminderSentAt, darshanStartedAt: r.darshan_started_at ?? r.darshanStartedAt,
+    completedAt: r.completed_at ?? r.completedAt,
+    cancelledAt: r.cancelled_at ?? r.cancelledAt, cancellationReason: r.cancellation_reason ?? r.cancellationReason,
+    noShowAt: r.no_show_at ?? r.noShowAt, noShowReason: r.no_show_reason ?? r.noShowReason,
+    closedAt: r.closed_at ?? r.closedAt, closedReason: r.closed_reason ?? r.closedReason,
     createdAt: r.created_at ?? r.createdAt, updatedAt: r.updated_at ?? r.updatedAt,
   };
 }
@@ -644,10 +675,13 @@ export const APPOINTMENT_TYPES = [
   "Trikala Consultation", "General Appointment", "Phone Call", "Video Call", "Temple Meeting",
   "Event Invitation", "VIP Meeting", "Follow-up", "Internal Meeting", "Travel Block", "Rest / Personal Time",
 ] as const;
+/* Appointment Flow §3 — canonical lifecycle */
 export const APPOINTMENT_STATUSES = [
-  "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Requested", "Scheduled", "Confirmed", "Reminder Sent",
+  "Arrived", "In Darshan", "Completed", "Cancelled", "No-show", "Closed",
 ] as const;
+/* Statuses that allow no further action (Flow §15.2) */
+export const FINAL_STATUSES = ["Completed", "Closed"] as const;
 /* The 3 ways a devotee meets Guruji (PRD §6) */
 export const APPOINTMENT_MODES = [
   { value: "phone",     label: "Phone Call" },
@@ -682,7 +716,7 @@ export async function deleteAppointment(id: number): Promise<void> {
 /* Office staff: verify devotee details + photo and mark them Arrived for darshan */
 export async function checkInAppointment(
   id: number,
-  payload: { devotee?: Record<string, any>; office_remarks?: string },
+  payload: { devotee?: Record<string, any>; verified_contact?: Record<string, any>; members_count?: number; member_names?: any[]; photo_url?: string; office_remarks?: string },
 ): Promise<{ appointment: Appointment; devotee: Devotee | null }> {
   const data = await sendJson(`/api/appointments/${id}/checkin`, "PATCH", payload);
   return { appointment: mapAppointment(data.data.appointment), devotee: data.data.devotee ? mapDevotee(data.data.devotee) : null };
@@ -691,6 +725,75 @@ export async function checkInAppointment(
 export async function convertCaseToAppointment(caseRef: string, payload: Record<string, any> = {}): Promise<Appointment> {
   const data = await sendJson(`/api/appointments/from-case/${encodeURIComponent(caseRef)}`, "POST", payload);
   return mapAppointment(data.data);
+}
+
+/* ── Workflow action endpoints (Flow §17.2) — the ONLY way to change status ── */
+export async function scheduleAppointment(id: number, payload: { scheduled_at?: string; start_time?: string; mode?: string; appointment_type?: string; venue?: string; location?: string; purpose?: string; priority?: string; assigned_to?: string; meeting_link?: string; note?: string; notify_devotee?: boolean }): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/schedule`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
+export async function rescheduleAppointment(id: number, payload: { new_scheduled_at: string; reason: string; staff_note?: string; notify_devotee?: boolean }): Promise<{ appointment: Appointment; finalAttempt: boolean }> {
+  const data = await sendJson(`/api/appointments/${id}/reschedule`, "PATCH", payload);
+  const appointment = mapAppointment(data.meta?.appointment ?? data.data);
+  return { appointment, finalAttempt: !!data.meta?.finalAttempt };
+}
+export async function confirmAppointment(id: number, payload: { confirmation_method?: string; note?: string } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/confirm`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
+export async function sendAppointmentReminder(id: number): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/send-reminder`, "PATCH", {});
+  return mapAppointment(data.data);
+}
+export async function startDarshan(id: number): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/start-darshan`, "PATCH", {});
+  return mapAppointment(data.data);
+}
+export async function completeAppointment(id: number, payload: { guruji_remarks?: string; darshan_summary?: string; outcome_note?: string; book_follow_up?: boolean; follow_up?: Record<string, any> } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/complete`, "PATCH", payload);
+  return mapAppointment(data.meta?.appointment ?? data.data);
+}
+export async function cancelAppointment(id: number, payload: { reason: string; cancellation_source?: string; follow_up_required?: boolean; note?: string; notify_devotee?: boolean }): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/cancel`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
+export async function markNoShow(id: number, payload: { reason?: string; contacted?: boolean; follow_up_required?: boolean; note?: string } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/no-show`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
+export async function closeAppointment(id: number, payload: { reason?: string } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/close`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
+export async function bookFollowUp(id: number, payload: { scheduled_at?: string; mode?: string; appointment_type?: string; purpose?: string; notify_devotee?: boolean } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/book-follow-up`, "POST", payload);
+  return mapAppointment(data.data);
+}
+
+/* ── Notes & timeline ──────────────────────────────────────────────────── */
+export interface AppointmentNote {
+  id: number; appointmentId: number; noteType: string; noteText: string; isPrivate: boolean; createdBy?: string; createdAt: string;
+}
+function mapApptNote(r: Record<string, any>): AppointmentNote {
+  return { id: r.id, appointmentId: r.appointment_id, noteType: r.note_type, noteText: r.note_text, isPrivate: r.is_private, createdBy: r.created_by, createdAt: r.created_at };
+}
+export interface AppointmentEvent {
+  id: number; eventType: string; fromStatus?: string; toStatus?: string; title: string; description?: string; createdBy?: string; createdAt: string;
+}
+function mapApptEvent(r: Record<string, any>): AppointmentEvent {
+  return { id: r.id, eventType: r.event_type, fromStatus: r.from_status, toStatus: r.to_status, title: r.title, description: r.description, createdBy: r.created_by, createdAt: r.created_at };
+}
+export async function addAppointmentNote(id: number, payload: { note_text: string; note_type?: string; is_private?: boolean }): Promise<AppointmentNote> {
+  const data = await sendJson(`/api/appointments/${id}/notes`, "POST", payload);
+  return mapApptNote(data.data);
+}
+export async function getAppointmentNotes(id: number): Promise<AppointmentNote[]> {
+  const json = await getJson(`/api/appointments/${id}/notes`);
+  return (json.data ?? []).map(mapApptNote);
+}
+export async function getAppointmentTimeline(id: number): Promise<AppointmentEvent[]> {
+  const json = await getJson(`/api/appointments/${id}/timeline`);
+  return (json.data ?? []).map(mapApptEvent);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -789,15 +892,9 @@ export async function convertBookingToAppointment(bookingId: string | number): P
    RBAC — 8-role system (PRD §11)
 ══════════════════════════════════════════════════════════════════ */
 export const ADMIN_ROLES = [
-  { value: "superadmin",      label: "Super Admin",         desc: "Full access to all modules" },
-  { value: "guruji",          label: "Guruji",              desc: "Guruji Vakya + Read all" },
-  { value: "trikala_admin",   label: "Trikala Admin",       desc: "Manage all Trikala cases" },
-  { value: "appt_manager",    label: "Appointment Manager", desc: "Manage appointments" },
-  { value: "devotee_manager", label: "Devotee Manager",     desc: "Manage devotee contacts" },
-  { value: "report_editor",   label: "Report Editor",       desc: "Generate & export reports" },
-  { value: "viewer",          label: "Viewer",              desc: "Read-only access" },
-  { value: "admin",           label: "Admin",               desc: "General admin access" },
-  { value: "volunteer",       label: "Volunteer",           desc: "Limited task-specific access" },
+  { value: "superadmin", label: "Super Admin", desc: "Full access to all modules" },
+  { value: "guruji",     label: "Guruji",      desc: "Guruji Vakya + Read all" },
+  { value: "admin",      label: "Admin",        desc: "General admin access" },
 ] as const;
 
 /* ══════════════════════════════════════════════════════════════════

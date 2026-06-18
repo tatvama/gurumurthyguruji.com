@@ -24,7 +24,7 @@ export function LanguageToggle({
       aria-label={t("lang.aria")}
       title={t("lang.aria")}
       className={cn(
-        "group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
+        "group inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
         tone === "light"
           ? "border-champagne/30 text-pearl/80 hover:border-champagne/60 hover:text-pearl"
           : "border-antique-gold/30 text-deep-brown/75 hover:border-antique-gold/60 hover:text-antique-gold",

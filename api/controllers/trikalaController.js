@@ -30,7 +30,7 @@ function generateCaseRef() {
 /* POST /api/trikala-readings — public form submission */
 export const submitReading = async (req, res, next) => {
   try {
-    const { fullName, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, preferredLanguage, dob, tob, birthTimeAccuracy, pob, fatherName, motherName, spouseName, childrenDetails, serviceType, guidanceQuery, palmImage, problemCategory, priority, consent } = req.body;
+    const { fullName, mobile, whatsapp, email, gender, occupation, city, district, state, pincode, preferredLanguage, dob, tob, pob, serviceType, guidanceQuery, palmImage, priority, consent } = req.body;
 
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
@@ -63,16 +63,10 @@ export const submitReading = async (req, res, next) => {
       pincode:            pincode || null,
       dob,
       tob:                tob || null,
-      birth_time_accuracy: birthTimeAccuracy || null,
       pob,
-      father_name:        fatherName || null,
-      mother_name:        motherName || null,
-      spouse_name:        spouseName || null,
-      children_details:   childrenDetails || null,
       service_type:       serviceType,
       guidance_query:     guidanceQuery,
       palm_image:         palmImage || null,
-      problem_category:   problemCategory || null,
       priority:           priority || "Normal",
       preferred_language: preferredLanguage || null,
       devotee_id:         devoteeId,

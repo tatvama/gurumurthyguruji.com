@@ -1,0 +1,167 @@
+[
+  {
+    "section": "DetailPanel header - devotee name",
+    "lineRange": "122-122",
+    "issueType": "ellipsis-truncation",
+    "severity": "high",
+    "description": "Devotee full name is truncated with ellipsis/nowrap instead of wrapping; real user content (name) must wrap, especially in a 460px panel that can shrink to viewport width.",
+    "currentCode": "<p style={{ fontSize:16, fontWeight:800, color:\"rgba(255,220,170,0.95)\", marginBottom:2, overflow:\"hidden\", textOverflow:\"ellipsis\", whiteSpace:\"nowrap\" }}>{reading.fullName}</p>",
+    "suggestedFix": "<p style={{ fontSize:16, fontWeight:800, color:\"rgba(255,220,170,0.95)\", marginBottom:2, wordBreak:\"break-word\", lineHeight:1.3 }}>{reading.fullName}</p>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "DetailPanel header - email",
+    "lineRange": "123-123",
+    "issueType": "ellipsis-truncation",
+    "severity": "high",
+    "description": "Email is truncated with ellipsis/nowrap; emails are real user content that must wrap, not be clipped, at narrow widths.",
+    "currentCode": "<p style={{ fontSize:11.5, color:\"rgba(255,220,170,0.55)\", overflow:\"hidden\", textOverflow:\"ellipsis\", whiteSpace:\"nowrap\" }}>{reading.email}</p>",
+    "suggestedFix": "<p style={{ fontSize:11.5, color:\"rgba(255,220,170,0.55)\", wordBreak:\"break-all\", lineHeight:1.4 }}>{reading.email}</p>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "DetailPanel - slide-over container width",
+    "lineRange": "105-105",
+    "issueType": "fixed-width",
+    "severity": "med",
+    "description": "Panel uses fixed width:460 capped by maxWidth:100vw, so it fills the screen below 460px (acceptable), but the fixed 460 combined with internal fixed-width label column (130px) leaves only ~120px for values at 250px viewport. Width itself is bounded by maxWidth:100vw so no page scroll, but flag the rigid label column it pairs with (see detail rows).",
+    "currentCode": "style={{ position:\"fixed\", top:0, right:0, bottom:0, zIndex:201, width:460, maxWidth:\"100vw\", background:\"#F9FAFB\", boxShadow:\"-8px 0 40px rgba(0,0,0,0.15)\", display:\"flex\", flexDirection:\"column\", fontFamily:\"'Inter','Segoe UI',sans-serif\" }}",
+    "suggestedFix": "Keep maxWidth:\"100vw\" (good) but reduce the paired fixed label column at narrow widths; add a media query: @media (max-width:520px){ /* see detail-row label fix */ }. No change to width:460 needed for desktop.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "DetailPanel - request details row label column",
+    "lineRange": "142-143",
+    "issueType": "fixed-width",
+    "severity": "high",
+    "description": "Each detail row uses a fixed 130px min-width label column with no media-query reduction. At a 250px viewport (panel = 100vw = ~250px minus 32px padding ≈ 218px), the 130px label leaves only ~88px for values; combined with the flex row this risks overflow and squeezes the value column. Label width should shrink or rows should stack on narrow screens.",
+    "currentCode": "<span style={{ width:130, minWidth:130, fontSize:12, fontWeight:600, color:\"#9CA3AF\" }}>{label}</span>\n                <span style={{ flex:1, fontSize:13, color:\"#1F2937\", wordBreak:\"break-word\", lineHeight:1.5 }}>{val || \"—\"}</span>",
+    "suggestedFix": "Add a class to the row span and reduce via media query, e.g. give the label span className=\"dp-label\" and add: @media (max-width:520px){ .dp-label{ width:auto !important; min-width:90px !important; } } OR stack the row to flexDirection:column at narrow widths. Desktop keeps 130px.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Main content - stat cards grid",
+    "lineRange": "327-332",
+    "issueType": "grid-no-stack",
+    "severity": "high",
+    "description": "Stat grid is repeat(4,1fr). The media query at 900px drops it to 2 columns, but there is NO further stack to a single column below ~560px. At 250px two columns of stat cards (each with 48px icon + 20-22px padding) overflow the container and cause horizontal scroll.",
+    "currentCode": "<div style={{ display:\"grid\", gridTemplateColumns:\"repeat(4,1fr)\", gap:16, marginBottom:28 }}>",
+    "suggestedFix": "Add a media query to collapse to 1 column on small screens: @media (max-width:560px){ div[style*=\"repeat(4,1fr)\"]{ grid-template-columns: 1fr !important; } } (matches the existing 900px selector pattern in the <style> block).",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "StatCard - fixed horizontal padding",
+    "lineRange": "35-35",
+    "issueType": "oversized-padding",
+    "severity": "med",
+    "description": "StatCard uses padding:\"20px 22px\" with no responsive reduction; combined with a 48px icon and gap:16, the card content (esp. fontSize:28 value) is wide. At narrow widths the padding should scale down to avoid cramping/overflow within the grid cell.",
+    "currentCode": "<div style={{ background:\"#fff\", borderRadius:12, border:\"1px solid #E5E7EB\", padding:\"20px 22px\", display:\"flex\", alignItems:\"center\", gap:16, boxShadow:\"0 1px 4px rgba(0,0,0,0.06)\" }}>",
+    "suggestedFix": "Reduce padding/gap on small screens via a class + media query, e.g. add className=\"statcard\" and: @media (max-width:560px){ .statcard{ padding:14px !important; gap:10px !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Table card - horizontal scroll wrapper",
+    "lineRange": "372-373",
+    "issueType": "overflow-x-scroll",
+    "severity": "high",
+    "description": "The data table is wrapped in overflowX:\"auto\" and the table is width:100% with 7 columns of nowrap cells (CASE ID, DEVOTEE, MOBILE, SERVICE, STATUS, SUBMITTED, action). This is exactly the forbidden sideways-scroll pattern: at narrow widths the table scrolls horizontally instead of collapsing to a stacked list.",
+    "currentCode": "<div style={{ overflowX:\"auto\" }}>\n              <table style={{ width:\"100%\", borderCollapse:\"collapse\" }}>",
+    "suggestedFix": "Remove overflowX:\"auto\" and implement a mobile-collapse pattern: hide the <table> below ~640px (via media query) and render a stacked card/list per record (primary label = fullName + caseReference, with a chevron/Open button), OR convert each row to display:block cards at narrow widths. e.g. add a class to wrapper and: @media (max-width:640px){ .trikala-table{ display:none; } .trikala-cards{ display:flex; flex-direction:column; } } and add a stacked-list renderer.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Table header cells - nowrap",
+    "lineRange": "376-378",
+    "issueType": "table-no-mobile-collapse",
+    "severity": "high",
+    "description": "All table header cells force whiteSpace:\"nowrap\" with fixed 16px horizontal padding; with 7 columns this guarantees the table is wider than a 250px viewport, forcing the parent overflowX scroll. Header row has no mobile-collapse alternative.",
+    "currentCode": "{[\"CASE ID\",\"DEVOTEE\",\"MOBILE\",\"SERVICE\",\"STATUS\",\"SUBMITTED\",\"\"].map(h => (\n                      <th key={h} style={{ padding:\"11px 16px\", fontSize:11, fontWeight:700, letterSpacing:\"0.10em\", textTransform:\"uppercase\", color:\"#9CA3AF\", textAlign:\"left\", whiteSpace:\"nowrap\" }}>{h}</th>\n                    ))}",
+    "suggestedFix": "As part of the table-collapse fix, hide <thead> at narrow widths and render labeled stacked rows instead. The nowrap header is acceptable ONLY on desktop; ensure the whole table is replaced by a stacked list below ~640px.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Table cell - Devotee name & email",
+    "lineRange": "401-404",
+    "issueType": "table-no-mobile-collapse",
+    "severity": "med",
+    "description": "The Devotee cell renders fullName and email as real content inside a table that scrolls sideways. These should wrap in a stacked-list layout, not contribute to a wide scrolling table. (No ellipsis here, but the cell lives in the forbidden scroll container.)",
+    "currentCode": "<td style={{ padding:\"14px 16px\" }}>\n                          <p style={{ fontSize:14, fontWeight:600, color:\"#111827\", marginBottom:1 }}>{c.fullName}</p>\n                          <p style={{ fontSize:12, color:\"#9CA3AF\" }}>{c.email}</p>\n                        </td>",
+    "suggestedFix": "In the mobile-collapse list, render fullName as the primary wrapping label and email below it (wordBreak:break-all), inside a block card rather than a table cell. No desktop change.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Top nav header - fixed height & horizontal padding with many children",
+    "lineRange": "258-258",
+    "issueType": "flex-no-wrap",
+    "severity": "high",
+    "description": "Header is a single non-wrapping flex row (height:60, no flexWrap) holding logo, search (maxWidth:440), search button, spacer, Refresh button, admin user, and Logout button. The 560px media query only trims padding/gap; it never wraps or hides items, so at 250px these fixed-size children overflow horizontally.",
+    "currentCode": "<header style={{ background:\"#fff\", borderBottom:\"1px solid #E5E7EB\", height:60, display:\"flex\", alignItems:\"center\", padding:\"0 28px\", gap:16 }}>",
+    "suggestedFix": "Allow wrapping and auto height on small screens. Add to the <style> block: @media (max-width:560px){ header{ flex-wrap:wrap !important; height:auto !important; padding:10px 14px !important; row-gap:8px !important; } } and let the search input take full width (flex-basis:100%) when wrapped. Desktop unaffected.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Top nav header - search wrapper maxWidth",
+    "lineRange": "270-279",
+    "issueType": "minwidth-too-large",
+    "severity": "med",
+    "description": "Search wrapper uses flex:1 with maxWidth:440 but no min-width:0 guard; inside a non-wrapping header flex row the input plus all other fixed-width buttons exceed 250px. While input itself has box-sizing:border-box and width:100% (good), the surrounding row does not allow it to shrink the header below overflow.",
+    "currentCode": "<div style={{ flex:1, maxWidth:440, position:\"relative\" }}>",
+    "suggestedFix": "Add minWidth:0 to allow shrinking: <div style={{ flex:1, minWidth:0, maxWidth:440, position:\"relative\" }}> and pair with the header flex-wrap media query so the search can take full width on small screens.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Top nav header - spacer + duplicate flex:1 pushing buttons",
+    "lineRange": "286-286",
+    "issueType": "flex-no-wrap",
+    "severity": "low",
+    "description": "An extra flex:1 spacer div sits between the search button and the right-side buttons. In a non-wrapping header this just consumes space on desktop, but at narrow widths it has no effect to prevent overflow; once header wrapping is added this spacer should collapse to avoid an empty wrapped line.",
+    "currentCode": "<div style={{ flex:1 }} />",
+    "suggestedFix": "Hide the spacer on small screens within the header media query, e.g. give it className=\"nav-spacer\" and: @media (max-width:560px){ .nav-spacer{ display:none !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Main content padding",
+    "lineRange": "318-318",
+    "issueType": "oversized-padding",
+    "severity": "low",
+    "description": "<main> uses padding:\"32px 32px 48px\". There IS a 900px media query reducing it to 20px 16px 40px, so this is already handled for narrow widths; flagged only to confirm no additional reduction needed below 560px (current value is acceptable).",
+    "currentCode": "<main style={{ padding:\"32px 32px 48px\", maxWidth:1380, margin:\"0 auto\" }}>",
+    "suggestedFix": "No change required — already covered by @media (max-width:900px){ main{ padding:20px 16px 40px !important } }. (Listed for completeness; not a defect.)",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "Table card header - records count row",
+    "lineRange": "351-356",
+    "issueType": "flex-no-wrap",
+    "severity": "low",
+    "description": "The table-card title row uses padding:\"16px 22px\" justify space-between with no flex-wrap; the title and '{n} records' are short, so this is low risk, but the 22px horizontal padding does not reduce on small screens and adds to inner width.",
+    "currentCode": "<div style={{ display:\"flex\", alignItems:\"center\", justifyContent:\"space-between\", padding:\"16px 22px\", borderBottom:\"1px solid #F3F4F6\" }}>",
+    "suggestedFix": "Reduce padding on small screens via a class + media query: add className=\"tablecard-head\" and @media (max-width:560px){ .tablecard-head{ padding:12px 14px !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  },
+  {
+    "section": "DetailPanel header padding & status badge row",
+    "lineRange": "117-128",
+    "issueType": "flex-no-wrap",
+    "severity": "low",
+    "description": "The avatar + name/email + status badge row is a non-wrapping flex (avatar 46px flexShrink:0, status badge flexShrink:0). With the name/email column using minWidth:0 it can shrink, but at 250px the 46px avatar + badge + gaps leave little room; acceptable since middle column shrinks, but padding:\"20px 22px 18px\" does not reduce on small screens.",
+    "currentCode": "<div style={{ background:\"linear-gradient(135deg,#1e0800,#2a1000)\", padding:\"20px 22px 18px\", flexShrink:0 }}>",
+    "suggestedFix": "Reduce header padding on narrow screens via class + media query: add className=\"dp-header\" and @media (max-width:520px){ .dp-header{ padding:16px 14px !important; } }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\trikala-readings\\page.tsx",
+    "chunk": "trikala-readings/page.tsx (full)"
+  }
+]

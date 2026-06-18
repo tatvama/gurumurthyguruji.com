@@ -2,6 +2,9 @@ import { Router } from "express";
 import {
   getAppointments, getAppointment, createAppointment,
   updateAppointment, deleteAppointment, getArrivedToday, checkInAppointment,
+  scheduleAppointment, rescheduleAppointment, confirmAppointment, sendReminder,
+  startDarshan, completeAppointment, cancelAppointment, markNoShow, closeAppointment,
+  bookFollowUp, addNote, getNotes, getTimeline,
 } from "../controllers/appointmentController.js";
 import Appointment from "../models/Appointment.js";
 import { pool } from "../config/db.js";
@@ -15,20 +18,39 @@ export const APPOINTMENT_TYPES = [
   "Internal Meeting", "Travel Block", "Rest / Personal Time",
 ];
 
-/* PRD §6 — appointment statuses (Arrived = office check-in before darshan) */
+/* Appointment Flow §3 — canonical lifecycle statuses
+   (Approved / Rescheduled kept as legacy values for old rows) */
 export const APPOINTMENT_STATUSES = [
-  "Requested", "Approved", "Scheduled", "Confirmed", "Reminder Sent",
-  "Arrived", "Completed", "No-show", "Rescheduled", "Cancelled", "Closed",
+  "Requested", "Scheduled", "Confirmed", "Reminder Sent",
+  "Arrived", "In Darshan", "Completed", "Cancelled", "No-show", "Closed",
 ];
 
 /* Static / collection routes BEFORE "/:id" so they aren't shadowed */
 router.get("/queue/arrived", getArrivedToday);
 router.get("/", getAppointments);
 router.post("/", createAppointment);
+
 router.get("/:id", getAppointment);
-router.patch("/:id/checkin", checkInAppointment);
 router.patch("/:id", updateAppointment);
 router.delete("/:id", deleteAppointment);
+
+/* ── Workflow action endpoints (Flow §17.2) — status changes only here ── */
+router.patch("/:id/schedule",      scheduleAppointment);
+router.patch("/:id/reschedule",    rescheduleAppointment);
+router.patch("/:id/confirm",       confirmAppointment);
+router.patch("/:id/send-reminder", sendReminder);
+router.patch("/:id/checkin",       checkInAppointment);
+router.patch("/:id/start-darshan", startDarshan);
+router.patch("/:id/complete",      completeAppointment);
+router.patch("/:id/cancel",        cancelAppointment);
+router.patch("/:id/no-show",       markNoShow);
+router.patch("/:id/close",         closeAppointment);
+router.post("/:id/book-follow-up", bookFollowUp);
+
+/* ── Notes & timeline ──────────────────────────────────────────────────── */
+router.post("/:id/notes",   addNote);
+router.get("/:id/notes",    getNotes);
+router.get("/:id/timeline", getTimeline);
 
 /* POST /from-booking/:bookingId — one-click convert Appointment booking → appointment (PRD §8) */
 router.post("/from-booking/:bookingId", async (req, res, next) => {
@@ -74,7 +96,7 @@ router.post("/from-case/:caseRef", async (req, res, next) => {
       mobile:           c.mobile,
       appointment_type: "Trikala Consultation",
       mode:             req.body.mode || "in-person",
-      status:           "Scheduled",
+      status:           req.body.start_time ? "Scheduled" : "Requested",
       priority:         c.priority || "Normal",
       start_time:       req.body.start_time || null,
       location:         req.body.location || "Guruji Ashram",

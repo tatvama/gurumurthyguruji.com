@@ -1,0 +1,46 @@
+[
+  {
+    "section": "Section filter row - search form fixed width",
+    "lineRange": "5476",
+    "issueType": "fixed-width",
+    "severity": "low",
+    "description": "The devotees search form (.section-search-form) is a fixed 220px wide. It is reset to 100% only at <=480px (line 5644). Between 481px and ~768px it stays 220px, which combined with the pills wrap is acceptable, but the fixed width has no reduction until 480px; at very narrow widths above 480 it could still crowd. Minor since it sits in a flex-wrap row.",
+    "currentCode": "        .section-search-form { position: relative; flex-shrink: 0; width: 220px; }",
+    "suggestedFix": "Allow it to grow/shrink in the wrapped row and cap rather than fix: .section-search-form { position: relative; flex: 1 1 200px; min-width: 0; max-width: 100%; } (keeps desktop ~220 via flex-basis while remaining fluid below).",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 4681-5200 (devotees, admins, contacts tables)"
+  },
+  {
+    "section": ".adm-table-wrap (Table wrapper)",
+    "lineRange": "5461-5468",
+    "issueType": "overflow-x-scroll",
+    "severity": "high",
+    "description": "The shared table wrapper forces sideways scrolling on every wide table instead of collapsing to a stacked list, directly violating the no-horizontal-scroll and table-collapse requirements down to 250px.",
+    "currentCode": ".adm-table-wrap {\n          background: #fff;\n          border-radius: 14px;\n          border: 1px solid #e5e7eb;\n          overflow-x: auto;\n          -webkit-overflow-scrolling: touch;\n          box-shadow: 0 2px 16px rgba(0,0,0,0.06);\n        }",
+    "suggestedFix": "Remove the horizontal scroll and rely on the column-collapse classes. Keep desktop intact, only change narrow widths:\n.adm-table-wrap {\n          background: #fff;\n          border-radius: 14px;\n          border: 1px solid #e5e7eb;\n          overflow-x: auto;\n          -webkit-overflow-scrolling: touch;\n          box-shadow: 0 2px 16px rgba(0,0,0,0.06);\n        }\n@media (max-width: 768px) {\n  .adm-table-wrap { overflow-x: hidden; }\n  .adm-table-wrap table { width: 100%; table-layout: fixed; }\n}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 5201-5683 (reports, settings, CSS style block)"
+  },
+  {
+    "section": "th inline style constant (table header cells)",
+    "lineRange": "5652-5661",
+    "issueType": "nowrap-longtext",
+    "severity": "med",
+    "description": "All table header cells use whiteSpace:nowrap; combined with .adm-table-wrap overflow-x:auto this keeps headers from wrapping and forces the table wider than a 250px viewport instead of collapsing.",
+    "currentCode": "const th: React.CSSProperties = {\n  padding: \"11px 14px\",\n  fontSize: 10.5,\n  fontWeight: 800,\n  letterSpacing: \"0.14em\",\n  textTransform: \"uppercase\",\n  color: \"#6b7280\",\n  textAlign: \"left\",\n  whiteSpace: \"nowrap\",\n};",
+    "suggestedFix": "Allow header labels to wrap at narrow widths. Add a media query (or remove nowrap on mobile):\n@media (max-width: 768px) {\n  .resp-table th { white-space: normal !important; }\n}\nKeep the desktop nowrap as-is; only relax it under the mobile breakpoint so headers wrap instead of widening the table.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 5201-5683 (reports, settings, CSS style block)"
+  },
+  {
+    "section": ".adm-header-title (top bar title)",
+    "lineRange": "5259-5265",
+    "issueType": "nowrap-longtext",
+    "severity": "low",
+    "description": "Header title is whiteSpace:nowrap; a long page/section title cannot wrap and can push the header wider than 250px (font is reduced at breakpoints but text still cannot wrap).",
+    "currentCode": ".adm-header-title {\n          font-size: 18px;\n          font-weight: 800;\n          color: #111827;\n          line-height: 1.2;\n          white-space: nowrap;\n        }",
+    "suggestedFix": "Permit wrapping (or at least overflow-safe) on small screens:\n@media (max-width: 480px) {\n  .adm-header-title { white-space: normal; line-height: 1.15; }\n}",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 5201-5683 (reports, settings, CSS style block)"
+  }
+]

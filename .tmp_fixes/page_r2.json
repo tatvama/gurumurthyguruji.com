@@ -1,0 +1,101 @@
+[
+  {
+    "section": "DetailPanel header — name display",
+    "lineRange": "1433",
+    "issueType": "ellipsis-truncation",
+    "severity": "high",
+    "description": "The devotee/contact name (real user content) is truncated with ellipsis + nowrap and capped at maxWidth 200, directly violating the no-ellipsis-on-content rule; long names get cut off instead of wrapping.",
+    "currentCode": "<p style={{ fontSize: 15, fontWeight: 800, color: \"#111827\", overflow: \"hidden\", textOverflow: \"ellipsis\", whiteSpace: \"nowrap\", maxWidth: 200 }}>{name}</p>",
+    "suggestedFix": "<p style={{ fontSize: 15, fontWeight: 800, color: \"#111827\", wordBreak: \"break-word\", overflowWrap: \"anywhere\" }}>{name}</p>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1041-1560 (CheckIn, PDF, panels)"
+  },
+  {
+    "section": "DetailPanel — slide-in panel container width",
+    "lineRange": "1420-1421",
+    "issueType": "fixed-width",
+    "severity": "low",
+    "description": "Panel is fixed at width 430 capped by maxWidth:\"100vw\"; 100vw can exceed the visible area by the scrollbar width on some browsers, allowing a hairline horizontal scroll. Use 100% / 100dvw to be safe at narrow widths.",
+    "currentCode": "style={{ position: \"fixed\", top: 0, right: 0, bottom: 0, zIndex: 201, width: 430, maxWidth: \"100vw\", background: \"#f8fafc\", boxShadow: \"-12px 0 48px rgba(0,0,0,0.16)\", display: \"flex\", flexDirection: \"column\", fontFamily: \"'Inter','Segoe UI',sans-serif\" }}>",
+    "suggestedFix": "Change maxWidth: \"100vw\" to maxWidth: \"100%\" (or \"100dvw\") so the panel never exceeds the viewport content box: width: 430, maxWidth: \"100%\"",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1041-1560 (CheckIn, PDF, panels)"
+  },
+  {
+    "section": "DetailPanel — Info card detail rows (label column)",
+    "lineRange": "1469-1473",
+    "issueType": "minwidth-too-large",
+    "severity": "med",
+    "description": "Each detail row is a flex row (no flex-wrap) with a fixed 110px label column (width:110, minWidth:110) plus icon + gaps. At a ~250px panel (minus 32px padding) the rigid 110px label leaves almost no room for the value, crowding the wrapping value column. The minWidth:110 prevents the label from shrinking on small screens.",
+    "currentCode": "<div key={label} style={{ display: \"flex\", alignItems: \"flex-start\", padding: \"10px 16px\", borderBottom: \"1px solid #f9fafb\", gap: 10 }}>\n                    <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0 }}>{icon}</span>\n                    <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: \"#9ca3af\", paddingTop: 1 }}>{label}</span>\n                    <span style={{ flex: 1, fontSize: 13, color: \"#1f2937\", lineHeight: 1.55, wordBreak: \"break-word\" }}>{val || \"—\"}</span>",
+    "suggestedFix": "Allow the row to stack at narrow widths and let the label shrink. Add flexWrap:\"wrap\" to the row and replace the fixed label width with a responsive basis, e.g. label span: style={{ flexBasis: 110, minWidth: 80, flexGrow: 0, fontSize: 11.5, fontWeight: 600, color: \"#9ca3af\", paddingTop: 1 }} — or add a media query @media(max-width:360px){ .detail-row{flex-direction:column;gap:2px} .detail-row .lbl{width:auto;min-width:0} }",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1041-1560 (CheckIn, PDF, panels)"
+  },
+  {
+    "section": "DetailPanel — Submitted row (label column)",
+    "lineRange": "1475-1478",
+    "issueType": "minwidth-too-large",
+    "severity": "med",
+    "description": "Same rigid 110px label column (width:110, minWidth:110) inside a non-wrapping flex row holding icon + label + value; at narrow panel widths the value (date + time) is crowded and cannot reclaim space because the label cannot shrink.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", padding: \"10px 16px\", gap: 10 }}>\n                  <span style={{ fontSize: 14, flexShrink: 0 }}>🗓️</span>\n                  <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: \"#9ca3af\" }}>Submitted</span>\n                  <span style={{ flex: 1, fontSize: 13, color: \"#1f2937\" }}>{fmt(item.createdAt)} <span style={{ color: \"#9ca3af\" }}>{fmtTime(item.createdAt)}</span></span>",
+    "suggestedFix": "Add flexWrap:\"wrap\" to the row and make the label flexible: replace width:110, minWidth:110 with flexBasis:110, minWidth:80, flexGrow:0 on the label span so it can shrink at narrow widths.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1041-1560 (CheckIn, PDF, panels)"
+  },
+  {
+    "section": "LoginScreen — OM watermark glyph",
+    "lineRange": "1236-1237",
+    "issueType": "other",
+    "severity": "low",
+    "description": "A 500px font-size glyph is rendered absolutely; it is wrapped in an overflow:hidden full-bleed layer so it does not itself cause horizontal scroll, but on a 250px viewport the giant fixed glyph is visually oversized. The fixed 500px font-size does not scale down on small screens.",
+    "currentCode": "<span style={{ fontFamily: \"serif\", fontSize: 500, lineHeight: 1, color: \"#1f2937\" }}>ॐ</span>",
+    "suggestedFix": "Use a viewport-relative size that shrinks on small screens, e.g. fontSize: \"min(500px, 90vw)\" so the watermark scales down below 250px while keeping the desktop size.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1041-1560 (CheckIn, PDF, panels)"
+  },
+  {
+    "section": "Comment reply footer (isBooking comments tab)",
+    "lineRange": "1585-1596",
+    "issueType": "flex-no-wrap",
+    "severity": "high",
+    "description": "Flex row holds a wide checkbox label ('Internal remark (won't notify user)') and a 'Send reply' button with space-between and no flex-wrap; at ~250px the two children cannot fit side by side and will overflow horizontally.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", marginTop: 8 }}>\n              <label style={{ display: \"flex\", alignItems: \"center\", gap: 7, cursor: \"pointer\", userSelect: \"none\" as const }}>",
+    "suggestedFix": "Add flexWrap and a gap so the children stack at narrow widths: <div style={{ display: \"flex\", alignItems: \"center\", justifyContent: \"space-between\", flexWrap: \"wrap\", gap: 8, marginTop: 8 }}>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1561-2080 (panels, lists)"
+  },
+  {
+    "section": "Comment reply footer — checkbox label",
+    "lineRange": "1586-1590",
+    "issueType": "flex-no-wrap",
+    "severity": "med",
+    "description": "The label is a non-wrapping flex (checkbox + text on one line) holding real content text 'Internal remark (won't notify user)'; with no min-width:0 / flex-shrink it pushes the row wider than 250px and forces overflow next to the Send button.",
+    "currentCode": "<label style={{ display: \"flex\", alignItems: \"center\", gap: 7, cursor: \"pointer\", userSelect: \"none\" as const }}>\n                <input type=\"checkbox\" checked={isInternal} onChange={e => setIsInternal(e.target.checked)}\n                  style={{ width: 14, height: 14, accentColor: \"#0d9488\", cursor: \"pointer\" }} />\n                <span style={{ fontSize: 11.5, color: \"#6b7280\" }}>Internal remark (won't notify user)</span>",
+    "suggestedFix": "Allow the label to shrink/wrap: add minWidth: 0 and flex: \"1 1 auto\" to the label style, and let the span wrap (it has no nowrap, which is good). e.g. <label style={{ display: \"flex\", alignItems: \"center\", gap: 7, minWidth: 0, flex: \"1 1 auto\", cursor: \"pointer\", userSelect: \"none\" as const }}>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1561-2080 (panels, lists)"
+  },
+  {
+    "section": "AdminPanel header strip (avatar + name block)",
+    "lineRange": "1683-1690",
+    "issueType": "nowrap-longtext",
+    "severity": "med",
+    "description": "The name/sub-text block beside the avatar has no minWidth:0; a long admin name or 'Editing · <10-digit mobile>' sub-line cannot wrap within the flex row and can push the row past the panel width at ~250px (panel maxWidth is 100vw).",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", gap: 14 }}>\n            <div style={{ width: 52, height: 52, borderRadius: \"50%\", background: name ? avatarColor(name) : \"#e5e7eb\", display: \"flex\", alignItems: \"center\", justifyContent: \"center\", fontSize: 22, fontWeight: 800, color: \"#fff\", flexShrink: 0, boxShadow: \"0 2px 10px rgba(0,0,0,0.08)\" }}>\n              {name ? name[0].toUpperCase() : <UserPlus size={22} color=\"#9ca3af\" />}\n            </div>\n            <div>\n              <p style={{ fontSize: 17, fontWeight: 800, color: \"#111827\", lineHeight: 1.3 }}>{name || \"New Admin\"}</p>",
+    "suggestedFix": "Add minWidth:0 (and wordBreak) to the text wrapper so the name/sub-text wrap instead of forcing overflow: <div style={{ minWidth: 0 }}> and add wordBreak: \"break-word\" to the two <p> styles.",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1561-2080 (panels, lists)"
+  },
+  {
+    "section": "FollowUps item card — type label + date badge row",
+    "lineRange": "1999-2004",
+    "issueType": "flex-no-wrap",
+    "severity": "med",
+    "description": "Type label and the date/time badge sit in a non-wrapping flex (display:flex, no flexWrap). The badge holds a full formatted datetime (e.g. '18 Jun 2026, 10:30 AM'); combined with the type label it can exceed the narrow card width at ~250px and force horizontal overflow.",
+    "currentCode": "<div style={{ display: \"flex\", alignItems: \"center\", gap: 8, marginBottom: 4 }}>\n                    <span style={{ fontSize: 13, fontWeight: 700, color: \"#1f2937\" }}>{typeLabel(item.type)}</span>\n                    <span style={{ fontSize: 11, color: \"#0d9488\", fontWeight: 600, background: \"#f0fdfa\", borderRadius: 20, padding: \"2px 9px\", border: \"1px solid #a7f3d0\" }}>\n                      {fmtDT(item.dateTime)}",
+    "suggestedFix": "Allow the row to wrap so the badge drops below the label at narrow widths: <div style={{ display: \"flex\", alignItems: \"center\", flexWrap: \"wrap\", gap: 8, marginBottom: 4 }}>",
+    "file": "D:\\vinay\\gurumurthyguruji\\public-ui\\src\\app\\[locale]\\admin\\page.tsx",
+    "chunk": "page 1561-2080 (panels, lists)"
+  }
+]

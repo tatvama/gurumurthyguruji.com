@@ -33,6 +33,12 @@ const SIZES: { key: string; label: string; w: number }[] = [
   { key: "m", label: "Medium", w: 3.5 },
   { key: "l", label: "Bold",   w: 6 },
 ];
+const ERASER_SIZES: { key: string; label: string; w: number }[] = [
+  { key: "xs", label: "S",  w: 4 },
+  { key: "s",  label: "M",  w: 8 },
+  { key: "m",  label: "L",  w: 14 },
+  { key: "xl", label: "XL", w: 24 },
+];
 
 const BLANK = ""; // empty string ⇒ a fresh white page
 
@@ -56,12 +62,15 @@ export default function WritingPadPro({
   const lastMidRef = useRef<{ x: number; y: number } | null>(null);
   const hasPenRef = useRef(false);                   // palm rejection flag
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const overlayRef = useRef<HTMLCanvasElement | null>(null);   // highlighter stroke buffer
+  const strokePtsRef = useRef<{ x: number; y: number }[]>([]); // live stroke points
 
   const [pageCount, setPageCount] = useState(1);
   const [cur, setCur]   = useState(0);
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
   const [sizeW, setSizeW] = useState(SIZES[1].w);
+  const [eraserSizeW, setEraserSizeW] = useState(ERASER_SIZES[1].w);
   const [save, setSave] = useState<"idle" | "saving" | "saved">("idle");
   const [loaded, setLoaded] = useState(false);
 
@@ -153,7 +162,7 @@ export default function WritingPadPro({
   }
 
   function strokeWidth(e: React.PointerEvent<HTMLCanvasElement>) {
-    const base = tool === "highlighter" ? sizeW * 4 : tool === "eraser" ? sizeW * 6 : sizeW;
+    const base = tool === "highlighter" ? sizeW * 4 : tool === "eraser" ? eraserSizeW : sizeW;
     // Real pens report 0–1 pressure; mouse/most touch report 0 or 0.5.
     if (e.pointerType === "pen" && e.pressure > 0) return base * (0.35 + 1.7 * e.pressure);
     return base;
@@ -180,23 +189,29 @@ export default function WritingPadPro({
 
   function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (e.pointerType === "pen") hasPenRef.current = true;
-    // Palm rejection: ignore finger touches once a pen has been used here
     if (e.pointerType === "touch" && hasPenRef.current) return;
     e.preventDefault();
-    const c = ctx(); const cv = canvasRef.current; if (!c || !cv) return;
+    const cv = canvasRef.current; if (!cv) return;
     cv.setPointerCapture(e.pointerId);
-    // push undo snapshot (cap 20)
     undoRef.current.push(cv.toDataURL("image/png"));
     if (undoRef.current.length > 20) undoRef.current.shift();
     drawingRef.current = true;
     const p = pos(e);
     lastRef.current = p;
     lastMidRef.current = p;
+
+    if (tool === "highlighter") {
+      strokePtsRef.current = [p];
+      const oc = overlayRef.current?.getContext("2d");
+      if (oc) oc.clearRect(0, 0, CW, CH);
+      return;
+    }
+
+    const c = ctx(); if (!c) return;
     applyStyle(c, strokeWidth(e));
-    // dot for a tap
     c.beginPath();
     c.arc(p.x, p.y, Math.max(c.lineWidth / 2, 0.5), 0, Math.PI * 2);
-    c.fillStyle = tool === "eraser" ? "rgba(0,0,0,1)" : (tool === "highlighter" ? "#fde047" : color);
+    c.fillStyle = tool === "eraser" ? "rgba(0,0,0,1)" : color;
     if (tool === "eraser") c.globalCompositeOperation = "destination-out";
     c.fill();
   }
@@ -205,13 +220,39 @@ export default function WritingPadPro({
     if (!drawingRef.current) return;
     if (e.pointerType === "touch" && hasPenRef.current) return;
     e.preventDefault();
-    const c = ctx(); if (!c) return;
     const p = pos(e);
     const last = lastRef.current || p;
-    const prevMid = lastMidRef.current || last;
-    // midpoint-to-midpoint quadratic: produces gapless smooth curves
     const mx = (last.x + p.x) / 2;
     const my = (last.y + p.y) / 2;
+
+    if (tool === "highlighter") {
+      strokePtsRef.current.push(p);
+      const oc = overlayRef.current?.getContext("2d");
+      if (oc) {
+        oc.clearRect(0, 0, CW, CH);
+        oc.lineCap = "round";
+        oc.lineJoin = "round";
+        oc.strokeStyle = "#fde047";
+        oc.lineWidth = sizeW * 4;
+        oc.globalAlpha = 1;
+        const pts = strokePtsRef.current;
+        oc.beginPath();
+        oc.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          const pmx = (pts[i - 1].x + pts[i].x) / 2;
+          const pmy = (pts[i - 1].y + pts[i].y) / 2;
+          oc.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, pmx, pmy);
+        }
+        oc.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        oc.stroke();
+      }
+      lastRef.current = p;
+      lastMidRef.current = { x: mx, y: my };
+      return;
+    }
+
+    const c = ctx(); if (!c) return;
+    const prevMid = lastMidRef.current || last;
     applyStyle(c, strokeWidth(e));
     c.beginPath();
     c.moveTo(prevMid.x, prevMid.y);
@@ -226,6 +267,22 @@ export default function WritingPadPro({
     drawingRef.current = false;
     lastRef.current = null;
     lastMidRef.current = null;
+
+    if (tool === "highlighter") {
+      const c = ctx();
+      const ov = overlayRef.current;
+      const oc = ov?.getContext("2d");
+      if (c && ov && oc) {
+        c.save();
+        c.globalAlpha = 0.30;
+        c.globalCompositeOperation = "source-over";
+        c.drawImage(ov, 0, 0);
+        c.restore();
+        oc.clearRect(0, 0, CW, CH);
+      }
+      strokePtsRef.current = [];
+    }
+
     const c = ctx(); if (c) c.globalAlpha = 1;
     scheduleSave();
   }
@@ -285,6 +342,23 @@ export default function WritingPadPro({
     a.click();
   }
 
+  /* ── custom cursors ──────────────────────────────────────────── */
+  function getCursor(): string {
+    if (tool === "eraser") {
+      const sizeMap: Record<number, { d: number; hot: number }> = {
+        4:  { d: 14, hot: 7 },
+        8:  { d: 20, hot: 10 },
+        14: { d: 28, hot: 14 },
+        24: { d: 40, hot: 20 },
+      };
+      const { d, hot } = sizeMap[eraserSizeW] ?? { d: 20, hot: 10 };
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${d}' height='${d}'><circle cx='${hot}' cy='${hot}' r='${hot - 1}' fill='none' stroke='black' stroke-width='1.5'/><circle cx='${hot}' cy='${hot}' r='1' fill='black'/></svg>`;
+      return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${hot} ${hot}, crosshair`;
+    }
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><line x1='12' y1='1' x2='12' y2='23' stroke='black' stroke-width='1.5'/><line x1='1' y1='12' x2='23' y2='12' stroke='black' stroke-width='1.5'/><circle cx='12' cy='12' r='2.5' fill='white' stroke='black' stroke-width='1.2'/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 12 12, crosshair`;
+  }
+
   /* ── styles ───────────────────────────────────────────────────── */
   const toolBtn = (active: boolean): React.CSSProperties => ({
     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
@@ -321,16 +395,33 @@ export default function WritingPadPro({
 
         <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
 
-        {/* sizes */}
-        <div style={{ display: "flex", gap: 5 }}>
-          {SIZES.map(s => (
-            <button key={s.key} onClick={() => setSizeW(s.w)} title={s.label}
-              style={{ padding: "0 10px", height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
-                border: sizeW === s.w ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb",
-                background: sizeW === s.w ? "rgba(13,148,136,0.08)" : "#fff",
-                color: sizeW === s.w ? "#0d9488" : "#6b7280" }}>{s.label}</button>
-          ))}
-        </div>
+        {/* sizes — pen/highlighter */}
+        {tool !== "eraser" && (
+          <div style={{ display: "flex", gap: 5 }}>
+            {SIZES.map(s => (
+              <button key={s.key} onClick={() => setSizeW(s.w)} title={s.label}
+                style={{ padding: "0 10px", height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
+                  border: sizeW === s.w ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb",
+                  background: sizeW === s.w ? "rgba(13,148,136,0.08)" : "#fff",
+                  color: sizeW === s.w ? "#0d9488" : "#6b7280" }}>{s.label}</button>
+            ))}
+          </div>
+        )}
+
+        {/* eraser sizes */}
+        {tool === "eraser" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginRight: 2 }}>Size:</span>
+            {ERASER_SIZES.map(s => (
+              <button key={s.key} onClick={() => setEraserSizeW(s.w)} title={`Eraser ${s.label}`}
+                style={{ width: 32, height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
+                  border: eraserSizeW === s.w ? "1.5px solid #ef4444" : "1.5px solid #e5e7eb",
+                  background: eraserSizeW === s.w ? "rgba(239,68,68,0.08)" : "#fff",
+                  color: eraserSizeW === s.w ? "#ef4444" : "#6b7280",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>{s.label}</button>
+            ))}
+          </div>
+        )}
 
         <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
 
@@ -371,23 +462,36 @@ export default function WritingPadPro({
 
       {/* The A4 page */}
       <div style={{ display: "flex", justifyContent: "center", background: "#eef2f7", borderRadius: 12, padding: 16, overflow: "auto" }}>
-        <canvas
-          ref={canvasRef}
-          width={CW}
-          height={CH}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-          onPointerLeave={onPointerUp}
-          style={{
-            width: "100%", maxWidth: 760, height: "auto",
-            background: "#fff", borderRadius: 6,
-            boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-            touchAction: "none", cursor: "crosshair",
-            border: "1px solid #d1d5db",
-          }}
-        />
+        <div style={{ position: "relative", width: "100%", maxWidth: 760 }}>
+          <canvas
+            ref={canvasRef}
+            width={CW}
+            height={CH}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onPointerLeave={onPointerUp}
+            style={{
+              display: "block", width: "100%", height: "auto",
+              background: "#fff", borderRadius: 6,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+              touchAction: "none", cursor: getCursor(),
+              border: "1px solid #d1d5db",
+            }}
+          />
+          {/* Overlay canvas — shows live highlighter stroke at 0.30 opacity without bead artifacts */}
+          <canvas
+            ref={overlayRef}
+            width={CW}
+            height={CH}
+            style={{
+              position: "absolute", top: 0, left: 0,
+              display: "block", width: "100%", height: "auto",
+              opacity: 0.30, pointerEvents: "none", borderRadius: 6,
+            }}
+          />
+        </div>
       </div>
       <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "center" }}>
         Write with a stylus for pressure-sensitive strokes. Once a pen is used, palm touches are ignored automatically. Pages autosave.

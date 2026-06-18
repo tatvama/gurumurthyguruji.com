@@ -65,7 +65,7 @@ export function ScripturalRoots() {
                 <p
                   lang="sa"
                   className="font-heading text-[1.45rem] leading-[1.6] text-deep-brown"
-                  style={{ fontFamily: "var(--font-cormorant), 'Noto Serif Devanagari', serif" }}
+                  style={{ fontFamily: "var(--font-cormorant), 'Noto Serif Devanagari', serif", overflowWrap: "break-word", wordBreak: "break-word" }}
                 >
                   {v.devanagari}
                 </p>

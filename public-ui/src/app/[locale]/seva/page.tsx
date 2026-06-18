@@ -66,7 +66,7 @@ export default function SevaPage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="relative z-10 mx-auto mt-10 grid max-w-3xl grid-cols-3 gap-px overflow-hidden rounded-2xl border border-antique-gold/20 px-4 md:px-8"
+            className="relative z-10 mx-4 mt-10 grid max-w-3xl grid-cols-3 gap-px overflow-hidden rounded-2xl border border-antique-gold/20 sm:mx-auto"
             style={{ background: "rgba(255,255,255,0.04)" }}
           >
             {sevaStats.map((stat, idx) => (

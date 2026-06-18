@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -136,15 +136,15 @@ function CustomSelect({
         onClick={() => setOpen((v) => !v)}
         style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 8, height: 40, minWidth: 145, padding: "0 12px 0 14px",
+          gap: 8, height: 40, minWidth: 0, maxWidth: "100%", boxSizing: "border-box", padding: "0 12px 0 14px",
           border: "1.5px solid #0d9488", borderRadius: 10,
           background: "linear-gradient(135deg,#f9fafb,#f0fdfa)",
           cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151",
           boxShadow: "0 1px 4px rgba(13,148,136,0.08)",
-          outline: "none", whiteSpace: "nowrap",
+          outline: "none",
         }}
       >
-        <span style={{ flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span style={{ flex: 1, textAlign: "left", minWidth: 0, whiteSpace: "normal", wordBreak: "break-word" }}>
           {selected.label}
         </span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -169,13 +169,13 @@ function CustomSelect({
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
               style={{
-                display: "block", width: "100%", textAlign: "left",
+                display: "block", width: "100%", textAlign: "left", boxSizing: "border-box",
                 padding: "10px 16px", border: "none", cursor: "pointer", fontSize: 13,
                 fontWeight: opt.value === value ? 700 : 500,
                 color: opt.value === value ? "#374151" : "#374151",
                 background: opt.value === value ? "#f0fdfa" : "#fff",
                 transition: "background 0.12s",
-                whiteSpace: "nowrap",
+                whiteSpace: "normal", wordBreak: "break-word",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f0fdfa"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = opt.value === value ? "#f0fdfa" : "#fff"; }}
@@ -301,7 +301,7 @@ function DevoteeProfilePanel({
       val ? (
         <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: "1px solid #e5e7eb" }}>
           <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0 }}>{label}</span>
-          <span style={{ fontSize: 12.5, color: "#1f2937", fontWeight: 500, textAlign: "right" }}>{val}</span>
+          <span style={{ fontSize: 12.5, color: "#1f2937", fontWeight: 500, textAlign: "right", minWidth: 0, overflowWrap: "anywhere" }}>{val}</span>
         </div>
       ) : null
     )
@@ -318,12 +318,12 @@ function DevoteeProfilePanel({
             style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
           <motion.div key="dev-panel" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 460, maxWidth: "100vw",
+            style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 460, maxWidth: "100%",
               background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column",
               fontFamily: "'Inter','Segoe UI',sans-serif" }}>
             {/* Header */}
-            <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "20px 22px", color: "#1f2937", flexShrink: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)", color: "#1f2937", flexShrink: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
                 <div style={{ display: "flex", gap: 13, alignItems: "center", minWidth: 0 }}>
                   {d.photo ? (
                     <img src={d.photo} alt={d.name} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(0,0,0,0.12)" }} />
@@ -335,14 +335,14 @@ function DevoteeProfilePanel({
                   <div style={{ minWidth: 0 }}>
                     {editMode ? (
                       <input value={localD?.name ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, name: e.target.value }))}
-                        style={{ fontSize: 18, fontWeight: 800, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 7, padding: "3px 8px", color: "#1f2937", outline: "none", width: "100%" }} />
+                        style={{ fontSize: 18, fontWeight: 800, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 7, padding: "3px 8px", color: "#1f2937", outline: "none", width: "100%", boxSizing: "border-box" }} />
                     ) : (
                       <h2 style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{d.name}</h2>
                     )}
                     <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace", marginTop: 2 }}>{d.devoteeRef || "—"}</p>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {editMode ? (
                     <>
                       <button onClick={saveEdit} disabled={saving}
@@ -372,27 +372,27 @@ function DevoteeProfilePanel({
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)" }}>
               {/* Quick contact — Call / WhatsApp / Email */}
-              <div style={{ display: "flex", gap: 7, marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 7, marginBottom: 12, flexWrap: "wrap" }}>
                 <a href={`tel:${d.phone || ""}`}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.phone ? 1 : 0.4, pointerEvents: d.phone ? "auto" : "none" }}>
+                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.phone ? 1 : 0.4, pointerEvents: d.phone ? "auto" : "none" }}>
                   <Phone size={16} />
                   <span style={{ fontSize: 11, fontWeight: 700 }}>Call</span>
-                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace" }}>{d.phone || "—"}</span>
+                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace", overflowWrap: "anywhere" }}>{d.phone || "—"}</span>
                 </a>
                 <a href={`https://wa.me/91${(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10)}`}
                   target="_blank" rel="noreferrer"
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: (d.whatsapp || d.phone) ? 1 : 0.4, pointerEvents: (d.whatsapp || d.phone) ? "auto" : "none" }}>
+                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: (d.whatsapp || d.phone) ? 1 : 0.4, pointerEvents: (d.whatsapp || d.phone) ? "auto" : "none" }}>
                   <MessageCircle size={16} />
                   <span style={{ fontSize: 11, fontWeight: 700 }}>WhatsApp</span>
-                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace" }}>{(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10) || "—"}</span>
+                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace", overflowWrap: "anywhere" }}>{(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10) || "—"}</span>
                 </a>
                 <a href={`mailto:${d.email || ""}`}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.email ? 1 : 0.4, pointerEvents: d.email ? "auto" : "none" }}>
+                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.email ? 1 : 0.4, pointerEvents: d.email ? "auto" : "none" }}>
                   <Mail size={16} />
                   <span style={{ fontSize: 11, fontWeight: 700 }}>Email</span>
-                  <span style={{ fontSize: 9, color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%", padding: "0 4px", textAlign: "center" }}>{d.email || "—"}</span>
+                  <span style={{ fontSize: 9, color: "#6b7280", overflowWrap: "anywhere", wordBreak: "break-word", whiteSpace: "normal", maxWidth: "100%", padding: "0 4px", textAlign: "center" }}>{d.email || "—"}</span>
                 </a>
               </div>
 
@@ -650,17 +650,17 @@ function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreate
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
         style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 420, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "18px 22px", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 420, maxWidth: "100%", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "clamp(12px,4vw,18px) clamp(12px,4vw,22px)", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div><p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(17,24,39,0.5)" }}>Devotee 360</p><h2 style={{ fontSize: 17, fontWeight: 800 }}>Add Devotee</h2></div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937" }}><X size={16} /></button>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)" }}>
           {dupes.length > 0 && (
             <div style={{ background: "#FEF3C7", border: "1.5px solid #F59E0B", borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
               <p style={{ fontSize: 12.5, fontWeight: 700, color: "#92400e", marginBottom: 6 }}>⚠️ Possible duplicate found</p>
               {dupes.map(dp => <p key={dp.id} style={{ fontSize: 12, color: "#78350f" }}>This person may already exist as <strong>{dp.devoteeRef}</strong> — {dp.name}{dp.phone ? ` (${dp.phone})` : ""}</p>)}
-              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 <button onClick={() => submit(true)} disabled={saving} style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#92400e", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Create anyway</button>
                 <button onClick={() => setDupes([])} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid #d6a960", background: "transparent", color: "#92400e", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               </div>
@@ -686,7 +686,7 @@ function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreate
 
           {field("Full Name", "name")}
           {/* Gender + DOB */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
             <FancySelect label="Gender" value={f.gender} onChange={v => set("gender", v)}
               options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }, { value: "Other", label: "Other" }]} />
             <div style={{ marginBottom: 13 }}>
@@ -727,7 +727,7 @@ function AddDevoteePanel({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
           {err && <p style={{ fontSize: 12.5, color: "#dc2626", marginBottom: 10 }}>{err}</p>}
         </div>
-        <div style={{ padding: "14px 22px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
+        <div style={{ padding: "clamp(10px,3vw,14px) clamp(12px,4vw,22px)", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={() => submit(false)} disabled={saving || dupes.length > 0} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving || dupes.length > 0 ? 0.6 : 1 }}>{saving ? "Saving…" : "Create Devotee"}</button>
         </div>
@@ -793,25 +793,47 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
         style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 440, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "18px 22px", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 440, maxWidth: "100%", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        <style>{`
+          .apf-body    { padding: 20px 22px; }
+          .apf-footer  { padding: 14px 22px; }
+          .apf-header  { padding: 18px 22px; }
+          .apf-grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .apf-grid-dt { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+          @media (max-width: 420px) {
+            .apf-grid-2  { grid-template-columns: 1fr !important; }
+            .apf-grid-dt { grid-template-columns: 1fr 80px !important; }
+            .apf-body    { padding: 14px 14px !important; }
+            .apf-footer  { padding: 10px 14px !important; }
+            .apf-header  { padding: 14px 14px !important; }
+          }
+          @media (max-width: 360px) {
+            .apf-grid-dt { grid-template-columns: 1fr 70px !important; }
+            .apf-body    { padding: 12px 12px !important; }
+            .apf-footer  { padding: 8px 12px !important; }
+          }
+          @media (max-width: 300px) {
+            .apf-grid-dt { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+        <div className="apf-header" style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div><p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(17,24,39,0.5)" }}>Appointment{appt?.appointmentRef ? ` · ${appt.appointmentRef}` : ""}</p><h2 style={{ fontSize: 17, fontWeight: 800 }}>{appt ? "Edit Appointment" : "New Appointment"}</h2></div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937" }}><X size={16} /></button>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937", flexShrink: 0 }}><X size={16} /></button>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+        <div className="apf-body" style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Devotee Name *</label><input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} /></div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Mobile</label><input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="apf-grid-2">
             <FancySelect label="Type" value={f.appointmentType} onChange={v => set("appointmentType", v)}
               options={APPOINTMENT_TYPES.map(t => ({ value: t, label: t }))} />
             <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)}
               options={[...APPOINTMENT_MODES]} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+          <div className="apf-grid-dt">
             <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><input type="datetime-local" value={f.startTime} onChange={e => set("startTime", e.target.value)} style={inp} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Minutes</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="apf-grid-2" style={{ alignItems: "start" }}>
             <FancySelect label="Status" value={f.status} onChange={v => set("status", v)}
               options={APPOINTMENT_STATUSES.map(s => ({ value: s, label: s }))} />
             <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
@@ -823,7 +845,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
           {appt && <div style={{ marginBottom: 13 }}><label style={lbl}>Outcome Note (after meeting)</label><textarea value={f.outcomeNote} onChange={e => set("outcomeNote", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>}
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
         </div>
-        <div style={{ padding: "14px 22px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
+        <div className="apf-footer" style={{ borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
           {appt && <button onClick={remove} disabled={saving} style={{ padding: "11px 14px", borderRadius: 10, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Trash2 size={14} /></button>}
           <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={save} disabled={saving} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>{saving ? "Saving…" : appt ? "Save Changes" : "Create Appointment"}</button>
@@ -948,8 +970,8 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={() => { stopCam(); onClose(); }}
         style={{ position: "fixed", inset: 0, zIndex: 220, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 221, width: 440, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-        <div style={{ background: "linear-gradient(135deg,#0d9488,#0f766e)", padding: "18px 22px", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 221, width: 440, maxWidth: "100%", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        <div style={{ background: "linear-gradient(135deg,#0d9488,#0f766e)", padding: "clamp(12px,4vw,18px) clamp(12px,4vw,22px)", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)" }}>Darshan Check-In{appt.appointmentRef ? ` · ${appt.appointmentRef}` : ""}</p>
             <h2 style={{ fontSize: 17, fontWeight: 800 }}>Verify &amp; Mark Arrived</h2>
@@ -957,7 +979,7 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
           <button onClick={() => { stopCam(); onClose(); }} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}><X size={16} /></button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)" }}>
           {loading && <p style={{ fontSize: 12.5, color: "#6b7280", marginBottom: 12 }}>Loading devotee record…</p>}
 
           {/* Photo capture */}
@@ -993,16 +1015,16 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
 
           {/* Verify contact details */}
           <div style={{ marginBottom: 13 }}><label style={lbl}>Name *</label><input value={d.name} onChange={e => set("name", e.target.value)} style={inp} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Phone</label><input value={d.phone} onChange={e => set("phone", e.target.value)} style={inp} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>WhatsApp</label><input value={d.whatsapp} onChange={e => set("whatsapp", e.target.value)} style={inp} /></div>
           </div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Email</label><input value={d.email} onChange={e => set("email", e.target.value)} style={inp} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>City</label><input ref={cityRef} value={d.city} autoComplete="off" placeholder="Start typing city…" onChange={e => set("city", e.target.value)} style={inp} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>District</label><input value={d.district} onChange={e => set("district", e.target.value)} style={inp} /></div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>State</label><input value={d.state} onChange={e => set("state", e.target.value)} style={inp} /></div>
             <div style={{ marginBottom: 13 }}><label style={lbl}>Pincode</label><input value={d.pincode} inputMode="numeric" onChange={e => set("pincode", e.target.value)} style={inp} /></div>
           </div>
@@ -1010,7 +1032,7 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
         </div>
 
-        <div style={{ padding: "14px 22px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
+        <div style={{ padding: "clamp(10px,3vw,14px) clamp(12px,4vw,22px)", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
           <button onClick={() => { stopCam(); onClose(); }} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={confirm} disabled={saving} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}><CheckCircle2 size={15} /> {saving ? "Saving…" : "Confirm Arrival"}</button>
         </div>
@@ -1215,7 +1237,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
     <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", padding: 16, background: COSMIC, position: "relative" }}>
       {/* OM watermark */}
       <div style={{ pointerEvents: "none", position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", userSelect: "none", opacity: 0.04 }}>
-        <span style={{ fontFamily: "serif", fontSize: 500, lineHeight: 1, color: "#1f2937" }}>ॐ</span>
+        <span style={{ fontFamily: "serif", fontSize: "min(500px, 90vw)", lineHeight: 1, color: "#1f2937" }}>ॐ</span>
       </div>
 
       <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 400, overflow: "hidden", borderRadius: 22, border: "1px solid rgba(13,148,136,0.2)", background: "#fff", boxShadow: "0 24px 64px rgba(0,0,0,0.38)" }}>
@@ -1399,7 +1421,7 @@ function DetailPanel({
         onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }} />
 
       <motion.div key="panel" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 430, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-12px 0 48px rgba(0,0,0,0.16)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 430, maxWidth: "100%", background: "#f8fafc", boxShadow: "-12px 0 48px rgba(0,0,0,0.16)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
 
         {/* ── Header ── */}
         <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "16px 18px 0", flexShrink: 0 }}>
@@ -1411,7 +1433,7 @@ function DetailPanel({
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <p style={{ fontSize: 15, fontWeight: 800, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{name}</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: "#111827", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{name}</p>
                   <span style={{ fontSize: 10, fontWeight: 700, background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", borderRadius: 20, padding: "2px 8px", flexShrink: 0 }}>Received</span>
                 </div>
                 <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>{sub}</p>
@@ -1447,16 +1469,16 @@ function DetailPanel({
                   <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "#6b7280" }}>{isBooking ? "Intake Details" : "Message Details"}</span>
                 </div>
                 {detailRows.map(({ icon, label, val }) => (
-                  <div key={label} style={{ display: "flex", alignItems: "flex-start", padding: "10px 16px", borderBottom: "1px solid #f9fafb", gap: 10 }}>
+                  <div key={label} style={{ display: "flex", alignItems: "flex-start", flexWrap: "wrap", padding: "10px 16px", borderBottom: "1px solid #f9fafb", gap: 10 }}>
                     <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0 }}>{icon}</span>
-                    <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: "#9ca3af", paddingTop: 1 }}>{label}</span>
-                    <span style={{ flex: 1, fontSize: 13, color: "#1f2937", lineHeight: 1.55, wordBreak: "break-word" }}>{val || "—"}</span>
+                    <span style={{ flexBasis: 110, minWidth: 80, flexGrow: 0, fontSize: 11.5, fontWeight: 600, color: "#9ca3af", paddingTop: 1 }}>{label}</span>
+                    <span style={{ flex: "1 1 140px", minWidth: 0, fontSize: 13, color: "#1f2937", lineHeight: 1.55, wordBreak: "break-word", overflowWrap: "anywhere" }}>{val || "—"}</span>
                   </div>
                 ))}
-                <div style={{ display: "flex", alignItems: "center", padding: "10px 16px", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", padding: "10px 16px", gap: 10 }}>
                   <span style={{ fontSize: 14, flexShrink: 0 }}>🗓️</span>
-                  <span style={{ width: 110, minWidth: 110, fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>Submitted</span>
-                  <span style={{ flex: 1, fontSize: 13, color: "#1f2937" }}>{fmt(item.createdAt)} <span style={{ color: "#9ca3af" }}>{fmtTime(item.createdAt)}</span></span>
+                  <span style={{ flexBasis: 110, minWidth: 80, flexGrow: 0, fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>Submitted</span>
+                  <span style={{ flex: "1 1 140px", minWidth: 0, fontSize: 13, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{fmt(item.createdAt)} <span style={{ color: "#9ca3af" }}>{fmtTime(item.createdAt)}</span></span>
                 </div>
               </div>
 
@@ -1563,11 +1585,11 @@ function DetailPanel({
               onFocus={e => (e.target.style.borderColor = "#0d9488")}
               onBlur={e => (e.target.style.borderColor = "#e5e7eb")}
             />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", userSelect: "none" as const }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, flex: "1 1 auto", cursor: "pointer", userSelect: "none" as const }}>
                 <input type="checkbox" checked={isInternal} onChange={e => setIsInternal(e.target.checked)}
                   style={{ width: 14, height: 14, accentColor: "#0d9488", cursor: "pointer" }} />
-                <span style={{ fontSize: 11.5, color: "#6b7280" }}>Internal remark (won't notify user)</span>
+                <span style={{ fontSize: 11.5, color: "#6b7280", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>Internal remark (won't notify user)</span>
               </label>
               <button onClick={submitComment} disabled={sendingComment || !commentText.trim()}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 9, border: "none", background: commentText.trim() ? "linear-gradient(135deg,#0d9488,#14b8a6)" : "#e5e7eb", color: commentText.trim() ? "#fff" : "#9ca3af", fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? "pointer" : "default", boxShadow: commentText.trim() ? "0 2px 8px rgba(13,148,136,0.3)" : "none", transition: "all 0.15s" }}>
@@ -1665,9 +1687,9 @@ function AdminPanel({
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: name ? avatarColor(name) : "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}>
               {name ? name[0].toUpperCase() : <UserPlus size={22} color="#9ca3af" />}
             </div>
-            <div>
-              <p style={{ fontSize: 17, fontWeight: 800, color: "#111827", lineHeight: 1.3 }}>{name || "New Admin"}</p>
-              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{isEdit ? `Editing · ${admin?.mobile}` : "Fill in the details below"}</p>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 17, fontWeight: 800, color: "#111827", lineHeight: 1.3, wordBreak: "break-word", overflowWrap: "anywhere" }}>{name || "New Admin"}</p>
+              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{isEdit ? `Editing · ${admin?.mobile}` : "Fill in the details below"}</p>
             </div>
           </div>
         </div>
@@ -1977,9 +1999,9 @@ function FollowUps({ caseId }: { caseId: string }) {
             <div key={item.id} style={{ background: "#fffbf4", border: "1px solid #e5e7eb", borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1f2937" }}>{typeLabel(item.type)}</span>
-                    <span style={{ fontSize: 11, color: "#0d9488", fontWeight: 600, background: "#f0fdfa", borderRadius: 20, padding: "2px 9px", border: "1px solid #a7f3d0" }}>
+                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{typeLabel(item.type)}</span>
+                    <span style={{ fontSize: 11, color: "#0d9488", fontWeight: 600, background: "#f0fdfa", borderRadius: 20, padding: "2px 9px", border: "1px solid #a7f3d0", whiteSpace: "nowrap" }}>
                       {fmtDT(item.dateTime)}
                     </span>
                   </div>
@@ -2271,22 +2293,22 @@ function AiAnalysisTab({ reading, onStatusChange }: { reading: TrikalaReading; o
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderBottom: "1px solid #F2F3F5" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <span style={{ color: "#0d9488", display: "flex" }}><TIco.AI /></span>
-          <p style={{ fontSize: 14.5, fontWeight: 700, color: "#23262d" }}>AI Pre-Analysis</p>
-          <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0d9488", background: "rgba(13,148,136,0.10)", padding: "2px 8px", borderRadius: 20 }}>Draft · Not Final</span>
+      <div className="tdp-ai-hdr">
+        <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap", minWidth: 0 }}>
+          <span style={{ color: "#0d9488", display: "flex", flexShrink: 0 }}><TIco.AI /></span>
+          <p style={{ fontSize: 14.5, fontWeight: 700, color: "#23262d", whiteSpace: "nowrap" }}>AI Pre-Analysis</p>
+          <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0d9488", background: "rgba(13,148,136,0.10)", padding: "2px 8px", borderRadius: 20, whiteSpace: "nowrap" }}>Draft · Not Final</span>
         </div>
-        <button onClick={generate} disabled={busy} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#d4a946,#c39a3e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", boxShadow: "0 2px 8px rgba(13,148,136,0.3)", opacity: busy ? 0.7 : 1 }}>
+        <button className="tdp-ai-hdr-right" onClick={generate} disabled={busy} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 18px", borderRadius: 9, border: "none", background: "linear-gradient(135deg,#d4a946,#c39a3e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", boxShadow: "0 2px 8px rgba(13,148,136,0.3)", opacity: busy ? 0.7 : 1, flexShrink: 0, whiteSpace: "nowrap" }}>
           {busy ? "Analysing…" : <><TIco.Pencil /> {report ? "Regenerate" : "Generate"}</>}
         </button>
       </div>
-      <div style={{ padding: "20px 24px" }}>
+      <div style={{ padding: "clamp(14px,4vw,20px) clamp(12px,4vw,24px)" }}>
         {err && <p style={{ fontSize: 12.5, color: "#dc2626", marginBottom: 12 }}>{err}</p>}
         {loading ? (
           <p style={{ textAlign: "center", color: "#878d98", padding: 30, fontSize: 13 }}>Loading…</p>
         ) : !report ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 240, color: "#878d98", textAlign: "center", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "min(240px, 50vh)", color: "#878d98", textAlign: "center", gap: 14 }}>
             <span style={{ fontSize: 42 }}>🔍</span>
             <p style={{ fontSize: 13.5, lineHeight: 1.7, maxWidth: 360 }}>No AI pre-analysis yet. Generate a structured Guruji Review Sheet — it summarizes the case, detects missing data, and suggests questions. <strong>It never finalizes guidance.</strong></p>
           </div>
@@ -2311,7 +2333,7 @@ function AiAnalysisTab({ reading, onStatusChange }: { reading: TrikalaReading; o
       </div>
 
       {/* PRD §4-A action buttons — advance or flag the case */}
-      <div style={{ borderTop: "1px solid #F2F3F5", padding: "14px 22px", display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div style={{ borderTop: "1px solid #F2F3F5", padding: "clamp(12px,4vw,14px) clamp(12px,4vw,22px)", display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button
           onClick={() => setStatus("Incomplete")}
           disabled={!!actionBusy || reading.status === "Incomplete"}
@@ -2366,22 +2388,22 @@ function GurujiVakyaTab({ reading, onSaved }: { reading: TrikalaReading; onSaved
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "16px 22px", borderBottom: "1px solid #F2F3F5", background: "#f8fafc" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "clamp(12px,4vw,16px) clamp(12px,4vw,22px)", borderBottom: "1px solid #F2F3F5", background: "#f8fafc" }}>
         <span style={{ fontSize: 18 }}>🪔</span>
         <div>
           <p style={{ fontSize: 14.5, fontWeight: 800, color: "#0d9488" }}>Guruji Vakya &mdash; Sacred Guidance</p>
           <p style={{ fontSize: 11.5, color: "#6b7280" }}>The final, authoritative guidance. Saving advances the case to &ldquo;Remedy Assigned&rdquo;.</p>
         </div>
       </div>
-      <div style={{ padding: "20px 24px" }}>
+      <div style={{ padding: "clamp(14px,4vw,20px) clamp(12px,4vw,24px)" }}>
         <div style={{ marginBottom: 16 }}><label style={lbl}>Guruji&apos;s Observation</label><textarea rows={3} value={f.guruji_observation} onChange={e => set("guruji_observation", e.target.value)} style={ta} placeholder="What Guruji understood about the devotee's situation…" /></div>
         <div style={{ marginBottom: 16 }}><label style={lbl}>Spiritual Reason / Karmic Indication</label><textarea rows={2} value={f.karmic_indication} onChange={e => set("karmic_indication", e.target.value)} style={ta} /></div>
         <div style={{ marginBottom: 16 }}><label style={lbl}>Divine Remedy Advised</label><textarea rows={2} value={f.divine_remedy} onChange={e => set("divine_remedy", e.target.value)} style={ta} /></div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 12 }}>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Duration</label><input value={f.remedy_duration} onChange={e => set("remedy_duration", e.target.value)} style={inp} placeholder="3 / 9 / 21 / 48 days" /></div>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Place</label><input ref={remedyPlaceRef} value={f.remedy_place} onChange={e => set("remedy_place", e.target.value)} style={inp} placeholder="Home / temple / kshetra" /></div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 12 }}>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Mantra / Japa</label><input value={f.mantra_japa} onChange={e => set("mantra_japa", e.target.value)} style={inp} /></div>
           <div style={{ marginBottom: 16 }}><label style={lbl}>Seva / Daana</label><input value={f.seva_daana} onChange={e => set("seva_daana", e.target.value)} style={inp} /></div>
         </div>
@@ -2596,11 +2618,11 @@ function SettingsTab({
         </div>
       </div>
 
-      <div style={{ padding: "24px 28px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ padding: "clamp(14px,4vw,24px) clamp(12px,4vw,28px) 32px", display: "flex", flexDirection: "column", gap: 24 }}>
         {/* System Counts */}
         <div>
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>System Overview</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 12 }}>
             {systemCounts.map(s => (
               <div key={s.label} style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "18px 16px", display: "flex", alignItems: "center", gap: 13, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: `${s.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{s.icon}</div>
@@ -2617,17 +2639,17 @@ function SettingsTab({
         <div>
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>RBAC Role Matrix</p>
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
+            <div className="role-matrix-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,180px) minmax(0,1fr)", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
               <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Role</span>
               <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Permissions</span>
             </div>
             {ROLES_TABLE.map((r, i) => (
-              <div key={r.value} style={{ display: "grid", gridTemplateColumns: "180px 1fr", padding: "12px 16px", borderBottom: i < ROLES_TABLE.length - 1 ? "1px solid #e5e7eb" : "none" }}>
-                <div>
-                  <p style={{ fontSize: 12.5, fontWeight: 700, color: "#1f2937" }}>{r.label}</p>
-                  <code style={{ fontSize: 10, color: "#6b7280" }}>{r.value}</code>
+              <div key={r.value} className="role-matrix-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,180px) minmax(0,1fr)", gap: 2, padding: "12px 16px", borderBottom: i < ROLES_TABLE.length - 1 ? "1px solid #e5e7eb" : "none" }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 12.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.label}</p>
+                  <code style={{ fontSize: 10, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.value}</code>
                 </div>
-                <p style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.5 }}>{r.desc}</p>
+                <p style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.5, minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.desc}</p>
               </div>
             ))}
           </div>
@@ -2641,13 +2663,13 @@ function SettingsTab({
 
         {/* Audit Log */}
         <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488" }}>Audit Log · Last {auditLimit} entries</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>Audit Log · Last {auditLimit} entries</p>
             <FancySelect
               value={String(auditLimit)}
               onChange={v => setAuditLimit(Number(v))}
               options={[25, 50, 100, 200].map(n => ({ value: String(n), label: `Show ${n}` }))}
-              containerStyle={{ marginBottom: 0, width: 140 }}
+              containerStyle={{ marginBottom: 0, width: "100%", maxWidth: 140 }}
             />
           </div>
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -2658,8 +2680,8 @@ function SettingsTab({
             ) : auditLogs.length === 0 ? (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#0d9488", fontSize: 13 }}>No audit entries yet.</div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <div className="audit-log-wrap">
+                <table className="audit-log-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                   <thead>
                     <tr style={{ background: "#F8F2EA", borderBottom: "1px solid #EDE8DD" }}>
                       {["Timestamp","Action","Entity Type","Entity ID","By"].map(h => (
@@ -2669,20 +2691,20 @@ function SettingsTab({
                   </thead>
                   <tbody>
                     {auditLogs.map((log, i) => (
-                      <tr key={log.id} style={{ borderBottom: i < auditLogs.length - 1 ? "1px solid #e5e7eb" : "none" }}
+                      <tr key={log.id} className="audit-log-row" style={{ borderBottom: i < auditLogs.length - 1 ? "1px solid #e5e7eb" : "none" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
                         onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                        <td style={{ padding: "9px 14px", color: "#6b7280", whiteSpace: "nowrap", fontFamily: "monospace", fontSize: 11 }}>
+                        <td data-label="Timestamp" style={{ padding: "9px 14px", color: "#6b7280", whiteSpace: "nowrap", fontFamily: "monospace", fontSize: 11 }}>
                           {log.createdAt ? new Date(log.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
                         </td>
-                        <td style={{ padding: "9px 14px" }}>
+                        <td data-label="Action" style={{ padding: "9px 14px" }}>
                           <span style={{ padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: "#fff", background: actionColor(log.action || "") }}>
                             {log.action || "—"}
                           </span>
                         </td>
-                        <td style={{ padding: "9px 14px", color: "#1f2937", fontFamily: "monospace", fontSize: 11 }}>{log.entityType || "—"}</td>
-                        <td style={{ padding: "9px 14px", color: "#6b7280", fontFamily: "monospace", fontSize: 11 }}>{log.entityId || "—"}</td>
-                        <td style={{ padding: "9px 14px", color: "#6b7280", fontSize: 11 }}>{log.userName || "system"}</td>
+                        <td data-label="Entity Type" style={{ padding: "9px 14px", color: "#1f2937", fontFamily: "monospace", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.entityType || "—"}</td>
+                        <td data-label="Entity ID" style={{ padding: "9px 14px", color: "#6b7280", fontFamily: "monospace", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.entityId || "—"}</td>
+                        <td data-label="By" style={{ padding: "9px 14px", color: "#6b7280", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.userName || "system"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -2722,7 +2744,7 @@ function ApptCalendar({ appointments, onSelect }: { appointments: Appointment[];
   return (
     <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
       {/* Month nav */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(12px,4vw,24px)", borderBottom: "1px solid #e5e7eb" }}>
         <button onClick={prev} style={{ background: "none", border: "1.5px solid #e5e7eb", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151" }}>
           <ChevronLeft size={16} />
         </button>
@@ -2769,7 +2791,7 @@ function ApptCalendar({ appointments, onSelect }: { appointments: Appointment[];
 
       {/* Day detail */}
       {picked && (
-        <div style={{ borderTop: "1px solid #e5e7eb", padding: "16px 24px" }}>
+        <div style={{ borderTop: "1px solid #e5e7eb", padding: "16px clamp(12px,4vw,24px)" }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
             {picked} {MONTH_NAMES[month]} · {dayAppts.length} appointment{dayAppts.length !== 1 ? "s" : ""}
           </p>
@@ -2848,7 +2870,7 @@ function AiChatTab({ reading }: { reading: TrikalaReading }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px", borderBottom: "1px solid #F2F3F5", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px clamp(12px,4vw,22px)", borderBottom: "1px solid #F2F3F5", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <span style={{ fontSize: 18 }}>🤖</span>
           <div>
@@ -2864,7 +2886,7 @@ function AiChatTab({ reading }: { reading: TrikalaReading }) {
       </div>
 
       {/* Message list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px clamp(12px,4vw,22px)", display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
         {loading ? (
           <p style={{ textAlign: "center", color: "#0d9488", fontSize: 13, padding: 30 }}>Loading chat…</p>
         ) : messages.length === 0 ? (
@@ -2923,10 +2945,10 @@ function AiChatTab({ reading }: { reading: TrikalaReading }) {
 
       {/* Quick prompts (when messages exist) */}
       {messages.length > 0 && (
-        <div style={{ padding: "8px 22px 0", borderTop: "1px solid #e5e7eb", display: "flex", gap: 6, overflowX: "auto", flexShrink: 0 }}>
+        <div style={{ padding: "8px clamp(12px,4vw,22px) 0", borderTop: "1px solid #e5e7eb", display: "flex", flexWrap: "wrap", gap: 6, flexShrink: 0 }}>
           {["Missing info?", "Suggest questions", "Case summary", "Urgency?"].map(q => (
             <button key={q} onClick={() => { setDraft(q); inputRef.current?.focus(); }}
-              style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#FBF8F2", color: "#374151", fontSize: 11.5, cursor: "pointer", whiteSpace: "nowrap" }}>
+              style={{ padding: "5px 12px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#FBF8F2", color: "#374151", fontSize: 11.5, cursor: "pointer", whiteSpace: "nowrap" }}>
               {q}
             </button>
           ))}
@@ -2934,7 +2956,7 @@ function AiChatTab({ reading }: { reading: TrikalaReading }) {
       )}
 
       {/* Input area */}
-      <div style={{ padding: "12px 22px 16px", borderTop: "1px solid #F2F3F5", flexShrink: 0, display: "flex", gap: 10, alignItems: "flex-end" }}>
+      <div style={{ padding: "12px clamp(12px,4vw,22px) 16px", borderTop: "1px solid #F2F3F5", flexShrink: 0, display: "flex", gap: 10, alignItems: "flex-end" }}>
         <textarea ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)} rows={2}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder="Ask about missing data, case summary, questions to ask, urgency… (Enter to send)"
@@ -3164,7 +3186,7 @@ function CasePdfMenu({ reading }: { reading: TrikalaReading }) {
         <FileDown size={13} /> PDF
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden", minWidth: 200 }}>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden", minWidth: 200, maxWidth: "calc(100vw - 24px)" }}>
           {options.map(o => (
             <button key={o.label} onClick={() => { o.fn(); setOpen(false); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "11px 16px", border: "none", borderBottom: "1px solid #e5e7eb", background: "#fff", color: "#1f2937", fontSize: 12.5, fontWeight: 500, cursor: "pointer", textAlign: "left" }}
@@ -3262,6 +3284,9 @@ function TrikalaDetailPanel({
       }}
     >
       <style>{`
+        .tdp-sched-txt { display: inline; }
+        .tdp-fname     { display: inline; font-size: 12px; color: #6b7280; font-weight: 600; margin-left: 8px; }
+        .tdp-ai-hdr    { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid #F2F3F5; gap: 10px; }
         @media (max-width: 900px) {
           .tdp-top      { padding: 0 12px !important; gap: 8px !important; }
           .tdp-logo-txt { display: none !important; }
@@ -3270,15 +3295,30 @@ function TrikalaDetailPanel({
           .tdp-body     { flex-direction: column !important; overflow-y: auto !important; padding: 14px !important; gap: 14px !important; }
           .tdp-left     { width: 100% !important; overflow-y: visible !important; padding-right: 0 !important; }
           .tdp-right    { overflow: visible !important; }
-          .tdp-tabs     { overflow-x: auto !important; scrollbar-width: none; }
-          .tdp-tabs::-webkit-scrollbar { display: none; }
-          .tdp-tabs button { flex: 0 0 auto !important; padding: 9px 14px !important; }
+          .tdp-tabs     { flex-wrap: wrap !important; }
+          .tdp-tabs button { flex: 1 1 auto !important; padding: 9px 14px !important; font-size: 12px !important; }
           .tdp-content  { overflow-y: visible !important; min-height: 320px; }
           .tdp-fu-grid  { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 560px) {
-          .tdp-top { height: 52px !important; }
-          .tdp-body { padding: 10px !important; }
+        @media (max-width: 640px) {
+          .tdp-sched-txt { display: none !important; }
+          .tdp-fname     { display: none !important; }
+          .tdp-top       { flex-wrap: wrap !important; height: auto !important; padding: 6px 10px !important; gap: 6px !important; }
+          .tdp-tabs      { flex-wrap: wrap !important; }
+          .tdp-tabs button { flex: 1 1 auto !important; padding: 8px 10px !important; font-size: 11px !important; gap: 4px !important; }
+          .tdp-ai-hdr    { flex-wrap: wrap !important; padding: 12px 16px !important; }
+          .tdp-ai-hdr-right { width: 100% !important; }
+          .tdp-body      { padding: 10px !important; gap: 10px !important; }
+        }
+        @media (max-width: 480px) {
+          .tdp-tabs button { padding: 7px 9px !important; font-size: 10.5px !important; }
+          .tdp-ai-hdr { padding: 10px 14px !important; }
+          .tdp-body { padding: 8px !important; gap: 8px !important; }
+        }
+        @media (max-width: 360px) {
+          .tdp-top { gap: 4px !important; padding: 6px !important; }
+          .tdp-tabs button { padding: 6px 7px !important; font-size: 10px !important; gap: 3px !important; }
+          .tdp-body { padding: 6px !important; gap: 6px !important; }
         }
       `}</style>
       {/* ── TOP BAR ─────────────────────────────────────── */}
@@ -3288,27 +3328,27 @@ function TrikalaDetailPanel({
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
       }}>
         <button onClick={onClose}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#6B5744", fontSize: 13, fontWeight: 600, padding: "5px 8px", borderRadius: 7 }}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "#6B5744", fontSize: 13, fontWeight: 600, padding: "5px 8px", borderRadius: 7, whiteSpace: "nowrap", flexShrink: 0 }}
           onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
           onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-          <TIco.Back /> Back to list
+          <TIco.Back /> <span className="tdp-sched-txt">Back to list</span>
         </button>
-        <span style={{ color: "#d1fae5" }}>|</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", letterSpacing: "0.05em" }}>{reading.caseReference}</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: stsCfg.bg, color: stsCfg.color }}>
+        <span style={{ color: "#d1fae5", flexShrink: 0 }}>|</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", letterSpacing: "0.05em", minWidth: 0, wordBreak: "break-word" }}>{reading.caseReference}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: stsCfg.bg, color: stsCfg.color, whiteSpace: "nowrap", flexShrink: 0 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: stsCfg.dot, display: "inline-block", flexShrink: 0 }} />
           {reading.status}
         </span>
         <div style={{ flex: 1 }} />
         {scheduledRef && scheduledRef !== "error"
-          ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: "#15803d", background: "#dcfce7", padding: "5px 11px", borderRadius: 20 }}><CheckCircle2 size={13} /> Appointment {scheduledRef}</span>
+          ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: "#15803d", background: "#dcfce7", padding: "5px 11px", borderRadius: 20, flexShrink: 0 }}><CheckCircle2 size={13} /> <span className="tdp-sched-txt">Appointment {scheduledRef}</span></span>
           : <button onClick={scheduleAppointment} disabled={scheduling}
               title="Create an appointment for this devotee in the Appointment Command Center"
-              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "6px 12px", borderRadius: 8, cursor: scheduling ? "default" : "pointer", whiteSpace: "nowrap" }}>
-              <CalendarPlus size={14} /> {scheduling ? "Scheduling…" : "Schedule Appointment"}
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "6px 12px", borderRadius: 8, cursor: scheduling ? "default" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <CalendarPlus size={14} /> <span className="tdp-sched-txt">{scheduling ? "Scheduling…" : "Schedule Appointment"}</span>
             </button>}
         <CasePdfMenu reading={reading} />
-        <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, marginLeft: 8 }}>{reading.fullName}</span>
+        <span className="tdp-fname">{reading.fullName}</span>
       </div>
 
       {/* ── BODY ────────────────────────────────────────── */}
@@ -3384,7 +3424,7 @@ function TrikalaDetailPanel({
               <span style={{ fontSize: 14 }}>⚡</span>
               <p style={{ fontSize: 11, fontWeight: 700, color: "#3a3f48", letterSpacing: "0.06em", textTransform: "uppercase" }}>Priority</p>
             </div>
-            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
               {(["Normal", "High", "Urgent", "Emergency"] as const).map(p => {
                 const cfg: Record<string, { bg: string; color: string; border: string }> = {
                   Normal:    { bg: "#f9fafb", color: "#6b7280", border: "#e5e7eb" },
@@ -3396,7 +3436,7 @@ function TrikalaDetailPanel({
                 const c = cfg[p];
                 return (
                   <button key={p} onClick={() => setPriority(p)}
-                    style={{ flex: 1, padding: "7px 4px", borderRadius: 8, border: `1.5px solid ${sel ? c.border : "#e5e7eb"}`, background: sel ? c.bg : "#f9fafb", color: sel ? c.color : "#9ca3af", fontSize: 10.5, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                    style={{ flex: "1 1 auto", minWidth: 60, boxSizing: "border-box", padding: "7px 4px", borderRadius: 8, border: `1.5px solid ${sel ? c.border : "#e5e7eb"}`, background: sel ? c.bg : "#f9fafb", color: sel ? c.color : "#9ca3af", fontSize: 10.5, fontWeight: sel ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
                     {p}
                   </button>
                 );
@@ -3490,7 +3530,7 @@ function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEve
 
       {open && (
         <div style={{
-          position: "absolute", top: "calc(100% + 8px)", right: 0, width: 340, maxHeight: 420,
+          position: "absolute", top: "calc(100% + 8px)", right: 0, width: 340, maxWidth: "calc(100vw - 16px)", maxHeight: 420,
           background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
           border: "1.5px solid #e5e7eb", zIndex: 9999, overflow: "hidden", display: "flex", flexDirection: "column",
         }}>
@@ -3520,11 +3560,11 @@ function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEve
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{n.name}</span>
-                    <span style={{ fontSize: 10, color: "#9ca3af" }}>{new Date(n.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111", minWidth: 0, wordBreak: "break-word", flex: 1 }}>{n.name}</span>
+                    <span style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0, marginLeft: 6 }}>{new Date(n.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                   </div>
                   <span style={{ fontSize: 10, color: "#6b7280", background: "#f0fdf4", border: "1px solid #a7f3d0", borderRadius: 4, padding: "1px 5px" }}>{n.template.replace(/_/g, " ")}</span>
-                  <p style={{ fontSize: 11, color: "#374151", marginTop: 4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{n.message.split("\n")[0]}</p>
+                  <p style={{ fontSize: 11, color: "#374151", marginTop: 4, wordBreak: "break-word", overflowWrap: "anywhere" }}>{n.message.split("\n")[0]}</p>
                   {n.waUrl && (
                     <a href={n.waUrl} target="_blank" rel="noopener noreferrer"
                       style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 5, fontSize: 10, color: "#059669", fontWeight: 600, textDecoration: "none", background: "#d1fae5", padding: "3px 8px", borderRadius: 5 }}>
@@ -3824,10 +3864,6 @@ export default function AdminPage() {
   const safePage = Math.min(page, totalPages);
   const slice = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  /* ── column definitions ── */
-  const bookingCols = ["Name", "Mobile", "Profession", "Location", "Ashram", "Date"];
-  const contactCols = ["Name", "Email", "Subject", "Date"];
-
   /* close sidebar when tab changes on mobile; reset filters; sync URL */
   const tabChange = (t: Tab) => {
     setTab(t); setPage(1); setSearch("");
@@ -3858,7 +3894,7 @@ export default function AdminPage() {
               <span style={{ fontFamily: "serif", fontSize: 18, color: "#0d9488" }}>ॐ</span>
             </div>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, whiteSpace: "nowrap" }}>
+              <p style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2 }}>
                 <span style={{ color: "#111827" }}>Gurumurthy </span><span style={{ color: "#0d9488" }}>Guruji</span>
               </p>
               <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 1 }}>Admin Console</p>
@@ -3901,7 +3937,7 @@ export default function AdminPage() {
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
             </button>
           ))}
 
@@ -3913,7 +3949,7 @@ export default function AdminPage() {
                 onPointerDown={() => router.push(`/${locale}/admin/guruji`)}
                 style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginTop: 4, marginBottom: 3, background: gurujiActive ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: gurujiActive ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
                 <span style={{ fontSize: 14 }}>🕉️</span>
-                <span style={{ flex: 1, fontSize: 12, fontWeight: gurujiActive ? 700 : 500, textAlign: "left", whiteSpace: "nowrap", color: gurujiActive ? "#0d9488" : "#6b7280" }}>Guruji Darshan</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: gurujiActive ? 700 : 500, textAlign: "left", color: gurujiActive ? "#0d9488" : "#6b7280" }}>Guruji Darshan</span>
                 <ArrowRight size={13} color={gurujiActive ? "#0d9488" : "#9ca3af"} />
               </button>
             );
@@ -3932,7 +3968,7 @@ export default function AdminPage() {
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
             </button>
           ))}
 
@@ -3949,7 +3985,7 @@ export default function AdminPage() {
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", whiteSpace: "nowrap", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
             </button>
           ))}
         </nav>
@@ -3969,8 +4005,8 @@ export default function AdminPage() {
               {(loggedName || "S")[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loggedName || "Super Admin"}</p>
-              <p style={{ fontSize: 10.5, color: "#9ca3af", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{loggedMobile}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#111827", overflowWrap: "anywhere" }}>{loggedName || "Super Admin"}</p>
+              <p style={{ fontSize: 10.5, color: "#9ca3af", fontFamily: "monospace", overflowWrap: "anywhere" }}>{loggedMobile}</p>
             </div>
           </div>
           <button onClick={logout}
@@ -4043,7 +4079,7 @@ export default function AdminPage() {
               </div>
 
               {/* Stat grid */}
-              <div style={{ padding: "24px 28px 32px" }}>
+              <div style={{ padding: "clamp(16px,4vw,24px) clamp(12px,4vw,28px) 32px" }}>
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 16 }}>Live Overview</p>
                 <div className="today-grid">
                   {cards.map(card => (
@@ -4060,7 +4096,7 @@ export default function AdminPage() {
 
                 {/* Quick links */}
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14, marginTop: 8 }}>Quick Actions</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 10 }}>
                   {[
                     { label: "Open Trikala Cases", desc: "Review consultation requests", tab: "trikala" as const, icon: "⭕" },
                     { label: "Appointments Bookings",  desc: "View appointment requests",   tab: "bookings" as const, icon: "📋" },
@@ -4069,13 +4105,13 @@ export default function AdminPage() {
                     // { label: "Reports & PDFs",     desc: "Generate and export reports", tab: "reports"  as const, icon: "📄" },
                   ].map(q => (
                     <button key={q.label} onClick={() => tabChange(q.tab)}
-                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid #EDE8DD", background: "#fff", cursor: "pointer", textAlign: "left", transition: "all 0.18s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid #EDE8DD", background: "#fff", cursor: "pointer", textAlign: "left", transition: "all 0.18s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", boxSizing: "border-box", minWidth: 0 }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "#0d9488"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(13,148,136,0.1)"; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = "#EDE8DD"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}>
                       <span style={{ fontSize: 22, flexShrink: 0 }}>{q.icon}</span>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", marginBottom: 2 }}>{q.label}</p>
-                        <p style={{ fontSize: 11, color: "#6b7280" }}>{q.desc}</p>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", marginBottom: 2, wordBreak: "break-word" }}>{q.label}</p>
+                        <p style={{ fontSize: 11, color: "#6b7280", wordBreak: "break-word" }}>{q.desc}</p>
                       </div>
                     </button>
                   ))}
@@ -4090,7 +4126,7 @@ export default function AdminPage() {
                         {(b.fullName || "?")[0].toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.fullName}</p>
+                        <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", overflowWrap: "anywhere" }}>{b.fullName}</p>
                         <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Appointment booking · {b.nearestAshram || b.location || "—"}</p>
                       </div>
                       <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -4154,7 +4190,7 @@ export default function AdminPage() {
 
               <div style={{ padding: "20px 28px 32px" }}>
                 {/* mini stat row */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 110px), 1fr))", gap: 12, marginBottom: 20 }}>
                   {[
                     { label: "Today", value: appointments.filter(a => isToday(a.startTime)).length, color: "gold" },
                     { label: "Pending Approval", value: appointments.filter(a => a.status === "Requested").length, color: "orange" },
@@ -4194,31 +4230,39 @@ export default function AdminPage() {
                           <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No appointments yet. Create one or convert from a booking.</div>
                         ) : filtered.map((a, i) => (
                           <div key={a.id} onClick={() => setApptPanel({ open: true, appt: a })}
-                            style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: isToday(a.startTime) ? "#f0fdfc" : "#fff" }}
+                            style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: isToday(a.startTime) ? "#f0fdfc" : "#fff" }}
                             onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
                             onMouseLeave={e => (e.currentTarget.style.background = isToday(a.startTime) ? "#f0fdfc" : "#fff")}>
+                            {/* Date badge */}
                             <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
                               <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{a.startTime ? new Date(a.startTime).getDate() : "—"}</p>
                               <p style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", marginTop: 2 }}>{a.startTime ? new Date(a.startTime).toLocaleDateString("en-IN", { month: "short" }) : "TBD"}</p>
                             </div>
+                            {/* Divider */}
                             <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                            {/* Content — name + details + badges */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>{a.devoteeName || "—"} <span style={{ fontWeight: 500, color: "#6b7280" }}>· {a.appointmentType}</span></p>
-                              <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{a.startTime ? `${fmt(a.startTime)} · ${fmtTime(a.startTime)}` : "Slot to be fixed"}{a.mode ? ` · ${a.mode}` : ""}{a.mobile ? ` · ${a.mobile}` : ""}</p>
+                              <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.devoteeName || "—"} <span style={{ fontWeight: 500, color: "#6b7280" }}>· {a.appointmentType}</span></p>
+                              <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.startTime ? `${fmt(a.startTime)} · ${fmtTime(a.startTime)}` : "Slot to be fixed"}{a.mode ? ` · ${a.mode}` : ""}{a.mobile ? ` · ${a.mobile}` : ""}</p>
+                              {/* Badges row */}
+                              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 6 }}>
+                                {a.priority && a.priority !== "Normal" && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.08)", padding: "2px 8px", borderRadius: 20 }}>{a.priority}</span>}
+                                {!["Arrived", "Completed", "Cancelled", "No-show", "Closed"].includes(a.status) && (
+                                  <button onClick={(e) => { e.stopPropagation(); setCheckInAppt(a); }}
+                                    title="Verify details & mark arrived for darshan"
+                                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "5px 11px", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap" }}>
+                                    <CheckCircle2 size={13} /> Check In
+                                  </button>
+                                )}
+                                <span style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", padding: "4px 10px", borderRadius: 20,
+                                  color: a.status === "Arrived" ? "#15803d" : "#374151",
+                                  background: a.status === "Arrived" ? "#dcfce7" : "#f3f4f6" }}>
+                                  {a.status === "Arrived" ? "🙏 Arrived" : a.status}
+                                </span>
+                              </div>
                             </div>
-                            {a.priority && a.priority !== "Normal" && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.08)", padding: "2px 8px", borderRadius: 20 }}>{a.priority}</span>}
-                            {!["Arrived", "Completed", "Cancelled", "No-show", "Closed"].includes(a.status) && (
-                              <button onClick={(e) => { e.stopPropagation(); setCheckInAppt(a); }}
-                                title="Verify details & mark arrived for darshan"
-                                style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "5px 11px", borderRadius: 20, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
-                                <CheckCircle2 size={13} /> Check In
-                              </button>
-                            )}
-                            <span style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, padding: "4px 10px", borderRadius: 20,
-                              color: a.status === "Arrived" ? "#15803d" : "#374151",
-                              background: a.status === "Arrived" ? "#dcfce7" : "#f3f4f6" }}>
-                              {a.status === "Arrived" ? "🙏 Arrived" : a.status}
-                            </span>
+                            {/* Chevron — always on the right */}
+                            <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
                           </div>
                         ));
                       })()}
@@ -4272,7 +4316,7 @@ export default function AdminPage() {
             <div style={{ padding: "24px 28px 32px" }}>
               {/* ── Service analytics (PRD §16) ── */}
               <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Service Analytics</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 22 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 12, marginBottom: 22 }}>
                 {[
                   { label: "New This Week",     value: analytics?.newThisWeek ?? 0,      color: "blue" },
                   { label: "Pending Review",    value: analytics?.pendingReview ?? 0,    color: "orange" },
@@ -4287,7 +4331,7 @@ export default function AdminPage() {
                 ))}
               </div>
               {analytics && analytics.byCategory.length > 0 && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 12, marginBottom: 28 }}>
                   <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "16px 18px" }}>
                     <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2937", marginBottom: 12 }}>Cases by Problem Category</p>
                     {analytics.byCategory.slice(0, 6).map(c => {
@@ -4326,16 +4370,16 @@ export default function AdminPage() {
               )}
 
               <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Available Now</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginBottom: 28 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 12, marginBottom: 28 }}>
                 {[
                   { icon: "📋", title: "Booking PDF",  desc: `${bookings.length} appointment requests`, action: () => downloadPdfDirect("bookings", bookings), ready: true },
                   { icon: "📬", title: "Contact PDF",  desc: `${contacts.length} contact messages`,   action: () => downloadPdfDirect("contacts", contacts), ready: true },
                 ].map(r => (
                   <div key={r.title} style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                     <span style={{ fontSize: 32, flexShrink: 0 }}>{r.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "#1f2937", marginBottom: 3 }}>{r.title}</p>
-                      <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12 }}>{r.desc}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#1f2937", marginBottom: 3, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.title}</p>
+                      <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 12, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.desc}</p>
                       <button onClick={r.action} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer" }}>
                         <FileDown size={13} /> Download
                       </button>
@@ -4351,21 +4395,21 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
-                    {["Devotee / Case", "Status", "Priority", "PDFs"].map(h => (
-                      <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</span>
+                  <div className="trikala-report-head" style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
+                    {["Devotee / Case", "Status", "Priority", "PDFs"].map((h, hi) => (
+                      <span key={h} className={hi === 1 ? "col-hide-sm" : hi === 2 ? "col-hide-sm" : undefined} style={{ fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</span>
                     ))}
                   </div>
                   {trikalaReadings.slice(0, 30).map((r, i) => (
-                    <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", padding: "12px 16px", borderBottom: i < Math.min(trikalaReadings.length, 30) - 1 ? "1px solid #e5e7eb" : "none", alignItems: "center", gap: 8 }}>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937" }}>{r.fullName}</p>
-                        <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{r.caseReference}</p>
+                    <div key={r.id} className="trikala-report-row" style={{ display: "grid", gridTemplateColumns: "1fr 120px 90px auto", padding: "12px 16px", borderBottom: i < Math.min(trikalaReadings.length, 30) - 1 ? "1px solid #e5e7eb" : "none", alignItems: "center", gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.fullName}</p>
+                        <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.caseReference}</p>
                       </div>
-                      <span style={{ fontSize: 10.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <span className="col-hide-sm" style={{ fontSize: 10.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap" }}>
                         {r.status}
                       </span>
-                      <span style={{ fontSize: 10.5, fontWeight: 600, color: r.priority === "Urgent" ? "#dc2626" : r.priority === "VIP" ? "#7c3aed" : "#374151", background: r.priority === "Urgent" ? "#fef2f2" : r.priority === "VIP" ? "#f5f3ff" : "#f3f4f6", borderRadius: 20, padding: "2px 8px" }}>
+                      <span className="col-hide-sm" style={{ fontSize: 10.5, fontWeight: 600, color: r.priority === "Urgent" ? "#dc2626" : r.priority === "VIP" ? "#7c3aed" : "#374151", background: r.priority === "Urgent" ? "#fef2f2" : r.priority === "VIP" ? "#f5f3ff" : "#f3f4f6", borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap" }}>
                         {r.priority || "Normal"}
                       </span>
                       <CasePdfMenu reading={r} />
@@ -4484,7 +4528,7 @@ export default function AdminPage() {
           const activeLabel = FILTER_PILLS.find(p => p.key === trikalaFilter)?.label ?? "All Cases";
 
           return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", padding: 0, gap: 0, background: "#f9fafb", minHeight: 0 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", padding: 0, gap: 0, background: "#f9fafb", minHeight: 0 }}>
 
               <div className="adm-hero-card">
                 <div className="adm-hero-row">
@@ -4524,10 +4568,10 @@ export default function AdminPage() {
               </div>
 
               {/* Content area below hero — padded */}
-              <div style={{ padding: "24px 28px 32px" }}>
+              <div className="adm-section-pad">
 
               {/* Stat cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 22 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 14, marginBottom: 22 }}>
                 {[
                   { icon: (
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="#FFF1E6"/><path d="M2 8h20" stroke="#F97316" strokeWidth="1.8"/><circle cx="6" cy="14" r="1.5" fill="#F97316"/><circle cx="12" cy="14" r="1.5" fill="#F97316"/><circle cx="18" cy="14" r="1.5" fill="#F97316"/></svg>
@@ -4544,9 +4588,9 @@ export default function AdminPage() {
                 ].map(card => (
                   <div key={card.label} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
                     <div style={{ flexShrink: 0 }}>{card.icon}</div>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{card.value}</p>
-                      <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 4, fontWeight: 500 }}>{card.label}</p>
+                      <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 4, fontWeight: 500, wordBreak: "break-word", overflowWrap: "anywhere" }}>{card.label}</p>
                     </div>
                   </div>
                 ))}
@@ -4565,10 +4609,10 @@ export default function AdminPage() {
                   );
                 })}
                 {/* Search */}
-                <div style={{ marginLeft: "auto", position: "relative" }}>
+                <div className="section-search-form" style={{ flexShrink: 0 }}>
                   <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#0d9488", pointerEvents: "none" }} />
                   <input type="text" placeholder="Search name, case ID, mobile…" value={trikalaSearch} onChange={e => setTrikalaSearch(e.target.value)}
-                    style={{ paddingLeft: 30, paddingRight: 12, height: 34, borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 12.5, color: "#1f2937", outline: "none", width: 230 }} />
+                    className="section-search-input" />
                 </div>
               </div>
 
@@ -4591,74 +4635,100 @@ export default function AdminPage() {
                     <button onClick={fetchTrikala} style={{ padding: "7px 18px", borderRadius: 8, border: "1px solid #dc2626", background: "#fff", color: "#dc2626", cursor: "pointer", fontSize: 12.5, fontWeight: 600 }}>Retry</button>
                   </div>
                 ) : (
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                          {["CASE ID", "DEVOTEE", "MOBILE", "SERVICE", "STATUS", "SUBMITTED", ""].map(h => (
-                            <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.length === 0 ? (
-                          <tr><td colSpan={7} style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</td></tr>
-                        ) : filtered.map((r, i) => {
-                          const sts = STATUS_CFG[r.status] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
-                          const svc = SVC_COLORS[r.serviceType] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
-                          const isEven = i % 2 === 0;
-                          return (
-                            <tr key={r.id}
-                              style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
-                              onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                              onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                              {/* Case ID */}
-                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
-                                <span style={{ background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#92710a", letterSpacing: "0.02em" }}>
-                                  {r.caseReference}
+                  <>
+                    {/* Desktop full table (> 1100px) */}
+                    <div className="bkg-desktop-table adm-table-wrap">
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                            {["CASE ID","DEVOTEE","MOBILE","SERVICE","STATUS","SUBMITTED"].map(h => (
+                              <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                            ))}
+                            <th style={{ padding: "10px 16px", background: "#f9fafb" }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.length === 0 ? (
+                            <tr><td colSpan={7} style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</td></tr>
+                          ) : filtered.map((r, i) => {
+                            const sts = STATUS_CFG[r.status] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                            const svc = SVC_COLORS[r.serviceType] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                            const isEven = i % 2 === 0;
+                            return (
+                              <tr key={r.id} onClick={() => openTrikalaDetail(r)}
+                                style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                                onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
+                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                  <span style={{ display: "inline-block", background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#92710a", letterSpacing: "0.02em" }}>{r.caseReference}</span>
+                                </td>
+                                <td style={{ padding: "13px 16px", minWidth: 0 }}>
+                                  <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.fullName}</p>
+                                  <p style={{ fontSize: 11.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.email}</p>
+                                </td>
+                                <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{r.mobile}</td>
+                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: svc.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: svc.color }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: svc.dot, flexShrink: 0 }} />{SVC_LABELS[r.serviceType] ?? r.serviceType}
+                                  </span>
+                                </td>
+                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: sts.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: sts.color }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: sts.dot, flexShrink: 0 }} />{r.status}
+                                  </span>
+                                </td>
+                                <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280", whiteSpace: "nowrap" }}>
+                                  {r.createdAt ? new Date(r.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                                </td>
+                                <td style={{ padding: "13px 16px", textAlign: "right" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: "#3b2010", fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                    Open
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile card list (≤ 1100px) */}
+                    <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                      {filtered.length === 0 ? (
+                        <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
+                      ) : filtered.map((r, i) => {
+                        const sts = STATUS_CFG[r.status] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                        const svc = SVC_COLORS[r.serviceType] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
+                        return (
+                          <div key={r.id} onClick={() => openTrikalaDetail(r)}
+                            style={{ display: "flex", alignItems: "center", gap: "clamp(8px,2vw,14px)", padding: "clamp(10px,2vw,13px) clamp(12px,3vw,20px)", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                            <div style={{ flexShrink: 0 }}>
+                              <span style={{ display: "inline-block", background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "clamp(2px,0.5vw,4px) clamp(7px,1.5vw,11px)", fontSize: "clamp(9px,1.8vw,11px)", fontWeight: 700, color: "#92710a", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
+                                {r.caseReference}
+                              </span>
+                            </div>
+                            <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: "clamp(12px,2.5vw,13.5px)", fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.fullName}</p>
+                              <p style={{ fontSize: "clamp(10px,2vw,11.5px)", color: "#6b7280", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.email}</p>
+                              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 5, marginTop: 5 }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: sts.bg, borderRadius: 20, padding: "2px 8px", fontSize: "clamp(9px,1.6vw,11px)", fontWeight: 600, color: sts.color }}>
+                                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: sts.dot, flexShrink: 0 }} />{r.status}
                                 </span>
-                              </td>
-                              {/* Devotee */}
-                              <td style={{ padding: "13px 16px" }}>
-                                <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 2 }}>{r.fullName}</p>
-                                <p style={{ fontSize: 11.5, color: "#6b7280" }}>{r.email}</p>
-                              </td>
-                              {/* Mobile */}
-                              <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{r.mobile}</td>
-                              {/* Service */}
-                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: svc.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: svc.color }}>
-                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: svc.dot, flexShrink: 0 }} />
-                                  {SVC_LABELS[r.serviceType] ?? r.serviceType}
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: svc.bg, borderRadius: 20, padding: "2px 8px", fontSize: "clamp(9px,1.6vw,11px)", fontWeight: 600, color: svc.color }}>
+                                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: svc.dot, flexShrink: 0 }} />{SVC_LABELS[r.serviceType] ?? r.serviceType}
                                 </span>
-                              </td>
-                              {/* Status */}
-                              <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: sts.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: sts.color }}>
-                                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: sts.dot, flexShrink: 0 }} />
-                                  {r.status}
-                                </span>
-                              </td>
-                              {/* Submitted date */}
-                              <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280", whiteSpace: "nowrap" }}>
-                                {r.createdAt ? new Date(r.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
-                              </td>
-                              {/* Open button */}
-                              <td style={{ padding: "13px 16px" }}>
-                                <button onClick={() => openTrikalaDetail(r)}
-                                  style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: "#3b2010", fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}
-                                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#0d9488"; e.currentTarget.style.color = "#0d9488"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.color = "#3b2010"; }}>
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                                  Open
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                              </div>
+                            </div>
+                            <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
               </div>{/* /content padding */}
@@ -4679,7 +4749,7 @@ export default function AdminPage() {
             "linear-gradient(135deg,#4a235a,#7D3C98)", "linear-gradient(135deg,#784212,#BA6010)",
           ];
           return (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", background: "#f9fafb", minHeight: 0 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
               {/* Hero */}
               <div className="adm-hero-card">
                 <div className="adm-hero-row">
@@ -4708,22 +4778,24 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div style={{ padding: "20px 28px 32px" }}>
+              <div className="adm-section-pad">
                 {/* relationship pills + search */}
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+                <div className="section-filter-row">
+                  <div className="section-pills-wrap">
                   {REL_PILLS.map(pill => {
                     const active = devoteeRel === pill.key;
                     return (
                       <button key={pill.key} onClick={() => setDevoteeRel(pill.key)}
-                        style={{ padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                        style={{ padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" }}>
                         {pill.label}
                       </button>
                     );
                   })}
-                  <form onSubmit={e => { e.preventDefault(); fetchDevotees(); }} style={{ marginLeft: "auto", position: "relative" }}>
+                  </div>
+                  <form onSubmit={e => { e.preventDefault(); fetchDevotees(); }} className="section-search-form">
                     <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#0d9488", pointerEvents: "none" }} />
                     <input type="text" placeholder="Search name, phone, ref…" value={devoteeSearch} onChange={e => setDevoteeSearch(e.target.value)}
-                      style={{ paddingLeft: 30, paddingRight: 12, height: 34, borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 12.5, color: "#1f2937", outline: "none", width: 230 }} />
+                      className="section-search-input" />
                   </form>
                 </div>
 
@@ -4742,56 +4814,95 @@ export default function AdminPage() {
                       No devotee contacts yet. New Trikala submissions auto-create devotees, or add one manually.
                     </div>
                   ) : (
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                          <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                            {["DEVOTEE", "REF", "PHONE", "PROFESSION", "RELATIONSHIP", "LOCATION", ""].map(h => (
-                              <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {devotees.map((d, i) => {
-                            const avatarBg = AVATAR_GRADIENTS[(d.name || "?").charCodeAt(0) % AVATAR_GRADIENTS.length];
-                            const isEven = i % 2 === 0;
-                            const relColor = relBadge(d.relationship);
-                            return (
-                              <tr key={d.id} onClick={() => openDevotee(d)}
-                                style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                                onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                                onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                                <td style={{ padding: "13px 16px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                    {d.photo ? (
-                                      <img src={d.photo} alt={d.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #e5e7eb" }} />
-                                    ) : (
-                                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                                        {(d.name || "?")[0].toUpperCase()}
+                    <>
+                      {/* Desktop full table (> 1100px) */}
+                      <div className="bkg-desktop-table" style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                              {["DEVOTEE","REF","PHONE","PROFESSION","RELATIONSHIP","LOCATION"].map(h => (
+                                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                              ))}
+                              <th style={{ padding: "10px 16px", background: "#f9fafb" }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {devotees.map((d, i) => {
+                              const avatarBg = AVATAR_GRADIENTS[(d.name || "?").charCodeAt(0) % AVATAR_GRADIENTS.length];
+                              const isEven = i % 2 === 0;
+                              const relColor = relBadge(d.relationship);
+                              return (
+                                <tr key={d.id} onClick={() => openDevotee(d)}
+                                  style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                                  onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
+                                  <td style={{ padding: "13px 16px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                                      {d.photo ? (
+                                        <img src={d.photo} alt={d.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #e5e7eb" }} />
+                                      ) : (
+                                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                                          {(d.name || "?")[0].toUpperCase()}
+                                        </div>
+                                      )}
+                                      <div style={{ minWidth: 0 }}>
+                                        <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{d.name}</p>
+                                        {d.email && <p style={{ fontSize: 11.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{d.email}</p>}
                                       </div>
-                                    )}
-                                    <div>
-                                      <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 2 }}>{d.name}</p>
-                                      {d.email && <p style={{ fontSize: 11.5, color: "#6b7280" }}>{d.email}</p>}
                                     </div>
+                                  </td>
+                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 12, color: "#0d9488", whiteSpace: "nowrap" }}>{d.devoteeRef || "—"}</td>
+                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{d.phone || "—"}</td>
+                                  <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{d.profession || "—"}</td>
+                                  <td style={{ padding: "13px 16px" }}>
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: relColor.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
+                                      {d.relationship || "new"}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{[d.city, d.state].filter(Boolean).join(", ") || "—"}</td>
+                                  <td style={{ padding: "13px 16px", textAlign: "right" }}>
+                                    <Eye size={15} color="#0d9488" />
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile card list (≤ 1100px) */}
+                      <div className="bkg-mobile-list">
+                        {devotees.map((d, i) => {
+                          const avatarBg = AVATAR_GRADIENTS[(d.name || "?").charCodeAt(0) % AVATAR_GRADIENTS.length];
+                          const relColor = relBadge(d.relationship);
+                          return (
+                            <div key={d.id} onClick={() => openDevotee(d)}
+                              style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < devotees.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                              onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                              <div style={{ width: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                {d.photo ? (
+                                  <img src={d.photo} alt={d.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #e5e7eb" }} />
+                                ) : (
+                                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                                    {(d.name || "?")[0].toUpperCase()}
                                   </div>
-                                </td>
-                                <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 12, color: "#0d9488", whiteSpace: "nowrap" }}>{d.devoteeRef || "—"}</td>
-                                <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{d.phone || "—"}</td>
-                                <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{d.profession || "—"}</td>
-                                <td style={{ padding: "13px 16px" }}>
-                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: relColor.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
-                                    {d.relationship || "new"}
-                                  </span>
-                                </td>
-                                <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{[d.city, d.state].filter(Boolean).join(", ") || "—"}</td>
-                                <td style={{ padding: "13px 16px", textAlign: "right" }}><Eye size={15} color="#0d9488" /></td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                )}
+                              </div>
+                              <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{d.name}</p>
+                                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 3 }}>
+                                  {d.phone && <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace" }}>{d.phone}</p>}
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: relColor.bg, borderRadius: 20, padding: "2px 8px", fontSize: 10.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>{d.relationship || "new"}</span>
+                                </div>
+                              </div>
+                              <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -4923,65 +5034,105 @@ export default function AdminPage() {
             <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 18 }}>
               Manage who can log in to the admin console.
             </p>
-            <div className="adm-table-wrap">
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: "#f9fafb", borderBottom: "1.5px solid #e5e7eb" }}>
-                    {["Admin", "Role", "Sections", "Last Login", "Status", ""].map(h => (
-                      <th key={h} style={{ ...th }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.length === 0 ? (
-                    <tr><td colSpan={6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</td></tr>
-                  ) : admins.map((a, i) => {
-                    const color = avatarColor(a.name);
-                    const isSuperAdmin = a.role === "superadmin";
-                    return (
-                      <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
-                        onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "#fff" : "#f9fafb")}>
-                        <td style={{ ...td }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                              {a.name[0].toUpperCase()}
+            <>
+              {/* Desktop full table (> 1100px) */}
+              <div className="bkg-desktop-table adm-table-wrap">
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#f9fafb", borderBottom: "1.5px solid #e5e7eb" }}>
+                      {["ADMIN","ROLE","SECTIONS","LAST LOGIN","STATUS",""].map(h => (
+                        <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.length === 0 ? (
+                      <tr><td colSpan={6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</td></tr>
+                    ) : admins.map((a, i) => {
+                      const color = avatarColor(a.name);
+                      const isSuperAdmin = a.role === "superadmin";
+                      return (
+                        <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
+                          onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "#fff" : "#f9fafb")}>
+                          <td style={{ padding: "13px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                                {a.name[0].toUpperCase()}
+                              </div>
+                              <div style={{ minWidth: 0 }}>
+                                <p style={{ fontSize: 13, fontWeight: 700, color: "#374151", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.name}</p>
+                                <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.mobile}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{a.name}</p>
-                              <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{a.mobile}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ ...td }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", borderRadius: 20, padding: "3px 10px", background: isSuperAdmin ? "#f0fdfa" : "#ede9fe", color: isSuperAdmin ? "#0d9488" : "#7c3aed", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.3)"}` }}>
-                            <ShieldCheck size={11} /> {isSuperAdmin ? "SUPERADMIN" : "ADMIN"}
+                          </td>
+                          <td style={{ padding: "13px 16px" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", borderRadius: 20, padding: "3px 10px", background: isSuperAdmin ? "#f0fdfa" : "#ede9fe", color: isSuperAdmin ? "#0d9488" : "#7c3aed", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.3)"}` }}>
+                              <ShieldCheck size={11} /> {isSuperAdmin ? "SUPERADMIN" : "ADMIN"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "13px 16px", color: "#6b7280", fontSize: 12 }}>
+                            {a.sectionsCount === 0 ? <em>All sections</em> : `${a.sectionsCount} section${a.sectionsCount !== 1 ? "s" : ""}`}
+                          </td>
+                          <td style={{ padding: "13px 16px", color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>
+                            {a.lastLogin ? `${fmt(a.lastLogin)}, ${fmtTime(a.lastLogin)}` : <em style={{ color: "#c4b5a0" }}>Never</em>}
+                          </td>
+                          <td style={{ padding: "13px 16px" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: a.status === "active" ? "#f0fdf4" : "#fef2f2", color: a.status === "active" ? "#16a34a" : "#dc2626", border: `1px solid ${a.status === "active" ? "#bbf7d0" : "#fecaca"}` }}>
+                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: a.status === "active" ? "#16a34a" : "#dc2626" }} />
+                              {a.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: "13px 16px" }}>
+                            <button onClick={() => setAdminPanel({ open: true, user: a })}
+                              style={{ background: "#f9fafb", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#0d9488", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
+                              <Pencil size={12} /> Edit
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list (≤ 1100px) */}
+              <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                {admins.length === 0 ? (
+                  <div style={{ padding: "52px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</div>
+                ) : admins.map((a, i) => {
+                  const color = avatarColor(a.name);
+                  const isSuperAdmin = a.role === "superadmin";
+                  return (
+                    <div key={a.id} onClick={() => setAdminPanel({ open: true, user: a })}
+                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < admins.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                      <div style={{ width: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                          {a.name[0].toUpperCase()}
+                        </div>
+                      </div>
+                      <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.name}</p>
+                        <div className="adm-user-meta" style={{ marginTop: 3 }}>
+                          <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace" }}>{a.mobile}</p>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: isSuperAdmin ? "#f0fdfa" : "#ede9fe", color: isSuperAdmin ? "#0d9488" : "#7c3aed", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.3)"}` }}>
+                            <ShieldCheck size={10} /> {isSuperAdmin ? "SUPERADMIN" : "ADMIN"}
                           </span>
-                        </td>
-                        <td style={{ ...td, color: "#6b7280", fontSize: 12 }}>
-                          {a.sectionsCount === 0 ? <em>All sections</em> : `${a.sectionsCount} section${a.sectionsCount !== 1 ? "s" : ""}`}
-                        </td>
-                        <td style={{ ...td, color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>
-                          {a.lastLogin ? `${fmt(a.lastLogin)}, ${fmtTime(a.lastLogin)}` : <em style={{ color: "#c4b5a0" }}>Never</em>}
-                        </td>
-                        <td style={{ ...td }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: a.status === "active" ? "#f0fdf4" : "#fef2f2", color: a.status === "active" ? "#16a34a" : "#dc2626", border: `1px solid ${a.status === "active" ? "#bbf7d0" : "#fecaca"}` }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: a.status === "active" ? "#16a34a" : "#dc2626" }} />
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: a.status === "active" ? "#f0fdf4" : "#fef2f2", color: a.status === "active" ? "#16a34a" : "#dc2626", border: `1px solid ${a.status === "active" ? "#bbf7d0" : "#fecaca"}` }}>
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: a.status === "active" ? "#16a34a" : "#dc2626" }} />
                             {a.status.toUpperCase()}
                           </span>
-                        </td>
-                        <td style={{ ...td }}>
-                          <button onClick={() => setAdminPanel({ open: true, user: a })}
-                            style={{ background: "#f9fafb", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#0d9488", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
-                            <Pencil size={12} /> Edit
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           </div>
         )}
 
@@ -4999,72 +5150,126 @@ export default function AdminPage() {
                 <button onClick={fetchData} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid #dc2626", background: "#fff", color: "#dc2626", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Retry</button>
               </div>
             ) : (
-              <div className="adm-table-wrap">
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ background: "#f9fafb", borderBottom: "1.5px solid #e5e7eb" }}>
-                      <th style={{ ...th, color: "#0d9488", width: 44 }}>#</th>
-                      {(tab === "bookings" ? bookingCols : contactCols).map((col) => (
-                        <th key={col} style={{ ...th, color: "#0d9488" }}>{col}</th>
-                      ))}
-                      <th style={{ ...th, color: "#0d9488", width: 60 }}>View</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slice.length === 0 ? (
-                      <tr>
-                        <td colSpan={tab === "bookings" ? 8 : 6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>
-                          No records found
-                        </td>
+              <>
+              <div className="bkg-desktop-table adm-table-wrap">
+                {tab === "bookings" ? (
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                        {["#","NAME","MOBILE","PROFESSION","LOCATION","ASHRAM","DATE"].map(h => (
+                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                        ))}
                       </tr>
-                    ) : (
-                      slice.map((row, i) => {
+                    </thead>
+                    <tbody>
+                      {slice.length === 0 ? (
+                        <tr><td colSpan={7} style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</td></tr>
+                      ) : slice.map((row, i) => {
+                        const bk = row as AudienceBooking;
                         const idx = (safePage - 1) * PAGE_SIZE + i + 1;
                         const isEven = i % 2 === 0;
                         return (
-                          <tr key={row.id}
+                          <tr key={row.id} onClick={() => setDetail(row)}
                             style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdfa")}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                            <td style={{ ...td, color: "#0d9488", fontWeight: 700, fontSize: 12 }}>{idx}</td>
-                            {tab === "bookings" ? (
-                              <>
-                                <td style={{ ...td, fontWeight: 600, color: "#374151" }}>{(row as AudienceBooking).fullName}</td>
-                                <td style={{ ...td, color: "#374151", fontFamily: "monospace" }}>{(row as AudienceBooking).mobile}</td>
-                                <td style={{ ...td }}>{(row as AudienceBooking).profession}</td>
-                                <td style={{ ...td }}>{(row as AudienceBooking).location}</td>
-                                <td style={{ ...td }}>
-                                  <span style={{ background: "#f0fdfa", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 20, padding: "2px 9px", fontSize: 11, fontWeight: 600, color: "#0d9488", whiteSpace: "nowrap" }}>
-                                    {(row as AudienceBooking).nearestAshram?.split(",")[0]}
-                                  </span>
-                                </td>
-                                <td style={{ ...td, color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
-                              </>
-                            ) : (
-                              <>
-                                <td style={{ ...td, fontWeight: 600, color: "#374151" }}>{(row as ContactMessage).name}</td>
-                                <td style={{ ...td, color: "#374151" }}>{(row as ContactMessage).email}</td>
-                                <td style={{ ...td }}>
-                                  <span style={{ display: "block", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {(row as ContactMessage).subject}
-                                  </span>
-                                </td>
-                                <td style={{ ...td, color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
-                              </>
-                            )}
-                            <td style={{ ...td }}>
-                              <button onClick={() => setDetail(row)}
-                                style={{ background: "#f9fafb", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#0d9488", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
-                                <Eye size={13} /> View
-                              </button>
-                            </td>
+                            onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
+                            onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
+                            <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "#0d9488" }}>{idx}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#374151", fontFamily: "monospace", whiteSpace: "nowrap" }}>{bk.mobile}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.profession || "—"}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.location || "—"}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", whiteSpace: "nowrap" }}>{bk.nearestAshram?.split(",")[0] || "—"}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
                           </tr>
                         );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                        {["#","NAME","EMAIL","SUBJECT","DATE"].map(h => (
+                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {slice.length === 0 ? (
+                        <tr><td colSpan={5} style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</td></tr>
+                      ) : slice.map((row, i) => {
+                        const cm = row as ContactMessage;
+                        const idx = (safePage - 1) * PAGE_SIZE + i + 1;
+                        const isEven = i % 2 === 0;
+                        return (
+                          <tr key={row.id} onClick={() => setDetail(row)}
+                            style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
+                            onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
+                            <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "#0d9488" }}>{idx}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.name}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.email}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#374151", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.subject}</td>
+                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </div>
+
+              {/* ── Mobile card list (≤ 600px) ── */}
+              <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                {tab === "bookings" ? (
+                  slice.length === 0 ? (
+                    <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
+                  ) : slice.map((row, i) => {
+                    const bk = row as AudienceBooking;
+                    const idx = (safePage - 1) * PAGE_SIZE + i + 1;
+                    return (
+                      <div key={row.id} onClick={() => setDetail(row)}
+                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < slice.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                        <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
+                          <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{idx}</p>
+                        </div>
+                        <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</p>
+                          <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.mobile}{bk.nearestAshram ? ` · ${bk.nearestAshram.split(",")[0]}` : ""}</p>
+                        </div>
+                        <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                      </div>
+                    );
+                  })
+                ) : (
+                  slice.length === 0 ? (
+                    <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
+                  ) : slice.map((row, i) => {
+                    const cm = row as ContactMessage;
+                    const idx = (safePage - 1) * PAGE_SIZE + i + 1;
+                    return (
+                      <div key={row.id} onClick={() => setDetail(row)}
+                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < slice.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                        <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
+                          <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{idx}</p>
+                        </div>
+                        <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.name}</p>
+                          <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.email}</p>
+                        </div>
+                        <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              </>
             )}
           </div>
         )}
@@ -5410,6 +5615,130 @@ export default function AdminPage() {
           -webkit-overflow-scrolling: touch;
           box-shadow: 0 2px 16px rgba(0,0,0,0.06);
         }
+        @media (max-width: 768px) {
+          .adm-table-wrap { overflow-x: hidden; }
+          .adm-table-wrap table { width: 100%; table-layout: fixed; }
+        }
+        /* bookings/contacts: full table above 1100px, card list below */
+        .bkg-desktop-table { display: block; }
+        .bkg-mobile-list   { display: none; }
+        @media (max-width: 1100px) {
+          .bkg-desktop-table { display: none !important; }
+          .bkg-mobile-list   { display: block !important; }
+        }
+
+        /* Admin user card: inline badges row, stack vertically below 370px */
+        .adm-user-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+        @media (max-width: 370px) {
+          .adm-user-meta { flex-direction: column; align-items: flex-start; gap: 4px; }
+        }
+
+        /* ── Section content padding (trikala, devotees) ── */
+        .adm-section-pad { padding: 24px 28px 32px; overflow-x: hidden; }
+
+        /* ── Generic filter row (pills + search) ─────────── */
+        .section-filter-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .section-pills-wrap { display: flex; flex-wrap: wrap; gap: 7px; flex: 1; min-width: 0; }
+        .section-search-form { position: relative; flex: 0 1 220px; min-width: 0; max-width: 100%; }
+        @media (max-width: 640px) {
+          .section-filter-row { flex-direction: column; gap: 10px; }
+          .section-pills-wrap { flex: none; width: 100%; gap: 6px; }
+          .section-search-form { flex: none; width: 100%; max-width: 100%; }
+        }
+        .section-search-input { width: 100%; padding-left: 30px; padding-right: 12px; height: 34px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #fff; font-size: 12.5px; color: #1f2937; outline: none; box-sizing: border-box; }
+        .section-search-input::placeholder { color: #9ca3af; }
+        .section-search-input:focus { border-color: #0d9488; }
+
+        /* Trikala large-screen collapse */
+        .col-show-lg { display: none; }
+        @media (max-width: 1100px) {
+          .col-hide-lg { display: none !important; }
+          .col-show-lg { display: inline-flex !important; align-items: center; }
+        }
+
+        /* Responsive tables: hide extra cols on tablet/mobile, show chevron */
+        .col-show-sm { display: none; }
+        @media (max-width: 768px) {
+          .col-hide-sm { display: none !important; }
+          .col-show-sm { display: inline-flex !important; align-items: center; }
+          /* Trikala Case Reports grid: drop hidden Status/Priority tracks */
+          .trikala-report-head,
+          .trikala-report-row { grid-template-columns: 1fr auto !important; }
+          /* Trikala readings table: let the CASE ID pill wrap instead of forcing width */
+          .trikala-caseid-cell { white-space: normal !important; }
+          .resp-row td { padding: 13px 14px !important; }
+          .booking-row td:first-child {
+            position: relative;
+            border-right: none !important;
+            width: 44px !important;
+            min-width: 44px !important;
+            text-align: center;
+            padding: 12px 0 !important;
+            font-size: 16px !important;
+            font-weight: 800 !important;
+            color: #0d9488 !important;
+          }
+          .booking-row td:first-child::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 28px;
+            background: #e5e7eb;
+          }
+          .bkg-th-row th:first-child {
+            width: 44px !important;
+            min-width: 44px !important;
+            text-align: center;
+            border-right: 1px solid #e5e7eb !important;
+          }
+          .booking-row { height: auto !important; }
+          .booking-row td { padding: 12px 14px !important; }
+          .booking-row td:first-child { padding: 12px 0 !important; }
+          .booking-name-cell { display: flex !important; align-items: center; justify-content: space-between; width: 100%; }
+          .booking-row td:nth-child(2) { font-size: 13.5px !important; font-weight: 600 !important; color: #111827 !important; }
+          .resp-table td:last-child { text-align: right; padding-right: 14px !important; }
+          .resp-table th:last-child { text-align: right; }
+          /* Let header labels wrap instead of forcing the table wider than the viewport */
+          .resp-table th { white-space: normal !important; }
+        }
+
+        /* ── Audit log table: collapse to stacked cards on narrow screens ── */
+        .audit-log-wrap { overflow-x: auto; }
+        @media (max-width: 640px) {
+          .audit-log-wrap { overflow-x: visible; }
+          .audit-log-table { display: block; width: 100%; }
+          .audit-log-table thead { display: none; }
+          .audit-log-table tbody { display: block; width: 100%; }
+          .audit-log-row { display: block; width: 100%; padding: 10px 14px; }
+          .audit-log-row td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 3px 0 !important;
+            text-align: right;
+          }
+          .audit-log-row td::before {
+            content: attr(data-label);
+            flex-shrink: 0;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+          }
+        }
+
+        /* ── RBAC role matrix: stack label above description on narrow screens ── */
+        @media (max-width: 480px) {
+          .role-matrix-grid { grid-template-columns: 1fr !important; gap: 4px !important; }
+        }
 
         /* ── Pagination ─────────────────────────────── */
         .adm-pagination {
@@ -5490,16 +5819,13 @@ export default function AdminPage() {
             align-items: center;
             gap: 0;
           }
-          .adm-hero-sep   { display: none; }
+          .adm-hero-sep        { display: none; }
           .adm-hero-count-num  { font-size: 22px; }
-          .adm-hero-actions    { gap: 7px; }
+          .adm-hero-count-lbl  { white-space: nowrap; }
+          .adm-hero-actions    { gap: 7px; flex-wrap: wrap; }
           .adm-hero-btn-out    { padding: 7px 11px; font-size: 11px; }
           .adm-hero-btn-gold   { padding: 7px 11px; font-size: 11px; }
           .adm-hero-live       { padding: 5px 9px; font-size: 10.5px; }
-
-          /* Hide button labels — show icons only */
-          .adm-btn-label  { display: none; }
-          .adm-live-text  { display: none; }
           .adm-btn-gold   { padding: 7px 10px; }
           .adm-btn-outline{ padding: 7px 10px; }
 
@@ -5508,6 +5834,9 @@ export default function AdminPage() {
 
           /* Content area */
           .adm-content { padding: 12px 14px; }
+
+          /* Tables collapse via col-hide-sm/col-hide-lg — no sideways scroll on mobile */
+          .adm-table-wrap { overflow-x: hidden; }
 
           /* Pagination */
           .adm-pagination {
@@ -5520,10 +5849,19 @@ export default function AdminPage() {
            SMALL MOBILE  (≤ 480px)
         ══════════════════════════════════════════════ */
         @media (max-width: 480px) {
-          .adm-header-title { font-size: 13px; }
+          .adm-header-title { font-size: 13px; white-space: normal; line-height: 1.15; }
           .adm-content { padding: 10px; }
           .adm-searchbar { padding: 8px 10px; }
           .adm-pagination { padding: 8px 10px; }
+          .adm-section-pad { padding: 14px 14px 24px !important; }
+          .section-search-form { width: 100% !important; }
+
+          /* Hero buttons: icon-only on very small screens */
+          .adm-hero-btn-txt  { display: none !important; }
+          .adm-hero-btn-out  { padding: 7px 10px; min-width: 34px; justify-content: center; }
+          .adm-hero-btn-gold { padding: 7px 10px; min-width: 34px; justify-content: center; }
+          .adm-hero-actions  { gap: 5px; }
+          .adm-hero-right    { gap: 8px; }
         }
       `}</style>
     </div>
