@@ -71,9 +71,10 @@ router.post("/from-booking/:bookingId", async (req, res, next) => {
       devotee_name:     b.full_name,
       mobile:           b.mobile,
       appointment_type: "General Audience",
-      mode:             "in-person",
-      status:           "Requested",
+      mode:             req.body.mode || "in-person",
+      status:           req.body.start_time ? "Scheduled" : "Requested",
       priority:         "Normal",
+      start_time:       req.body.start_time || null,
       location:         b.nearest_ashram || "",
       purpose:          b.message || "",
     });

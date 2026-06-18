@@ -823,9 +823,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
         <div className="apf-body" style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Devotee Name *</label><input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} /></div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Mobile</label><input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} /></div>
-          <div className="apf-grid-2">
-            <FancySelect label="Type" value={f.appointmentType} onChange={v => set("appointmentType", v)}
-              options={APPOINTMENT_TYPES.map(t => ({ value: t, label: t }))} />
+          <div style={{ marginBottom: 13 }}>
             <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)}
               options={[...APPOINTMENT_MODES]} />
           </div>
@@ -834,8 +832,12 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
             <div style={{ marginBottom: 13 }}><label style={lbl}>Minutes</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
           </div>
           <div className="apf-grid-2" style={{ alignItems: "start" }}>
-            <FancySelect label="Status" value={f.status} onChange={v => set("status", v)}
-              options={APPOINTMENT_STATUSES.map(s => ({ value: s, label: s }))} />
+            <div style={{ marginBottom: 13 }}>
+              <label style={lbl}>Status</label>
+              <div style={{ ...inp, display: "flex", alignItems: "center", background: "#f9fafb", color: "#374151", pointerEvents: "none", userSelect: "none" as const }}>
+                {f.status || "—"}
+              </div>
+            </div>
             <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
               options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />
           </div>
@@ -1053,8 +1055,8 @@ function downloadPdfDirect(
   const M     = 12;
   const now   = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
   const today = new Date().toLocaleDateString("en-IN", { dateStyle: "long" });
-  const title = type === "contacts" ? "Contact Messages Report" : "Appointment Bookings Report";
-  const sub   = type === "contacts" ? "CONTACT MESSAGES REPORT" : "APPOINTMENT BOOKINGS REPORT";
+  const title = type === "contacts" ? "Contact Messages Report" : "Appointment Requests Report";
+  const sub   = type === "contacts" ? "CONTACT MESSAGES REPORT" : "APPOINTMENT REQUESTS REPORT";
   const dateStr = new Date().toISOString().slice(0, 10);
 
   /* ── Header band (clean grayscale — light header like a printable template) ── */
@@ -1320,16 +1322,23 @@ function DetailPanel({
   item,
   tab,
   onClose,
+  onScheduled,
 }: {
   item: AudienceBooking | ContactMessage;
   tab: Tab;
   onClose: () => void;
+  onScheduled?: (id: string | number) => void;
 }) {
   const isBooking = tab === "bookings";
   const [converting, setConverting] = useState(false);
   const [convertMsg, setConvertMsg] = useState<{ type: "ok" | "warn" | "err"; text: string } | null>(null);
   const [convertingDevotee, setConvertingDevotee] = useState(false);
   const [convertDevoteeMsg, setConvertDevoteeMsg] = useState<{ type: "ok" | "warn" | "err"; text: string } | null>(null);
+
+  /* ── Schedule popup state ── */
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleDateTime, setScheduleDateTime] = useState("");
+  const [scheduleMode, setScheduleMode] = useState("in-person");
 
   /* ── Comments state (bookings only) ── */
   const [comments, setComments] = useState<BookingComment[]>([]);
@@ -1362,11 +1371,13 @@ function DetailPanel({
   }
 
   async function convertToAppt() {
-    if (!isBooking) return;
-    setConverting(true); setConvertMsg(null);
+    if (!isBooking || !scheduleDateTime) return;
+    setConverting(true); setConvertMsg(null); setScheduleOpen(false);
     try {
-      await convertBookingToAppointment((item as AudienceBooking).id);
-      setConvertMsg({ type: "ok", text: "Appointment created! Open Appointments tab to view." });
+      const params: { start_time?: string; mode?: string } = { mode: scheduleMode };
+      if (scheduleDateTime) params.start_time = new Date(scheduleDateTime).toISOString();
+      await convertBookingToAppointment((item as AudienceBooking).id, params);
+      onScheduled?.((item as AudienceBooking).id);
     } catch (e: any) {
       if (e?.status === 409) {
         setConvertMsg({ type: "warn", text: "An appointment already exists for this booking." });
@@ -1496,7 +1507,7 @@ function DetailPanel({
               {/* Schedule Appointment */}
               {isBooking && (
                 <div>
-                  <button onClick={convertToAppt} disabled={converting}
+                  <button onClick={() => { setScheduleOpen(true); setConvertMsg(null); }} disabled={converting}
                     style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: converting ? "#ccfbf1" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: converting ? "#0d9488" : "#fff", fontSize: 13, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: converting ? "none" : "0 4px 14px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>
                     <CalendarPlus size={16} />
                     {converting ? "Creating appointment…" : "Schedule Appointment"}
@@ -1505,6 +1516,70 @@ function DetailPanel({
                     <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12, fontWeight: 500, background: convertMsg.type === "ok" ? "#f0fdf4" : convertMsg.type === "warn" ? "#fefce8" : "#fef2f2", color: convertMsg.type === "ok" ? "#15803d" : convertMsg.type === "warn" ? "#92400e" : "#b91c1c", border: `1px solid ${convertMsg.type === "ok" ? "#bbf7d0" : convertMsg.type === "warn" ? "#fde68a" : "#fecaca"}` }}>
                       {convertMsg.text}
                     </div>
+                  )}
+
+                  {/* Schedule popup */}
+                  {scheduleOpen && (
+                    <>
+                      <div onClick={() => setScheduleOpen(false)}
+                        style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)" }} />
+                      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 211, width: 340, maxWidth: "calc(100vw - 32px)", background: "#fff", borderRadius: 18, boxShadow: "0 20px 60px rgba(0,0,0,0.22)", overflow: "hidden", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+                        {/* Header */}
+                        <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                            <CalendarPlus size={18} color="#fff" />
+                            <div>
+                              <p style={{ fontSize: 13, fontWeight: 800, color: "#fff", margin: 0 }}>Schedule Appointment</p>
+                              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", margin: 0, marginTop: 1 }}>{(item as AudienceBooking).fullName}</p>
+                            </div>
+                          </div>
+                          <button onClick={() => setScheduleOpen(false)}
+                            style={{ background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <X size={14} />
+                          </button>
+                        </div>
+
+                        {/* Body */}
+                        <div style={{ padding: "20px 20px 16px" }}>
+                          <div style={{ marginBottom: 14 }}>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date &amp; Time *</label>
+                            <input
+                              type="datetime-local"
+                              value={scheduleDateTime}
+                              onChange={e => setScheduleDateTime(e.target.value)}
+                              style={{ width: "100%", height: 42, padding: "0 13px", borderRadius: 9, border: "1.5px solid #d1d5db", background: "#f9fafb", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" as const }}
+                            />
+                          </div>
+                          <div style={{ marginBottom: 6 }}>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Mode</label>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              {[{ v: "in-person", label: "In-person" }, { v: "video", label: "Video" }, { v: "phone", label: "Phone" }].map(({ v, label }) => (
+                                <button key={v} onClick={() => setScheduleMode(v)}
+                                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: `1.5px solid ${scheduleMode === v ? "#0d9488" : "#e5e7eb"}`, background: scheduleMode === v ? "#f0fdfa" : "#fff", color: scheduleMode === v ? "#0d9488" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          {!scheduleDateTime && (
+                            <p style={{ fontSize: 11, color: "#dc2626", marginTop: 10, fontWeight: 600 }}>⚠ Date &amp; Time is required to schedule an appointment.</p>
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ padding: "0 20px 20px", display: "flex", gap: 10 }}>
+                          <button onClick={() => setScheduleOpen(false)}
+                            style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                            Cancel
+                          </button>
+                          <button onClick={convertToAppt} disabled={converting || !scheduleDateTime}
+                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDateTime) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDateTime) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: !scheduleDateTime ? 0.55 : 1 }}>
+                            <CalendarPlus size={15} />
+                            {converting ? "Scheduling…" : "Confirm & Schedule"}
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               )}
@@ -1515,9 +1590,9 @@ function DetailPanel({
                   <button onClick={convertToDevoteeProfile} disabled={convertingDevotee}
                     style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: convertingDevotee ? "#ede9fe" : "linear-gradient(135deg,#7c3aed,#8b5cf6)", color: convertingDevotee ? "#7c3aed" : "#fff", fontSize: 13, fontWeight: 700, cursor: convertingDevotee ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: convertingDevotee ? "none" : "0 4px 14px rgba(124,58,237,0.25)", transition: "all 0.2s" }}>
                     <span style={{ fontSize: 15 }}>🙏</span>
-                    {convertingDevotee ? "Creating contact…" : "Schedule Devotee Contact"}
+                    {convertingDevotee ? "Saving contact…" : "Save Devotee Contact"}
                   </button>
-                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>Creates or links a Devotee 360 contact</p>
+                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>Saves or links a Devotee 360 contact</p>
                   {convertDevoteeMsg && (
                     <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 10, fontSize: 12, fontWeight: 500, background: convertDevoteeMsg.type === "ok" ? "#f0fdf4" : "#fef2f2", color: convertDevoteeMsg.type === "ok" ? "#15803d" : "#b91c1c", border: `1px solid ${convertDevoteeMsg.type === "ok" ? "#bbf7d0" : "#fecaca"}` }}>
                       {convertDevoteeMsg.text}
@@ -2718,14 +2793,15 @@ function SettingsTab({
   );
 }
 
-function ApptCalendar({ appointments, onSelect }: { appointments: Appointment[]; onSelect: (a: Appointment) => void }) {
+function ApptCalendar({ appointments, onSelect, onDateSelect }: { appointments: Appointment[]; onSelect: (a: Appointment) => void; onDateSelect?: (year: number, month: number, day: number | null) => void }) {
   const now = new Date();
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [picked, setPicked] = useState<number | null>(null);
 
-  function prev() { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); setPicked(null); }
-  function next() { if (month === 11) { setYear(y => y + 1); setMonth(0);  } else setMonth(m => m + 1); setPicked(null); }
+  function pickDay(d: number | null) { setPicked(d); onDateSelect?.(year, month, d); }
+  function prev() { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); setPicked(null); onDateSelect?.(year, month, null); }
+  function next() { if (month === 11) { setYear(y => y + 1); setMonth(0);  } else setMonth(m => m + 1); setPicked(null); onDateSelect?.(year, month, null); }
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -2770,7 +2846,7 @@ function ApptCalendar({ appointments, onSelect }: { appointments: Appointment[];
           const isToday = d === todayD;
           const isPicked = d === picked;
           return (
-            <button key={d} onClick={() => setPicked(isPicked ? null : d)}
+            <button key={d} onClick={() => pickDay(isPicked ? null : d)}
               style={{
                 padding: "6px 4px", borderRadius: 9, border: isPicked ? "2px solid #0d9488" : isToday ? "2px solid #0d9488" : "2px solid transparent",
                 background: isPicked ? "#0d9488" : isToday ? "#f3f4f6" : "transparent",
@@ -2789,29 +2865,6 @@ function ApptCalendar({ appointments, onSelect }: { appointments: Appointment[];
         })}
       </div>
 
-      {/* Day detail */}
-      {picked && (
-        <div style={{ borderTop: "1px solid #e5e7eb", padding: "16px clamp(12px,4vw,24px)" }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
-            {picked} {MONTH_NAMES[month]} · {dayAppts.length} appointment{dayAppts.length !== 1 ? "s" : ""}
-          </p>
-          {dayAppts.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#0d9488" }}>No appointments. Click "New Appointment" to schedule one.</p>
-          ) : dayAppts.map(a => (
-            <div key={a.id} onClick={() => onSelect(a)}
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", marginBottom: 8, cursor: "pointer", background: "#f9fafb" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-              onMouseLeave={e => (e.currentTarget.style.background = "#f9fafb")}>
-              <div style={{ width: 6, height: 40, borderRadius: 3, background: a.status === "Completed" ? "#16a34a" : a.priority === "Urgent" ? "#dc2626" : "#0d9488", flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>{a.devoteeName || "Devotee"}</p>
-                <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{a.appointmentType} · {a.startTime ? fmtTime(a.startTime) : "Time TBD"}{a.mode ? ` · ${a.mode}` : ""}</p>
-              </div>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{a.status}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -3661,6 +3714,7 @@ export default function AdminPage() {
   const [apptLoading, setApptLoading]     = useState(false);
   const [apptFilter, setApptFilter]       = useState("all");
   const [apptView, setApptView]           = useState<"list" | "calendar">("list");
+  const [calSelDate, setCalSelDate]       = useState<{ year: number; month: number; day: number } | null>(null);
   const [apptPanel, setApptPanel]         = useState<{ open: boolean; appt: Appointment | null }>({ open: false, appt: null });
   const [checkInAppt, setCheckInAppt]     = useState<Appointment | null>(null);
   const [addDevoteeOpen, setAddDevoteeOpen] = useState(false);
@@ -3931,7 +3985,7 @@ export default function AdminPage() {
           {([
             { key: "trikala"     as const, label: "Trikala Cases",    icon: "⭕" },
             { key: "appointments"as const, label: "Appointments",     icon: "📅" },
-            { key: "bookings"    as const, label: "Appointments Bookings", icon: "📋" },
+            { key: "bookings"    as const, label: "Appointment Requests", icon: "📋" },
             { key: "contacts"    as const, label: "Contact Messages",  icon: "📬" },
           ]).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
@@ -4127,7 +4181,7 @@ export default function AdminPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", overflowWrap: "anywhere" }}>{b.fullName}</p>
-                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Appointment booking · {b.nearestAshram || b.location || "—"}</p>
+                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Appointment Requests · {b.nearestAshram || b.location || "—"}</p>
                       </div>
                       <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap", flexShrink: 0 }}>
                         {b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
@@ -4217,34 +4271,31 @@ export default function AdminPage() {
                   })}
                 </div>
 
-                {apptView === "calendar"
-                  ? <ApptCalendar appointments={appointments} onSelect={a => setApptPanel({ open: true, appt: a })} />
-                  : (
-                    /* list */
-                    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                      {apptLoading ? (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#6b7280", gap: 10 }}><RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> Loading…</div>
-                      ) : (() => {
-                        const filtered = apptFilter === "all" ? appointments : appointments.filter(a => a.status.toLowerCase() === apptFilter.toLowerCase());
-                        return filtered.length === 0 ? (
-                          <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No appointments yet. Create one or convert from a booking.</div>
+                {(() => {
+                  const apptListEl = (filterFn?: (a: Appointment) => boolean) => {
+                    const base = apptFilter === "all" ? appointments : appointments.filter(a => a.status.toLowerCase() === apptFilter.toLowerCase());
+                    const filtered = filterFn ? base.filter(filterFn) : base;
+                    return (
+                      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+                        {apptLoading ? (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#6b7280", gap: 10 }}><RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /> Loading…</div>
+                        ) : filtered.length === 0 ? (
+                          <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>
+                            {filterFn ? "No appointments on this date." : "No appointments yet. Create one or convert from a booking."}
+                          </div>
                         ) : filtered.map((a, i) => (
                           <div key={a.id} onClick={() => setApptPanel({ open: true, appt: a })}
                             style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: isToday(a.startTime) ? "#f0fdfc" : "#fff" }}
                             onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
                             onMouseLeave={e => (e.currentTarget.style.background = isToday(a.startTime) ? "#f0fdfc" : "#fff")}>
-                            {/* Date badge */}
                             <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
                               <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{a.startTime ? new Date(a.startTime).getDate() : "—"}</p>
                               <p style={{ fontSize: 10, color: "#6b7280", textTransform: "uppercase", marginTop: 2 }}>{a.startTime ? new Date(a.startTime).toLocaleDateString("en-IN", { month: "short" }) : "TBD"}</p>
                             </div>
-                            {/* Divider */}
                             <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
-                            {/* Content — name + details + badges */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.devoteeName || "—"} <span style={{ fontWeight: 500, color: "#6b7280" }}>· {a.appointmentType}</span></p>
                               <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.startTime ? `${fmt(a.startTime)} · ${fmtTime(a.startTime)}` : "Slot to be fixed"}{a.mode ? ` · ${a.mode}` : ""}{a.mobile ? ` · ${a.mobile}` : ""}</p>
-                              {/* Badges row */}
                               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 6 }}>
                                 {a.priority && a.priority !== "Normal" && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.08)", padding: "2px 8px", borderRadius: 20 }}>{a.priority}</span>}
                                 {!["Arrived", "Completed", "Cancelled", "No-show", "Closed"].includes(a.status) && (
@@ -4254,6 +4305,12 @@ export default function AdminPage() {
                                     <CheckCircle2 size={13} /> Check In
                                   </button>
                                 )}
+                                {a.status === "Scheduled" && (
+                                  <button onClick={(e) => { e.stopPropagation(); setApptPanel({ open: true, appt: a }); }}
+                                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#7c3aed", background: "rgba(124,58,237,0.07)", border: "1.5px solid rgba(124,58,237,0.35)", padding: "5px 11px", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap" }}>
+                                    <RefreshCw size={12} /> Reschedule
+                                  </button>
+                                )}
                                 <span style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", padding: "4px 10px", borderRadius: 20,
                                   color: a.status === "Arrived" ? "#15803d" : "#374151",
                                   background: a.status === "Arrived" ? "#dcfce7" : "#f3f4f6" }}>
@@ -4261,14 +4318,45 @@ export default function AdminPage() {
                                 </span>
                               </div>
                             </div>
-                            {/* Chevron — always on the right */}
                             <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
                           </div>
-                        ));
-                      })()}
-                    </div>
-                  )
-                }
+                        ))}
+                      </div>
+                    );
+                  };
+
+                  if (apptView === "calendar") {
+                    const calFilter = calSelDate
+                      ? (a: Appointment) => {
+                          if (!a.startTime) return false;
+                          const dt = new Date(a.startTime);
+                          return dt.getFullYear() === calSelDate.year && dt.getMonth() === calSelDate.month && dt.getDate() === calSelDate.day;
+                        }
+                      : undefined;
+                    return (
+                      <div className="appt-cal-split">
+                        <div className="appt-cal-left">
+                          <ApptCalendar appointments={appointments} onSelect={a => setApptPanel({ open: true, appt: a })}
+                            onDateSelect={(y, m, d) => setCalSelDate(d ? { year: y, month: m, day: d } : null)} />
+                        </div>
+                        <div className="appt-cal-right">
+                          {calSelDate && (
+                            <p style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+                              {calSelDate.day} {MONTH_NAMES[calSelDate.month]} {calSelDate.year}
+                            </p>
+                          )}
+                          {!calSelDate && (
+                            <p style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+                              Select a date to filter
+                            </p>
+                          )}
+                          {apptListEl(calFilter)}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return apptListEl();
+                })()}
               </div>
 
               {apptPanel.open && (
@@ -4946,10 +5034,10 @@ export default function AdminPage() {
                 <div className="adm-hero-text">
                   <p className="adm-hero-eyebrow">Submissions</p>
                   <h1 className="adm-hero-h1">
-                    {tab === "bookings" ? "Appointment Bookings" : "Contact Messages"}
+                    {tab === "bookings" ? "Appointment Requests" : "Contact Messages"}
                   </h1>
                   <p className="adm-hero-desc">
-                    {tab === "bookings" ? "Manage appointment booking submissions" : "Manage incoming contact messages"}
+                    {tab === "bookings" ? "Manage appointment request submissions" : "Manage incoming contact messages"}
                   </p>
                 </div>
               </div>
@@ -4959,7 +5047,7 @@ export default function AdminPage() {
                 <div className="adm-hero-count">
                   <span className="adm-hero-count-num">{filtered.length}</span>
                   <span className="adm-hero-count-lbl">
-                    {tab === "bookings" ? "Bookings" : "Messages"}
+                    {tab === "bookings" ? "Requests" : "Messages"}
                   </span>
                 </div>
                 <div className="adm-hero-sep" />
@@ -5305,7 +5393,8 @@ export default function AdminPage() {
 
       {/* Detail Panel */}
       <AnimatePresence>
-        {detail && <DetailPanel item={detail} tab={tab} onClose={() => setDetail(null)} />}
+        {detail && <DetailPanel item={detail} tab={tab} onClose={() => setDetail(null)}
+          onScheduled={id => { setBookings(prev => prev.filter(b => String(b.id) !== String(id))); setDetail(null); }} />}
       </AnimatePresence>
 
       {/* Trikala Detail Panel */}
@@ -5631,6 +5720,20 @@ export default function AdminPage() {
         .adm-user-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
         @media (max-width: 370px) {
           .adm-user-meta { flex-direction: column; align-items: flex-start; gap: 4px; }
+        }
+
+        /* ── Calendar split layout ─────────────────────────── */
+        .appt-cal-split {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+        }
+        .appt-cal-left  { flex: 0 0 420px; min-width: 0; }
+        .appt-cal-right { flex: 1; min-width: 0; }
+        @media (max-width: 900px) {
+          .appt-cal-split { flex-direction: column; }
+          .appt-cal-left  { flex: none; width: 100%; }
+          .appt-cal-right { width: 100%; }
         }
 
         /* ── Section content padding (trikala, devotees) ── */

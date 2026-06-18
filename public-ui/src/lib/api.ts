@@ -883,8 +883,11 @@ export async function logWhatsAppSent(payload: { devotee_id?: number; case_refer
 /* ══════════════════════════════════════════════════════════════════
    BOOKING → APPOINTMENT conversion (PRD §8)
 ══════════════════════════════════════════════════════════════════ */
-export async function convertBookingToAppointment(bookingId: string | number): Promise<Appointment> {
-  const data = await sendJson(`/api/appointments/from-booking/${bookingId}`, "POST", {});
+export async function convertBookingToAppointment(
+  bookingId: string | number,
+  params?: { start_time?: string; mode?: string }
+): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/from-booking/${bookingId}`, "POST", params || {});
   return mapAppointment(data.data);
 }
 
