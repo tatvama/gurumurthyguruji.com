@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN = requireRole("admin", "guruji", "superadmin");
 
 const router = Router();
 
 /* GET /api/case-pad/:caseRef */
-router.get("/:caseRef", async (req, res) => {
+router.get("/:caseRef", ALL_ADMIN, async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT image_data FROM case_pad WHERE case_reference = $1",
@@ -17,7 +20,7 @@ router.get("/:caseRef", async (req, res) => {
 });
 
 /* PUT /api/case-pad/:caseRef — upsert pad image */
-router.put("/:caseRef", async (req, res) => {
+router.put("/:caseRef", ALL_ADMIN, async (req, res) => {
   const { imageData } = req.body;
   if (!imageData) return res.status(400).json({ success: false, message: "imageData is required" });
   try {
@@ -34,7 +37,7 @@ router.put("/:caseRef", async (req, res) => {
 });
 
 /* DELETE /api/case-pad/:caseRef — clear pad */
-router.delete("/:caseRef", async (req, res) => {
+router.delete("/:caseRef", ALL_ADMIN, async (req, res) => {
   try {
     await pool.query("DELETE FROM case_pad WHERE case_reference = $1", [req.params.caseRef]);
     res.json({ success: true });

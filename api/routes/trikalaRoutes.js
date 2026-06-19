@@ -32,12 +32,13 @@ const readingRules = [
 router.post("/", formLimiter, validate(readingRules), submitReading);
 
 /* Admin — read */
-router.get("/",    getAllReadings);
-router.get("/:id", getReadingById);
+router.get("/",    requireRole("admin", "guruji", "superadmin"), getAllReadings);
+router.get("/:id", requireRole("admin", "guruji", "superadmin"), getReadingById);
 
 /* Admin — status update */
 router.patch(
   "/:id/status",
+  requireRole("admin", "superadmin"),
   validate([body("status").notEmpty().withMessage("Status is required")]),
   updateReadingStatus
 );
@@ -46,6 +47,6 @@ router.patch(
 router.patch("/:id/vakya", requireRole("guruji", "superadmin"), updateGurujiVakya);
 
 /* Admin — case field updates (category, priority, devotee link, assignment) */
-router.patch("/:id", updateReadingFields);
+router.patch("/:id", requireRole("admin", "superadmin"), updateReadingFields);
 
 export default router;

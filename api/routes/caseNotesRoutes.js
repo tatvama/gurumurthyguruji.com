@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
 
 const router = Router();
 
 /* GET /api/case-notes/:caseRef — all notes for a case */
-router.get("/:caseRef", async (req, res) => {
+router.get("/:caseRef", ALL_ADMIN, async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT * FROM case_notes WHERE case_reference = $1 ORDER BY created_at DESC",
@@ -17,7 +21,7 @@ router.get("/:caseRef", async (req, res) => {
 });
 
 /* POST /api/case-notes/:caseRef — add a note */
-router.post("/:caseRef", async (req, res) => {
+router.post("/:caseRef", ALL_ADMIN, async (req, res) => {
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ success: false, message: "text is required" });
   try {
@@ -32,7 +36,7 @@ router.post("/:caseRef", async (req, res) => {
 });
 
 /* DELETE /api/case-notes/:caseRef/:id — delete a note */
-router.delete("/:caseRef/:id", async (req, res) => {
+router.delete("/:caseRef/:id", ADMIN_SUPER, async (req, res) => {
   try {
     await pool.query(
       "DELETE FROM case_notes WHERE id = $1 AND case_reference = $2",

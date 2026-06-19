@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN = requireRole("admin", "guruji", "superadmin");
 
 const router = Router();
 
 /* ──────────────────────────────────────────────────────────────────────────
    GET /api/dashboard/today — Today command center cards (PRD §13)
 ────────────────────────────────────────────────────────────────────────── */
-router.get("/today", async (_req, res) => {
+router.get("/today", ALL_ADMIN, async (_req, res) => {
   try {
     const q = (sql, params = []) => pool.query(sql, params).then(r => r.rows[0]?.n ?? 0);
 
@@ -41,7 +44,7 @@ router.get("/today", async (_req, res) => {
 /* ──────────────────────────────────────────────────────────────────────────
    GET /api/dashboard/analytics — reports dashboard metrics (PRD §16)
 ────────────────────────────────────────────────────────────────────────── */
-router.get("/analytics", async (_req, res) => {
+router.get("/analytics", ALL_ADMIN, async (_req, res) => {
   try {
     const one = (sql) => pool.query(sql).then(r => r.rows[0]?.n ?? 0);
     const [newThisWeek, pendingReview, followupsOverdue, closedThisMonth, totalDevotees] = await Promise.all([

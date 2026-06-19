@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
 
 const router = Router();
 
 /* GET /api/settings — return all app settings as a flat object */
-router.get("/", async (_req, res, next) => {
+router.get("/", requireRole("admin", "guruji", "superadmin"), async (_req, res, next) => {
   try {
     const { rows } = await pool.query(`SELECT key, value FROM app_settings`);
     const data = {};
@@ -15,8 +16,8 @@ router.get("/", async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* PATCH /api/settings — upsert one or more settings keys */
-router.patch("/", async (req, res, next) => {
+/* PATCH /api/settings — upsert one or more settings keys (superadmin only) */
+router.patch("/", requireRole("superadmin"), async (req, res, next) => {
   try {
     const entries = Object.entries(req.body);
     if (!entries.length) return res.status(400).json({ success: false, message: "No settings provided." });

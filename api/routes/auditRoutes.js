@@ -16,7 +16,7 @@ router.get("/", requireRole("superadmin"), async (req, res) => {
 });
 
 /* POST /api/audit-logs — record an action */
-router.post("/", async (req, res) => {
+router.post("/", requireRole("admin", "guruji", "superadmin"), async (req, res) => {
   const { user_id, user_name, action, entity_type, entity_id, old_value, new_value } = req.body;
   try {
     const { rows } = await pool.query(

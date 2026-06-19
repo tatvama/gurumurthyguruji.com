@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
 
 const router = Router();
 
 /* GET /api/documents — list documents, optional ?related_type=&related_id= */
-router.get("/", async (req, res, next) => {
+router.get("/", ALL_ADMIN, async (req, res, next) => {
   try {
     const { related_type, related_id } = req.query;
     let query = `SELECT * FROM documents WHERE 1=1`;
@@ -18,7 +22,7 @@ router.get("/", async (req, res, next) => {
 });
 
 /* GET /api/documents/:id */
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", ALL_ADMIN, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`SELECT * FROM documents WHERE id = $1`, [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, message: "Document not found." });
@@ -27,7 +31,7 @@ router.get("/:id", async (req, res, next) => {
 });
 
 /* POST /api/documents — create document record */
-router.post("/", async (req, res, next) => {
+router.post("/", ADMIN_SUPER, async (req, res, next) => {
   try {
     const { related_type, related_id, document_type, title, file_url, watermark, status, created_by } = req.body;
     if (!document_type) return res.status(400).json({ success: false, message: "document_type is required." });
@@ -42,7 +46,7 @@ router.post("/", async (req, res, next) => {
 });
 
 /* PATCH /api/documents/:id — update status / watermark */
-router.patch("/:id", async (req, res, next) => {
+router.patch("/:id", ADMIN_SUPER, async (req, res, next) => {
   try {
     const fields = ["title","file_url","watermark","status","created_by"].filter(k => req.body[k] !== undefined);
     if (!fields.length) return res.status(400).json({ success: false, message: "No updatable fields." });
@@ -58,7 +62,7 @@ router.patch("/:id", async (req, res, next) => {
 });
 
 /* DELETE /api/documents/:id */
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", ADMIN_SUPER, async (req, res, next) => {
   try {
     await pool.query(`DELETE FROM documents WHERE id = $1`, [req.params.id]);
     res.json({ success: true });

@@ -2,7 +2,11 @@ import { Router } from "express";
 import { body } from "express-validator";
 import validate from "../middleware/validate.js";
 import { formLimiter } from "../middleware/rateLimiter.js";
+import { requireRole } from "../middleware/requireAuth.js";
 import { submitBooking, getAllBookings, getBookingById, updateBookingStatus, getBookingComments, addBookingComment, deleteBookingComment } from "../controllers/audienceController.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
 
 const router = Router();
 
@@ -22,11 +26,11 @@ const bookingRules = [
 ];
 
 router.post("/", formLimiter, validate(bookingRules), submitBooking);
-router.get("/", getAllBookings);
-router.get("/:id", getBookingById);
-router.patch("/:id/status", validate([body("status").notEmpty().withMessage("Status is required")]), updateBookingStatus);
-router.get("/:id/comments", getBookingComments);
-router.post("/:id/comments", addBookingComment);
-router.delete("/:id/comments/:commentId", deleteBookingComment);
+router.get("/",    ALL_ADMIN,   getAllBookings);
+router.get("/:id", ALL_ADMIN,   getBookingById);
+router.patch("/:id/status", ADMIN_SUPER, validate([body("status").notEmpty().withMessage("Status is required")]), updateBookingStatus);
+router.get("/:id/comments",              ALL_ADMIN,   getBookingComments);
+router.post("/:id/comments",             ALL_ADMIN,   addBookingComment);
+router.delete("/:id/comments/:commentId", ADMIN_SUPER, deleteBookingComment);
 
 export default router;

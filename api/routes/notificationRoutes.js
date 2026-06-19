@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { notificationEmitter, recentNotifs, autoNotify } from "../utils/notifyWhatsApp.js";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN = requireRole("admin", "guruji", "superadmin");
 
 const router = Router();
 
@@ -30,12 +33,12 @@ router.get("/stream", (req, res) => {
 });
 
 /* GET /api/notifications/recent — last 50 in-memory events (no DB round-trip) */
-router.get("/recent", (_req, res) => {
+router.get("/recent", ALL_ADMIN, (_req, res) => {
   res.json({ success: true, data: recentNotifs.slice(0, 50) });
 });
 
 /* GET /api/notifications/wa-logs — persistent WhatsApp log from DB */
-router.get("/wa-logs", async (req, res, next) => {
+router.get("/wa-logs", ALL_ADMIN, async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const { rows } = await pool.query(
@@ -45,8 +48,8 @@ router.get("/wa-logs", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* POST /api/notifications/test — send a test WhatsApp to CALLMEBOT_PHONE */
-router.post("/test", async (req, res, next) => {
+/* POST /api/notifications/test — send a test WhatsApp to CALLMEBOT_PHONE (superadmin only) */
+router.post("/test", requireRole("superadmin"), async (req, res, next) => {
   try {
     const key  = process.env.CALLMEBOT_APIKEY;
     const phone = process.env.CALLMEBOT_PHONE;

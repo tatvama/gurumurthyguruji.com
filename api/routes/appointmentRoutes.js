@@ -8,6 +8,11 @@ import {
 } from "../controllers/appointmentController.js";
 import Appointment from "../models/Appointment.js";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
+const GURUJI_SUPER = requireRole("guruji", "superadmin");
 
 const router = Router();
 
@@ -26,34 +31,34 @@ export const APPOINTMENT_STATUSES = [
 ];
 
 /* Static / collection routes BEFORE "/:id" so they aren't shadowed */
-router.get("/queue/arrived", getArrivedToday);
-router.get("/", getAppointments);
-router.post("/", createAppointment);
+router.get("/queue/arrived", ALL_ADMIN, getArrivedToday);
+router.get("/",              ALL_ADMIN, getAppointments);
+router.post("/",             ADMIN_SUPER, createAppointment);
 
-router.get("/:id", getAppointment);
-router.patch("/:id", updateAppointment);
-router.delete("/:id", deleteAppointment);
+router.get("/:id",    ALL_ADMIN,   getAppointment);
+router.patch("/:id",  ADMIN_SUPER, updateAppointment);
+router.delete("/:id", ADMIN_SUPER, deleteAppointment);
 
 /* ── Workflow action endpoints (Flow §17.2) — status changes only here ── */
-router.patch("/:id/schedule",      scheduleAppointment);
-router.patch("/:id/reschedule",    rescheduleAppointment);
-router.patch("/:id/confirm",       confirmAppointment);
-router.patch("/:id/send-reminder", sendReminder);
-router.patch("/:id/checkin",       checkInAppointment);
-router.patch("/:id/start-darshan", startDarshan);
-router.patch("/:id/complete",      completeAppointment);
-router.patch("/:id/cancel",        cancelAppointment);
-router.patch("/:id/no-show",       markNoShow);
-router.patch("/:id/close",         closeAppointment);
-router.post("/:id/book-follow-up", bookFollowUp);
+router.patch("/:id/schedule",      ADMIN_SUPER,  scheduleAppointment);
+router.patch("/:id/reschedule",    ADMIN_SUPER,  rescheduleAppointment);
+router.patch("/:id/confirm",       ADMIN_SUPER,  confirmAppointment);
+router.patch("/:id/send-reminder", ADMIN_SUPER,  sendReminder);
+router.patch("/:id/checkin",       ADMIN_SUPER,  checkInAppointment);
+router.patch("/:id/start-darshan", GURUJI_SUPER, startDarshan);
+router.patch("/:id/complete",      GURUJI_SUPER, completeAppointment);
+router.patch("/:id/cancel",        ADMIN_SUPER,  cancelAppointment);
+router.patch("/:id/no-show",       ADMIN_SUPER,  markNoShow);
+router.patch("/:id/close",         ADMIN_SUPER,  closeAppointment);
+router.post("/:id/book-follow-up", ALL_ADMIN,    bookFollowUp);
 
 /* ── Notes & timeline ──────────────────────────────────────────────────── */
-router.post("/:id/notes",   addNote);
-router.get("/:id/notes",    getNotes);
-router.get("/:id/timeline", getTimeline);
+router.post("/:id/notes",   ALL_ADMIN, addNote);
+router.get("/:id/notes",    ALL_ADMIN, getNotes);
+router.get("/:id/timeline", ALL_ADMIN, getTimeline);
 
 /* POST /from-booking/:bookingId — one-click convert Appointment booking → appointment (PRD §8) */
-router.post("/from-booking/:bookingId", async (req, res, next) => {
+router.post("/from-booking/:bookingId", ADMIN_SUPER, async (req, res, next) => {
   try {
     const { rows } = await pool.query(`SELECT * FROM appointment_bookings WHERE id = $1`, [req.params.bookingId]);
     if (!rows.length) return res.status(404).json({ success: false, message: "Booking not found" });
@@ -84,7 +89,7 @@ router.post("/from-booking/:bookingId", async (req, res, next) => {
 });
 
 /* POST /from-case/:caseRef — schedule an appointment for a Trikala case (PRD §6) */
-router.post("/from-case/:caseRef", async (req, res, next) => {
+router.post("/from-case/:caseRef", ADMIN_SUPER, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT * FROM trikala_readings WHERE case_reference = $1`, [req.params.caseRef]

@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
 
 const router = Router();
 
@@ -97,7 +101,7 @@ async function buildAiReply(caseRef, userMessage) {
 }
 
 /* GET /:caseRef — full chat history */
-router.get("/:caseRef", async (req, res, next) => {
+router.get("/:caseRef", ALL_ADMIN, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT * FROM chat_messages WHERE case_reference = $1 ORDER BY created_at ASC LIMIT 200`,
@@ -108,7 +112,7 @@ router.get("/:caseRef", async (req, res, next) => {
 });
 
 /* POST /:caseRef — send message + get AI reply */
-router.post("/:caseRef", async (req, res, next) => {
+router.post("/:caseRef", ALL_ADMIN, async (req, res, next) => {
   try {
     const { content } = req.body;
     if (!content?.trim()) return res.status(400).json({ success: false, message: "Message content required" });
@@ -130,7 +134,7 @@ router.post("/:caseRef", async (req, res, next) => {
 });
 
 /* DELETE /:caseRef — clear chat history */
-router.delete("/:caseRef", async (req, res, next) => {
+router.delete("/:caseRef", ADMIN_SUPER, async (req, res, next) => {
   try {
     await pool.query(`DELETE FROM chat_messages WHERE case_reference = $1`, [req.params.caseRef]);
     res.json({ success: true });

@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN   = requireRole("admin", "guruji", "superadmin");
+const ADMIN_SUPER = requireRole("admin", "superadmin");
 
 const router = Router();
 
@@ -61,7 +65,7 @@ function analyseCase(c, priorCases) {
 }
 
 /* GET /api/ai-reports/:caseRef — latest AI report for a case */
-router.get("/:caseRef", async (req, res) => {
+router.get("/:caseRef", ALL_ADMIN, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT * FROM ai_reports WHERE case_reference = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -72,7 +76,7 @@ router.get("/:caseRef", async (req, res) => {
 });
 
 /* POST /api/ai-reports/:caseRef/generate — run pre-analysis and store it */
-router.post("/:caseRef/generate", async (req, res) => {
+router.post("/:caseRef/generate", ADMIN_SUPER, async (req, res) => {
   try {
     const { rows: cases } = await pool.query(
       `SELECT * FROM trikala_readings WHERE case_reference = $1`, [req.params.caseRef]

@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
+
+const ALL_ADMIN = requireRole("admin", "guruji", "superadmin");
 
 const router = Router();
 
@@ -52,12 +55,12 @@ const TEMPLATES = {
 };
 
 /* GET /templates — list available templates */
-router.get("/templates", (_req, res) => {
+router.get("/templates", ALL_ADMIN, (_req, res) => {
   res.json({ success: true, data: Object.keys(TEMPLATES) });
 });
 
 /* POST /generate — generate message text from template */
-router.post("/generate", (req, res) => {
+router.post("/generate", ALL_ADMIN, (req, res) => {
   const { template, data } = req.body;
   if (!TEMPLATES[template]) {
     return res.status(400).json({
@@ -76,7 +79,7 @@ router.post("/generate", (req, res) => {
 });
 
 /* POST /log — log a dispatched message */
-router.post("/log", async (req, res, next) => {
+router.post("/log", ALL_ADMIN, async (req, res, next) => {
   try {
     const { devotee_id, case_reference, phone, template, message } = req.body;
     await pool.query(
