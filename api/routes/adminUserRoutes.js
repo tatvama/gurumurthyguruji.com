@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireRole } from "../middleware/requireAuth.js";
 import {
   getAllAdminUsers,
   createAdminUser,
@@ -10,11 +11,14 @@ import {
 
 const router = Router();
 
-router.get("/",           getAllAdminUsers);
-router.post("/",          createAdminUser);
-router.patch("/:id",      updateAdminUser);
-router.delete("/:id",     deleteAdminUser);
-router.post("/send-otp",  sendOtp);
+/* Public — login flow (no auth required, handled via PUBLIC_ROUTES in index.js) */
+router.post("/send-otp",   sendOtp);
 router.post("/verify-otp", verifyOtp);
+
+/* Super Admin only — admin user management */
+router.get("/",        requireRole("superadmin"), getAllAdminUsers);
+router.post("/",       requireRole("superadmin"), createAdminUser);
+router.patch("/:id",   requireRole("superadmin"), updateAdminUser);
+router.delete("/:id",  requireRole("superadmin"), deleteAdminUser);
 
 export default router;

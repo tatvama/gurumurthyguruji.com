@@ -2,6 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import validate from "../middleware/validate.js";
 import { formLimiter } from "../middleware/rateLimiter.js";
+import { requireRole } from "../middleware/requireAuth.js";
 import {
   submitReading,
   getAllReadings,
@@ -41,8 +42,8 @@ router.patch(
   updateReadingStatus
 );
 
-/* Admin — Guruji Vakya / guidance (PRD §3 Stage 3) */
-router.patch("/:id/vakya", updateGurujiVakya);
+/* Guruji or Super Admin only — Guruji Vakya / guidance (PRD §3 Stage 3) */
+router.patch("/:id/vakya", requireRole("guruji", "superadmin"), updateGurujiVakya);
 
 /* Admin — case field updates (category, priority, devotee link, assignment) */
 router.patch("/:id", updateReadingFields);

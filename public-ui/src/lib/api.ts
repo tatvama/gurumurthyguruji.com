@@ -5,7 +5,7 @@ export interface AdminUser {
   id: number;
   name: string;
   mobile: string;
-  role: "superadmin" | "admin";
+  role: "superadmin" | "admin" | "guruji";
   sectionsCount: number;
   status: "active" | "inactive";
   lastLogin?: string;
@@ -26,9 +26,7 @@ function mapAdminUser(r: Record<string, any>): AdminUser {
 }
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
-  const res = await fetch(`${BASE}/api/admin-users`);
-  if (!res.ok) throw new Error(`Server error: ${res.status}`);
-  const json = await res.json();
+  const json = await getJson(`/api/admin-users`);
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? []);
   return rows.map(mapAdminUser);
 }
@@ -36,32 +34,19 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
 export async function createAdminUser(payload: {
   name: string; mobile: string; role: string;
 }): Promise<AdminUser> {
-  const res = await fetch(`${BASE}/api/admin-users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/admin-users`, "POST", payload);
   return mapAdminUser(data.data);
 }
 
 export async function updateAdminUser(id: number, payload: {
   name: string; role: string; status: string;
 }): Promise<AdminUser> {
-  const res = await fetch(`${BASE}/api/admin-users/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/admin-users/${id}`, "PATCH", payload);
   return mapAdminUser(data.data);
 }
 
 export async function deleteAdminUser(id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/admin-users/${id}`, { method: "DELETE" });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/admin-users/${id}`, "DELETE");
 }
 
 export async function adminSendOtp(mobile: string): Promise<{ otp: string }> {
@@ -148,17 +133,13 @@ function mapContact(r: Record<string, any>): ContactMessage {
 
 /* ── Admin GET functions ─────────────────────────────────────────── */
 export async function getAppointmentBookings(): Promise<AppointmentBooking[]> {
-  const res = await fetch(`${BASE}/api/appointment-bookings`);
-  if (!res.ok) throw new Error(`Server error: ${res.status}`);
-  const json = await res.json();
+  const json = await getJson(`/api/appointment-bookings`);
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? json.bookings ?? []);
   return rows.map(mapBooking);
 }
 
 export async function getContacts(): Promise<ContactMessage[]> {
-  const res = await fetch(`${BASE}/api/contacts`);
-  if (!res.ok) throw new Error(`Server error: ${res.status}`);
-  const json = await res.json();
+  const json = await getJson(`/api/contacts`);
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? json.contacts ?? []);
   return rows.map(mapContact);
 }
@@ -191,23 +172,15 @@ function mapBookingComment(r: Record<string, any>): BookingComment {
   return { id: r.id, bookingId: r.booking_id, text: r.text, isInternal: r.is_internal, createdAt: r.created_at };
 }
 export async function getBookingComments(bookingId: string | number): Promise<BookingComment[]> {
-  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments`);
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await getJson(`/api/appointment-bookings/${bookingId}/comments`);
   return (data.data ?? []).map(mapBookingComment);
 }
 export async function addBookingComment(bookingId: string | number, text: string, isInternal = false): Promise<BookingComment> {
-  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, is_internal: isInternal }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/appointment-bookings/${bookingId}/comments`, "POST", { text, is_internal: isInternal });
   return mapBookingComment(data.data);
 }
 export async function deleteBookingComment(bookingId: string | number, commentId: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments/${commentId}`, { method: "DELETE" });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/appointment-bookings/${bookingId}/comments/${commentId}`, "DELETE");
 }
 
 export async function postAppointmentBooking(payload: {
@@ -355,22 +328,14 @@ export async function postTrikalaReading(payload: {
 
 /** Admin — fetch all readings */
 export async function getTrikalaReadings(): Promise<TrikalaReading[]> {
-  const res = await fetch(`${BASE}/api/trikala-readings`);
-  if (!res.ok) throw new Error(`Server error: ${res.status}`);
-  const json = await res.json();
+  const json = await getJson(`/api/trikala-readings`);
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? []);
   return rows.map(mapReading);
 }
 
 /** Admin — update reading status */
 export async function updateTrikalaStatus(id: number, status: string): Promise<TrikalaReading> {
-  const res = await fetch(`${BASE}/api/trikala-readings/${id}/status`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/trikala-readings/${id}/status`, "PATCH", { status });
   return mapReading(data.data);
 }
 
@@ -383,27 +348,20 @@ export interface CaseNote {
 }
 
 export async function getCaseNotes(caseRef: string): Promise<CaseNote[]> {
-  const res = await fetch(`${BASE}/api/case-notes/${encodeURIComponent(caseRef)}`);
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await getJson(`/api/case-notes/${encodeURIComponent(caseRef)}`);
   return (data.notes as Record<string, any>[]).map(r => ({
     id: r.id, caseReference: r.case_reference, text: r.text, createdAt: r.created_at,
   }));
 }
 
 export async function addCaseNote(caseRef: string, text: string): Promise<CaseNote> {
-  const res = await fetch(`${BASE}/api/case-notes/${encodeURIComponent(caseRef)}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/case-notes/${encodeURIComponent(caseRef)}`, "POST", { text });
   const r = data.note;
   return { id: r.id, caseReference: r.case_reference, text: r.text, createdAt: r.created_at };
 }
 
 export async function deleteCaseNote(caseRef: string, id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/case-notes/${encodeURIComponent(caseRef)}/${id}`, { method: "DELETE" });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/case-notes/${encodeURIComponent(caseRef)}/${id}`, "DELETE");
 }
 
 /* ── Case Follow-ups ─────────────────────────────────────────────── */
@@ -417,9 +375,7 @@ export interface CaseFollowup {
 }
 
 export async function getCaseFollowups(caseRef: string): Promise<CaseFollowup[]> {
-  const res = await fetch(`${BASE}/api/case-followups/${encodeURIComponent(caseRef)}`);
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await getJson(`/api/case-followups/${encodeURIComponent(caseRef)}`);
   return (data.followups as Record<string, any>[]).map(r => ({
     id: r.id, caseReference: r.case_reference, type: r.type,
     dateTime: r.date_time, notes: r.notes, createdAt: r.created_at,
@@ -427,53 +383,52 @@ export async function getCaseFollowups(caseRef: string): Promise<CaseFollowup[]>
 }
 
 export async function addCaseFollowup(caseRef: string, payload: { type: string; dateTime: string; notes: string }): Promise<CaseFollowup> {
-  const res = await fetch(`${BASE}/api/case-followups/${encodeURIComponent(caseRef)}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await sendJson(`/api/case-followups/${encodeURIComponent(caseRef)}`, "POST", payload);
   const r = data.followup;
   return { id: r.id, caseReference: r.case_reference, type: r.type, dateTime: r.date_time, notes: r.notes, createdAt: r.created_at };
 }
 
 export async function deleteCaseFollowup(caseRef: string, id: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/case-followups/${encodeURIComponent(caseRef)}/${id}`, { method: "DELETE" });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/case-followups/${encodeURIComponent(caseRef)}/${id}`, "DELETE");
 }
 
 /* ── Case Pad ────────────────────────────────────────────────────── */
 export async function getCasePad(caseRef: string): Promise<string | null> {
-  const res = await fetch(`${BASE}/api/case-pad/${encodeURIComponent(caseRef)}`);
-  const data = await res.json();
-  if (!res.ok) throw data;
+  const data = await getJson(`/api/case-pad/${encodeURIComponent(caseRef)}`);
   return data.imageData;
 }
 
 export async function saveCasePad(caseRef: string, imageData: string): Promise<void> {
-  const res = await fetch(`${BASE}/api/case-pad/${encodeURIComponent(caseRef)}`, {
-    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageData }),
-  });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/case-pad/${encodeURIComponent(caseRef)}`, "PUT", { imageData });
 }
 
 export async function clearCasePad(caseRef: string): Promise<void> {
-  const res = await fetch(`${BASE}/api/case-pad/${encodeURIComponent(caseRef)}`, { method: "DELETE" });
-  if (!res.ok) { const d = await res.json(); throw d; }
+  await sendJson(`/api/case-pad/${encodeURIComponent(caseRef)}`, "DELETE");
+}
+
+/* ── Auth header builder — reads credentials stored at login ─────── */
+function adminAuthHeaders(withContentType = false): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (withContentType) headers["Content-Type"] = "application/json";
+  if (typeof window !== "undefined") {
+    const mobile = sessionStorage.getItem("admin_mobile");
+    const key    = sessionStorage.getItem("admin_key");
+    const who    = sessionStorage.getItem("admin_name");
+    if (mobile) headers["x-admin-mobile"] = mobile;
+    if (key)    headers["x-admin-key"]    = key;
+    if (who)    headers["x-admin-name"]   = who;
+  }
+  return headers;
 }
 
 /* ── small fetch helpers ─────────────────────────────────────────── */
 async function getJson(path: string): Promise<any> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: adminAuthHeaders() });
   if (!res.ok) { let d: any = {}; try { d = await res.json(); } catch {} throw d.message ? d : new Error(`Server error: ${res.status}`); }
   return res.json();
 }
 async function sendJson(path: string, method: string, body?: any): Promise<any> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  /* Attribute workflow actions / audit logs to the logged-in admin */
-  if (typeof window !== "undefined") {
-    const who = sessionStorage.getItem("admin_name");
-    if (who) headers["x-admin-name"] = who;
-  }
+  const headers = adminAuthHeaders(true);
   const res = await fetch(`${BASE}${path}`, {
     method, headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,

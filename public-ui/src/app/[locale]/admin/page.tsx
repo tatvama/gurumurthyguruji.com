@@ -1022,11 +1022,11 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
           <div style={{ marginBottom: 13 }}><label style={lbl}>Email</label><input value={d.email} onChange={e => set("email", e.target.value)} style={inp} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
             <div style={{ marginBottom: 13 }}><label style={lbl}>City</label><input ref={cityRef} value={d.city} autoComplete="off" placeholder="Start typing city…" onChange={e => set("city", e.target.value)} style={inp} /></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>District</label><input value={d.district} onChange={e => set("district", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>District</label><input value={d.district} readOnly tabIndex={-1} style={{ ...inp, background: "#f3f4f6", color: "#6b7280", cursor: "default", border: "1.5px solid #e5e7eb" }} /></div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 10 }}>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>State</label><input value={d.state} onChange={e => set("state", e.target.value)} style={inp} /></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Pincode</label><input value={d.pincode} inputMode="numeric" onChange={e => set("pincode", e.target.value)} style={inp} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>State</label><input value={d.state} readOnly tabIndex={-1} style={{ ...inp, background: "#f3f4f6", color: "#6b7280", cursor: "default", border: "1.5px solid #e5e7eb" }} /></div>
+            <div style={{ marginBottom: 13 }}><label style={lbl}>Pincode</label><input value={d.pincode} readOnly tabIndex={-1} inputMode="numeric" style={{ ...inp, background: "#f3f4f6", color: "#6b7280", cursor: "default", border: "1.5px solid #e5e7eb" }} /></div>
           </div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Office Remarks (internal)</label><textarea value={remarks} onChange={e => setRemarks(e.target.value)} rows={3} placeholder="Anything Guruji's office should know before darshan…" style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
@@ -3762,7 +3762,10 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const [b, c, a] = await Promise.all([getAppointmentBookings(), getContacts(), getAdminUsers()]);
+      const storedRole = typeof window !== "undefined" ? sessionStorage.getItem("admin_role") : null;
+      /* Only superadmin can fetch the admin-users list; other roles get an empty array */
+      const adminFetch = storedRole === "superadmin" ? getAdminUsers() : Promise.resolve([] as AdminUser[]);
+      const [b, c, a] = await Promise.all([getAppointmentBookings(), getContacts(), adminFetch]);
       setBookings(b);
       setContacts(c);
       setAdmins(a);
@@ -3861,6 +3864,7 @@ export default function AdminPage() {
     sessionStorage.removeItem("admin_key");
     sessionStorage.removeItem("admin_name");
     sessionStorage.removeItem("admin_mobile");
+    sessionStorage.removeItem("admin_role");
     setAuthed(false);
     setLoggedName("");
     setLoggedMobile("");
@@ -3872,12 +3876,23 @@ export default function AdminPage() {
     [bookings],
   );
 
-  /* ── logged-in user's role derived from admins list ── */
-  const loggedRole = useMemo(
-    () => admins.find((a) => a.mobile === loggedMobile)?.role ?? "admin",
-    [admins, loggedMobile],
-  );
+  /* ── logged-in user's role — admins list first, then sessionStorage fallback ── */
+  const loggedRole = useMemo(() => {
+    const fromList = admins.find((a) => a.mobile === loggedMobile)?.role;
+    if (fromList) return fromList;
+    if (typeof window !== "undefined") return sessionStorage.getItem("admin_role") ?? "admin";
+    return "admin";
+  }, [admins, loggedMobile]);
   const isSuperAdmin = loggedRole === "superadmin";
+  const isGuruji     = loggedRole === "guruji";
+
+  /* redirect non-superadmin away from the Admins tab (cannot call router in render) */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (tab === "admins" && !isSuperAdmin) tabChange("today");
+  // tabChange is recreated each render — intentionally omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, isSuperAdmin]);
 
   if (!authed) return (
     <LoginScreen onLogin={(name, mobile) => {
@@ -3970,9 +3985,12 @@ export default function AdminPage() {
               <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 1 }}>Admin Console</p>
             </div>
           </div>
-          <div style={{ marginTop: 14, borderRadius: 6, padding: "5px 10px", display: "inline-block", background: isSuperAdmin ? "rgba(13,148,136,0.10)" : "rgba(124,58,237,0.08)", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.25)"}` }}>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: isSuperAdmin ? "#0d9488" : "#7c3aed" }}>
-              {isSuperAdmin ? "Super Admin" : "Admin"}
+          <div style={{ marginTop: 14, borderRadius: 6, padding: "5px 10px", display: "inline-block",
+            background: loggedRole === "superadmin" ? "rgba(13,148,136,0.10)" : loggedRole === "guruji" ? "rgba(180,83,9,0.10)" : "rgba(124,58,237,0.08)",
+            border: `1px solid ${loggedRole === "superadmin" ? "rgba(13,148,136,0.3)" : loggedRole === "guruji" ? "rgba(180,83,9,0.3)" : "rgba(124,58,237,0.25)"}` }}>
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
+              color: loggedRole === "superadmin" ? "#0d9488" : loggedRole === "guruji" ? "#b45309" : "#7c3aed" }}>
+              {loggedRole === "superadmin" ? "Super Admin" : loggedRole === "guruji" ? "Guruji" : "Admin"}
             </span>
           </div>
         </div>
@@ -4011,8 +4029,8 @@ export default function AdminPage() {
             </button>
           ))}
 
-          {/* Guruji Darshan — opens the dedicated Guruji console (separate page) */}
-          {(() => {
+          {/* Guruji Darshan — only guruji and superadmin may enter this console */}
+          {(isGuruji || isSuperAdmin) && (() => {
             const gurujiActive = pathname?.includes("/admin/guruji") ?? false;
             return (
               <button
@@ -4044,20 +4062,24 @@ export default function AdminPage() {
 
           <div style={{ height: 1, background: "#f0f0f0", margin: "10px 0 12px" }} />
 
-          {/* Configuration */}
-          <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#9ca3af", padding: "0 8px", marginBottom: 8 }}>
-            Configuration
-          </p>
-          {([
-            { key: "admins"   as const, label: "Admin Users",  icon: "👥" },
-            { key: "settings" as const, label: "Settings",     icon: "⚙️" },
-          ]).map(({ key, label, icon }) => (
-            <button key={key} onClick={() => tabChange(key)}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
-            </button>
-          ))}
+          {/* Configuration — superadmin sees both; admin sees Settings only; guruji sees neither */}
+          {!isGuruji && (
+            <>
+              <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#9ca3af", padding: "0 8px", marginBottom: 8 }}>
+                Configuration
+              </p>
+              {([
+                ...(isSuperAdmin ? [{ key: "admins" as const, label: "Admin Users", icon: "👥" }] : []),
+                { key: "settings" as const, label: "Settings", icon: "⚙️" },
+              ]).map(({ key, label, icon }) => (
+                <button key={key} onClick={() => tabChange(key)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
+                  <span style={{ fontSize: 14 }}>{icon}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+                </button>
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Notification Bell */}
@@ -4544,8 +4566,8 @@ export default function AdminPage() {
           />;
         })()}
 
-        {/* ── Admins tab: dark hero card (same style as bookings/contacts) ── */}
-        {tab === "admins" && (
+        {/* ── Admins tab: superadmin only — redirect handled in useEffect above ── */}
+        {tab === "admins" && isSuperAdmin && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
               {/* Left: hamburger + icon + title */}
@@ -5154,7 +5176,10 @@ export default function AdminPage() {
                       <tr><td colSpan={6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</td></tr>
                     ) : admins.map((a, i) => {
                       const color = avatarColor(a.name);
-                      const isSuperAdmin = a.role === "superadmin";
+                      const roleBg    = a.role === "superadmin" ? "#f0fdfa"              : a.role === "guruji" ? "#fffbeb"              : "#ede9fe";
+                      const roleClr   = a.role === "superadmin" ? "#0d9488"              : a.role === "guruji" ? "#b45309"              : "#7c3aed";
+                      const roleBdr   = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)"  : "rgba(124,58,237,0.3)";
+                      const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "ADMIN";
                       return (
                         <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
@@ -5171,8 +5196,8 @@ export default function AdminPage() {
                             </div>
                           </td>
                           <td style={{ padding: "13px 16px" }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", borderRadius: 20, padding: "3px 10px", background: isSuperAdmin ? "#f0fdfa" : "#ede9fe", color: isSuperAdmin ? "#0d9488" : "#7c3aed", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.3)"}` }}>
-                              <ShieldCheck size={11} /> {isSuperAdmin ? "SUPERADMIN" : "ADMIN"}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", borderRadius: 20, padding: "3px 10px", background: roleBg, color: roleClr, border: `1px solid ${roleBdr}` }}>
+                              <ShieldCheck size={11} /> {roleLabel}
                             </span>
                           </td>
                           <td style={{ padding: "13px 16px", color: "#6b7280", fontSize: 12 }}>
@@ -5206,7 +5231,10 @@ export default function AdminPage() {
                   <div style={{ padding: "52px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</div>
                 ) : admins.map((a, i) => {
                   const color = avatarColor(a.name);
-                  const isSuperAdmin = a.role === "superadmin";
+                  const roleBg    = a.role === "superadmin" ? "#f0fdfa"              : a.role === "guruji" ? "#fffbeb"              : "#ede9fe";
+                  const roleClr   = a.role === "superadmin" ? "#0d9488"              : a.role === "guruji" ? "#b45309"              : "#7c3aed";
+                  const roleBdr   = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)"  : "rgba(124,58,237,0.3)";
+                  const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "ADMIN";
                   return (
                     <div key={a.id} onClick={() => setAdminPanel({ open: true, user: a })}
                       style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < admins.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
@@ -5222,8 +5250,8 @@ export default function AdminPage() {
                         <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.name}</p>
                         <div className="adm-user-meta" style={{ marginTop: 3 }}>
                           <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace" }}>{a.mobile}</p>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: isSuperAdmin ? "#f0fdfa" : "#ede9fe", color: isSuperAdmin ? "#0d9488" : "#7c3aed", border: `1px solid ${isSuperAdmin ? "rgba(13,148,136,0.3)" : "rgba(124,58,237,0.3)"}` }}>
-                            <ShieldCheck size={10} /> {isSuperAdmin ? "SUPERADMIN" : "ADMIN"}
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: roleBg, color: roleClr, border: `1px solid ${roleBdr}` }}>
+                            <ShieldCheck size={10} /> {roleLabel}
                           </span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: a.status === "active" ? "#f0fdf4" : "#fef2f2", color: a.status === "active" ? "#16a34a" : "#dc2626", border: `1px solid ${a.status === "active" ? "#bbf7d0" : "#fecaca"}` }}>
                             <span style={{ width: 5, height: 5, borderRadius: "50%", background: a.status === "active" ? "#16a34a" : "#dc2626" }} />

@@ -2,6 +2,7 @@ import TrikalaReading from "../models/TrikalaReading.js";
 import Devotee from "../models/Devotee.js";
 import { logAudit } from "../utils/auditLog.js";
 import { autoNotify } from "../utils/notifyWhatsApp.js";
+import { pool } from "../config/db.js";
 
 /* The 12 PRD case statuses (§5) */
 export const TRIKALA_STATUSES = [
@@ -12,19 +13,15 @@ export const TRIKALA_STATUSES = [
   "AI Report",
 ];
 
-/* ── Generate unique GURUJI-XXXXXXX case reference ─────────────── */
-function generateCaseRef() {
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const digits  = "0123456789";
-  const parts = [
-    ...Array.from({ length: 3 }, () => digits[Math.floor(Math.random() * digits.length)]),
-    ...Array.from({ length: 4 }, () => letters[Math.floor(Math.random() * letters.length)]),
-  ];
-  for (let i = parts.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [parts[i], parts[j]] = [parts[j], parts[i]];
-  }
-  return parts.join("");
+/* ── Generate PRD-compliant case reference: TRK-YYYY-XXXXXX ─────── */
+async function generateCaseRef() {
+  const year = new Date().getFullYear();
+  const { rows } = await pool.query(
+    "SELECT COUNT(*) FROM trikala_readings WHERE case_reference LIKE $1",
+    [`TRK-${year}-%`]
+  );
+  const next = parseInt(rows[0].count, 10) + 1;
+  return `TRK-${year}-${String(next).padStart(6, "0")}`;
 }
 
 /* POST /api/trikala-readings — public form submission */
@@ -35,7 +32,7 @@ export const submitReading = async (req, res, next) => {
     // Ensure unique case reference (retry on unlikely collision)
     let caseReference;
     for (let i = 0; i < 5; i++) {
-      caseReference = generateCaseRef();
+      caseReference = await generateCaseRef();
       const existing = await TrikalaReading.findByCaseRef(caseReference);
       if (!existing) break;
     }
@@ -192,7 +189,11 @@ export const updateGurujiVakya = async (req, res, next) => {
     const record = await TrikalaReading.update(req.params.id, patch);
     if (!record) return res.status(404).json({ success: false, message: "Reading not found." });
 
-    await logAudit({ action: "GURUJI_VAKYA_SAVED", entityType: "trikala_case", entityId: record.case_reference, newValue: { divine_remedy, guruji_reviewed_by } });
+    await logAudit({
+      userId: req.user?.id, userName: req.user?.name ?? guruji_reviewed_by ?? "system",
+      action: "GURUJI_VAKYA_SAVED", entityType: "trikala_case", entityId: record.case_reference,
+      newValue: { divine_remedy, guruji_reviewed_by, actor_role: req.user?.role },
+    });
 
     // Mirror to devotee timeline — Guruji writes the remedy as free text (no pre-defined library)
     if (record.devotee_id) {

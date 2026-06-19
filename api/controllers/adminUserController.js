@@ -21,7 +21,11 @@ export const createAdminUser = async (req, res, next) => {
     if (existing)
       return res.status(409).json({ success: false, message: "Mobile number already registered." });
     const record = await AdminUser.create({ name, mobile, role });
-    await logAudit({ action: "CREATE_ADMIN", entityType: "admin_user", entityId: String(record.id), newValue: { name, role } });
+    await logAudit({
+      userId: req.user?.id, userName: req.user?.name ?? "system",
+      action: "CREATE_ADMIN", entityType: "admin_user", entityId: String(record.id),
+      newValue: { name, role, created_by_role: req.user?.role },
+    });
     res.status(201).json({ success: true, data: record });
   } catch (err) { next(err); }
 };
@@ -35,7 +39,11 @@ export const updateAdminUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Name is required." });
     const record = await AdminUser.update(id, { name, role, status });
     if (!record) return res.status(404).json({ success: false, message: "Admin not found." });
-    await logAudit({ action: "UPDATE_ADMIN", entityType: "admin_user", entityId: String(id), newValue: { name, role, status } });
+    await logAudit({
+      userId: req.user?.id, userName: req.user?.name ?? "system",
+      action: "UPDATE_ADMIN", entityType: "admin_user", entityId: String(id),
+      newValue: { name, role, status, updated_by_role: req.user?.role },
+    });
     res.json({ success: true, data: record });
   } catch (err) { next(err); }
 };
@@ -48,7 +56,13 @@ export const deleteAdminUser = async (req, res, next) => {
     if (!record) return res.status(404).json({ success: false, message: "Admin not found." });
     if (record.role === "superadmin")
       return res.status(403).json({ success: false, message: "Cannot delete a super admin." });
-    await logAudit({ action: "DELETE_ADMIN", entityType: "admin_user", entityId: String(id), oldValue: { name: record.name, role: record.role } });
+    if (record.id === req.user?.id)
+      return res.status(403).json({ success: false, message: "You cannot delete your own account." });
+    await logAudit({
+      userId: req.user?.id, userName: req.user?.name ?? "system",
+      action: "DELETE_ADMIN", entityType: "admin_user", entityId: String(id),
+      oldValue: { name: record.name, role: record.role, deleted_by_role: req.user?.role },
+    });
     await AdminUser.delete(id);
     res.json({ success: true, message: "Admin deleted." });
   } catch (err) { next(err); }

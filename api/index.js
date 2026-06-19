@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { globalLimiter } from "./middleware/rateLimiter.js";
 import errorHandler from "./middleware/errorHandler.js";
+import { requireAuth } from "./middleware/requireAuth.js";
 import { initDB } from "./config/db.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import audienceRoutes from "./routes/audienceRoutes.js";
@@ -43,7 +44,7 @@ app.use(
       callback(new Error("CORS: origin not allowed"));
     },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "x-admin-name"],
+    allowedHeaders: ["Content-Type", "x-admin-name", "x-admin-mobile", "x-admin-key"],
     credentials: false,
   })
 );
@@ -55,6 +56,27 @@ app.use(globalLimiter);
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+/* ── Public routes that skip authentication ──────────────────────────
+   These are the only endpoints accessible without admin credentials.
+   Every other /api/* route requires valid x-admin-mobile + x-admin-key headers.
+──────────────────────────────────────────────────────────────────── */
+const PUBLIC_ROUTES = [
+  { method: "POST", path: "/api/contacts" },
+  { method: "POST", path: "/api/appointment-bookings" },
+  { method: "POST", path: "/api/trikala-readings" },
+  { method: "POST", path: "/api/admin-users/send-otp" },
+  { method: "POST", path: "/api/admin-users/verify-otp" },
+  { method: "GET",  path: "/api/notifications/stream" },
+];
+
+app.use((req, res, next) => {
+  const isPublic = PUBLIC_ROUTES.some(
+    (r) => r.method === req.method && req.path === r.path
+  );
+  if (isPublic) return next();
+  return requireAuth(req, res, next);
 });
 
 app.use("/api/contacts", contactRoutes);

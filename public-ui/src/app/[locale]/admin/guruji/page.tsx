@@ -36,7 +36,7 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const MOCK_QUEUE: Appointment[] = [
   { id: -1, devoteeName: "Ramesh Kumar",  mobile: "+91 98765 43210", appointmentType: "Trikala Consultation", mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:05:00`, startTime: `${TODAY}T09:00:00`, purpose: "Seeking guidance on family matters and career path." },
   { id: -2, devoteeName: "Savitri Devi",  mobile: "+91 87654 32109", appointmentType: "General Appointment",  mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:22:00`, startTime: `${TODAY}T09:15:00`, purpose: "Health concerns and seeking Guruji's blessings." },
-  { id: -3, devoteeName: "Mohan Prasad",  mobile: "+91 76543 21098", appointmentType: "Follow-up",           mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:48:00`, startTime: `${TODAY}T09:45:00`, caseReference: "TK-2024-0041", purpose: "Follow-up on earlier Trikala reading." },
+  { id: -3, devoteeName: "Mohan Prasad",  mobile: "+91 76543 21098", appointmentType: "Follow-up",           mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T09:48:00`, startTime: `${TODAY}T09:45:00`, caseReference: "TRK-2024-000041", purpose: "Follow-up on earlier Trikala reading." },
   { id: -4, devoteeName: "Lakshmi Bai",   mobile: "+91 65432 10987", appointmentType: "General Appointment",  mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T10:10:00`, startTime: `${TODAY}T10:00:00`, purpose: "Seeking Sanjeevini Kriya initiation." },
   { id: -5, devoteeName: "Venkatesh Rao", mobile: "+91 54321 09876", appointmentType: "Trikala Consultation", mode: "in-person", status: "Arrived", checkedInAt: `${TODAY}T10:35:00`, startTime: `${TODAY}T10:30:00`, purpose: "Planetary period difficulties — Sade Sati concerns." },
 ];
@@ -130,11 +130,17 @@ export default function GurujiDarshanPage() {
   const [booking, setBooking]     = useState(false);
   const [bookedMsg, setBookedMsg] = useState("");
 
-  /* ── auth guard (shares the admin sessionStorage login) ─────────── */
+  /* ── auth guard — only guruji and superadmin may enter this console ─ */
   useEffect(() => {
-    const n = typeof window !== "undefined" ? sessionStorage.getItem("admin_name") : null;
-    if (!n) { setAuthed(false); router.replace(`/${locale}/admin`); return; }
-    setName(n); setAuthed(true);
+    const n    = typeof window !== "undefined" ? sessionStorage.getItem("admin_name") : null;
+    const role = typeof window !== "undefined" ? sessionStorage.getItem("admin_role") : null;
+    if (!n || (role !== "guruji" && role !== "superadmin")) {
+      setAuthed(false);
+      router.replace(`/${locale}/admin`);
+      return;
+    }
+    setName(n);
+    setAuthed(true);
   }, [locale, router]);
 
   const loadQueue = useCallback(async () => {

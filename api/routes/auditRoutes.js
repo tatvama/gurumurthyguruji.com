@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import { requireRole } from "../middleware/requireAuth.js";
 
 const router = Router();
 
-/* GET /api/audit-logs — recent activity (PRD §11, §19) */
-router.get("/", async (req, res) => {
+/* GET /api/audit-logs — Super Admin only (PRD §11, §19) */
+router.get("/", requireRole("superadmin"), async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 100, 300);
     const { rows } = await pool.query(
