@@ -5323,7 +5323,7 @@ export default function AdminPage() {
                             </span>
                           </td>
                           <td style={{ padding: "13px 16px", color: "#6b7280", fontSize: 12 }}>
-                            {a.sectionsCount === 0 ? <em>All sections</em> : `${a.sectionsCount} section${a.sectionsCount !== 1 ? "s" : ""}`}
+                            {a.role === "superadmin" ? <em>All sections</em> : a.allowedSections == null ? <em>All sections</em> : `${a.allowedSections.length} section${a.allowedSections.length !== 1 ? "s" : ""}`}
                           </td>
                           <td style={{ padding: "13px 16px", color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>
                             {a.lastLogin ? `${fmt(a.lastLogin)}, ${fmtTime(a.lastLogin)}` : <em style={{ color: "#c4b5a0" }}>Never</em>}
