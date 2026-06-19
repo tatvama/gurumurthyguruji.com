@@ -33,11 +33,11 @@ export const createAdminUser = async (req, res, next) => {
 /* ── PATCH update admin ─────────────────────────────────────────── */
 export const updateAdminUser = async (req, res, next) => {
   try {
-    const { name, role, status } = req.body;
+    const { name, role, status, allowedSections } = req.body;
     const id = parseInt(req.params.id);
     if (!name)
       return res.status(400).json({ success: false, message: "Name is required." });
-    const record = await AdminUser.update(id, { name, role, status });
+    const record = await AdminUser.update(id, { name, role, status, allowedSections });
     if (!record) return res.status(404).json({ success: false, message: "Admin not found." });
     await logAudit({
       userId: req.user?.id, userName: req.user?.name ?? "system",
@@ -95,10 +95,14 @@ export const verifyOtp = async (req, res, next) => {
     if (String(admin.password) !== String(otp))
       return res.status(401).json({ success: false, message: "Incorrect OTP." });
     await AdminUser.updateLastLogin(admin.id);
+    let allowedSections = null;
+    if (admin.allowed_sections) {
+      try { allowedSections = JSON.parse(admin.allowed_sections); } catch {}
+    }
     res.json({
       success: true,
       message: "Login successful.",
-      data: { id: admin.id, name: admin.name, mobile: admin.mobile, role: admin.role },
+      data: { id: admin.id, name: admin.name, mobile: admin.mobile, role: admin.role, allowedSections },
     });
   } catch (err) { next(err); }
 };

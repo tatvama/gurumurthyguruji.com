@@ -105,6 +105,24 @@ const PAGE_SIZE = 15;
 
 const COSMIC = "linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)";
 
+const SECTION_GROUPS = [
+  { group: "OPERATIONS", items: [
+    { id: "today",        label: "Today (Darshan Queue)" },
+    { id: "trikala",      label: "Trikala Cases" },
+    { id: "appointments", label: "Appointments" },
+    { id: "bookings",     label: "Appointment Requests" },
+    { id: "contacts",     label: "Contact Messages" },
+  ]},
+  { group: "SPIRITUAL RECORDS", items: [
+    { id: "guruji",   label: "Guruji Darshan" },
+    { id: "devotees", label: "Devotee Contacts" },
+  ]},
+  { group: "CONFIGURATION", items: [
+    { id: "settings", label: "Settings" },
+  ]},
+];
+const ALL_SECTION_IDS = SECTION_GROUPS.flatMap(g => g.items.map(i => i.id));
+
 type Tab = "today" | "bookings" | "contacts" | "admins" | "trikala" | "devotees" | "appointments" | "reports" | "settings";
 
 /* ── CustomSelect ──────────────────────────────────────────────────── */
@@ -1223,10 +1241,11 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
     setLoading(true);
     try {
       const user = await adminVerifyOtp(mobile, otp);
-      sessionStorage.setItem("admin_key",    otp);
-      sessionStorage.setItem("admin_name",   user.name);
-      sessionStorage.setItem("admin_mobile", mobile);
-      sessionStorage.setItem("admin_role",   user.role);
+      sessionStorage.setItem("admin_key",      otp);
+      sessionStorage.setItem("admin_name",     user.name);
+      sessionStorage.setItem("admin_mobile",   mobile);
+      sessionStorage.setItem("admin_role",     user.role);
+      sessionStorage.setItem("admin_sections", user.allowedSections ? JSON.stringify(user.allowedSections) : "null");
       onLogin(user.name, mobile);
     } catch (ex: any) {
       setErr(ex?.message || "Incorrect OTP. Please try again");
@@ -1525,72 +1544,75 @@ function DetailPanel({
                     <>
                       <div onClick={() => setScheduleOpen(false)}
                         style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)" }} />
-                      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 211, width: 340, maxWidth: "calc(100vw - 32px)", background: "#fff", borderRadius: 18, boxShadow: "0 20px 60px rgba(0,0,0,0.22)", overflow: "hidden", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-                        {/* Header */}
-                        <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                            <CalendarPlus size={18} color="#fff" />
+                      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 211, width: "min(420px, calc(100vw - 24px))", background: "#fff", borderRadius: 20, boxShadow: "0 24px 64px rgba(0,0,0,0.24)", overflow: "hidden", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+                        {/* ── Header ── */}
+                        <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ background: "rgba(255,255,255,0.18)", borderRadius: 9, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <CalendarPlus size={18} color="#fff" />
+                            </div>
                             <div>
-                              <p style={{ fontSize: 13, fontWeight: 800, color: "#fff", margin: 0 }}>Schedule Appointment</p>
-                              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", margin: 0, marginTop: 1 }}>{(item as AppointmentBooking).fullName}</p>
+                              <p style={{ fontSize: 14, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>Schedule Appointment</p>
+                              <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.75)", margin: "2px 0 0" }}>{(item as AppointmentBooking).fullName}</p>
                             </div>
                           </div>
                           <button onClick={() => setScheduleOpen(false)}
-                            style={{ background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            style={{ background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 8, width: 30, height: 30, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <X size={14} />
                           </button>
                         </div>
 
-                        {/* Body */}
-                        <div style={{ padding: "20px 20px 16px" }}>
-                          {/* Date + Time — two separate columns, error under each */}
-                          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date *</label>
+                        {/* ── Body ── */}
+                        <div style={{ padding: "20px 20px 4px" }}>
+
+                          {/* Date + Time — side by side on ≥360px, stacked below */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Date *</label>
                               <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" />
-                              {!scheduleDate && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>⚠ Required</p>}
+                              {!scheduleDate && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Time *</label>
+                            <div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Time *</label>
                               <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" />
-                              {!scheduleTime && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>⚠ Required</p>}
+                              {!scheduleTime && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
                             </div>
                           </div>
 
                           {/* Mode */}
-                          <div style={{ marginBottom: scheduleMode === "video" ? 12 : 6 }}>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Mode</label>
+                          <div style={{ marginBottom: 16 }}>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Mode</label>
                             <div style={{ display: "flex", gap: 8 }}>
                               {[{ v: "in-person", label: "In-person" }, { v: "video", label: "Video" }, { v: "phone", label: "Phone" }].map(({ v, label }) => (
                                 <button key={v} onClick={() => setScheduleMode(v)}
-                                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, border: `1.5px solid ${scheduleMode === v ? "#0d9488" : "#e5e7eb"}`, background: scheduleMode === v ? "#f0fdfa" : "#fff", color: scheduleMode === v ? "#0d9488" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+                                  style={{ flex: 1, padding: "9px 4px", borderRadius: 9, border: `1.5px solid ${scheduleMode === v ? "#0d9488" : "#e5e7eb"}`, background: scheduleMode === v ? "#f0fdfa" : "#fafafa", color: scheduleMode === v ? "#0d9488" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
                                   {label}
                                 </button>
                               ))}
                             </div>
                           </div>
 
-                          {/* Meeting link — required for video, error directly below */}
+                          {/* Meeting link */}
                           {scheduleMode === "video" && (
-                            <div style={{ marginBottom: 6 }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Meeting Link *</label>
+                            <div style={{ marginBottom: 16 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Meeting Link *</label>
                               <input type="url" value={scheduleMeetingLink} onChange={e => setScheduleMeetingLink(e.target.value)}
                                 placeholder="https://meet.google.com/…"
-                                style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
-                              {!scheduleMeetingLink.trim() && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>Enter a meeting link to continue</p>}
+                                style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                              {!scheduleMeetingLink.trim() && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0" }}>⚠ Enter a meeting link to continue</p>}
                             </div>
                           )}
                         </div>
 
-                        {/* Footer */}
-                        <div style={{ padding: "0 20px 20px", display: "flex", gap: 10 }}>
+                        {/* ── Footer ── */}
+                        <div style={{ padding: "12px 20px 20px", display: "flex", gap: 10 }}>
                           <button onClick={() => setScheduleOpen(false)}
                             style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                             Cancel
                           </button>
                           <button onClick={convertToAppt}
                             disabled={converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())}
-                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: (!scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? 0.55 : 1 }}>
+                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.2s", opacity: (!scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? 0.55 : 1, boxShadow: (!scheduleDate || !scheduleTime) ? "none" : "0 4px 14px rgba(13,148,136,0.35)" }}>
                             <CalendarPlus size={15} />
                             {converting ? "Scheduling…" : "Confirm & Schedule"}
                           </button>
@@ -1715,13 +1737,25 @@ function AdminPanel({
   onClose: () => void;
   onSave: (u: AdminUser) => void;
 }) {
+  const TEAL = "#0d9488";
   const isEdit = !!admin;
-  const [name,   setName]   = useState(admin?.name   || "");
-  const [mobile, setMobile] = useState(admin?.mobile || "");
-  const [role,   setRole]   = useState<string>(admin?.role || "admin");
-  const [status, setStatus] = useState(admin?.status || "active");
+  const [name,     setName]     = useState(admin?.name   || "");
+  const [mobile,   setMobile]   = useState(admin?.mobile || "");
+  const [role,     setRole]     = useState<string>(admin?.role === "superadmin" ? "superadmin" : "admin");
+  const [status,   setStatus]   = useState(admin?.status || "active");
+  const [sections, setSections] = useState<string[]>(
+    admin?.allowedSections ?? [...ALL_SECTION_IDS]
+  );
   const [saving, setSaving] = useState(false);
   const [err,    setErr]    = useState("");
+
+  const toggleSection = (id: string) =>
+    setSections(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+
+  const toggleGroup = (ids: string[]) =>
+    setSections(prev => ids.every(id => prev.includes(id))
+      ? prev.filter(s => !ids.includes(s))
+      : [...prev.filter(s => !ids.includes(s)), ...ids]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -1732,7 +1766,8 @@ function AdminPanel({
     try {
       let saved: AdminUser;
       if (isEdit && admin) {
-        saved = await updateAdminUser(admin.id, { name: name.trim(), role, status });
+        const allowedSections = role === "superadmin" ? null : sections;
+        saved = await updateAdminUser(admin.id, { name: name.trim(), role, status, allowedSections });
       } else {
         saved = await createAdminUser({ name: name.trim(), mobile, role });
       }
@@ -1744,110 +1779,187 @@ function AdminPanel({
     }
   }
 
+  const roleOpts = [
+    { v: "superadmin", label: "Super Admin", desc: "Full access to all sections", icon: "🛡️" },
+    { v: "admin",      label: "Staff",        desc: "Section-based access control", icon: "👤" },
+  ];
+
   const inp: React.CSSProperties = {
-    display: "block", width: "100%", height: 46,
-    border: "1.5px solid #e5e7eb", borderRadius: 10,
-    fontSize: 14, color: "#374151", background: "#fff",
-    outline: "none", paddingLeft: 14, paddingRight: 14,
-    boxSizing: "border-box", transition: "border-color 0.15s",
+    display: "block", width: "100%", height: 44,
+    border: "1.5px solid #e5e7eb", borderRadius: 9,
+    fontSize: 14, color: "#1f2937", background: "#fff",
+    outline: "none", paddingLeft: 12, paddingRight: 12,
+    boxSizing: "border-box", fontFamily: "inherit",
   };
-  const inpWithIcon: React.CSSProperties = { ...inp, paddingLeft: 40 };
-  const labelStyle: React.CSSProperties = {
-    display: "block", fontSize: 12, fontWeight: 600, color: "#5b3a1e", marginBottom: 7,
+  const sectionLabel: React.CSSProperties = {
+    display: "block", fontSize: 10.5, fontWeight: 700, color: "#9ca3af",
+    letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10,
+  };
+  const card: React.CSSProperties = {
+    background: "#fff", borderRadius: 14, border: "1px solid #e8edf2",
+    padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+    display: "flex", flexDirection: "column", gap: 16,
   };
 
   return (
     <>
       <motion.div key="ab" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }} onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }} />
+        transition={{ duration: 0.18 }} onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)" }} />
       <motion.div key="ap" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 301, width: 460, maxWidth: "100vw", background: "#f5f5f5", boxShadow: "-8px 0 48px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        transition={{ type: "spring", stiffness: 300, damping: 34 }}
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 301, width: "min(500px,100vw)", background: "#f4f6f8", boxShadow: "-6px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
 
-        {/* ── Header strip ── */}
-        <div style={{ background: COSMIC, padding: "22px 22px 20px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", color: "#9ca3af" }}>
-              {isEdit ? "Edit Admin User" : "Add New Admin"}
+        {/* ── Teal header ── */}
+        <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "clamp(16px,4vw,22px) clamp(16px,4vw,22px) 18px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <p style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.72)" }}>
+              {isEdit ? "Edit Staff Member" : "New Staff Member"}
             </p>
-            <button onClick={onClose} style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 8, width: 32, height: 32, cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 8, width: 32, height: 32, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <X size={15} />
             </button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: name ? avatarColor(name) : "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: "0 2px 10px rgba(0,0,0,0.08)" }}>
-              {name ? name[0].toUpperCase() : <UserPlus size={22} color="#9ca3af" />}
+          <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: name ? avatarColor(name) : "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "#fff", flexShrink: 0, border: "2.5px solid rgba(255,255,255,0.4)", boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }}>
+              {name ? name[0].toUpperCase() : <UserPlus size={20} color="rgba(255,255,255,0.7)" />}
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 17, fontWeight: 800, color: "#111827", lineHeight: 1.3, wordBreak: "break-word", overflowWrap: "anywhere" }}>{name || "New Admin"}</p>
-              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{isEdit ? `Editing · ${admin?.mobile}` : "Fill in the details below"}</p>
+              <p style={{ fontSize: 16, fontWeight: 800, color: "#fff", lineHeight: 1.25, wordBreak: "break-word" }}>{name || "New Member"}</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+                {isEdit ? `+91 ${admin?.mobile}` : "Fill in the details below"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* ── Form body ── */}
-        <form onSubmit={submit} style={{ flex: 1, overflowY: "auto", padding: "20px 20px 32px" }}>
+        {/* ── Scrollable body ── */}
+        <form onSubmit={submit} style={{ flex: 1, overflowY: "auto", padding: "16px clamp(12px,4vw,20px) 32px", display: "flex", flexDirection: "column", gap: 12 }}>
 
-          {/* White card */}
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e8e0d5", padding: "22px 20px", boxShadow: "0 2px 12px rgba(75,13,19,0.06)", display: "flex", flexDirection: "column", gap: 18 }}>
-
-            {/* Full Name */}
+          {/* Name + Mobile */}
+          <div style={card}>
             <div>
-              <label style={labelStyle}>Full Name <span style={{ color: "#dc2626" }}>*</span></label>
+              <label style={sectionLabel}>Full Name <span style={{ color: "#dc2626" }}>*</span></label>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Ravi Kumar" style={inp} />
             </div>
-
-            {/* Mobile — readonly on edit */}
             <div>
-              <label style={labelStyle}>
-                Mobile Number <span style={{ color: "#dc2626" }}>*</span>
-                {isEdit && <span style={{ marginLeft: 8, fontSize: 10.5, fontWeight: 500, color: "#6b7280", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 4, padding: "1px 6px" }}>cannot be changed</span>}
+              <label style={{ ...sectionLabel, marginBottom: 6 }}>
+                Mobile Number{!isEdit && <span style={{ color: "#dc2626" }}> *</span>}
+                {isEdit && <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 500, color: "#9ca3af", textTransform: "none", letterSpacing: 0 }}>cannot be changed</span>}
               </label>
-              <div style={{ position: "relative" }}>
-                <Phone size={15} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: isEdit ? "#c4b5a0" : "#0d9488" }} />
-                <input
-                  type="tel" inputMode="numeric" maxLength={10}
-                  value={mobile}
-                  onChange={e => !isEdit && setMobile(e.target.value.replace(/\D/g, ""))}
-                  readOnly={isEdit}
-                  placeholder="10-digit mobile number"
-                  style={{ ...inpWithIcon, background: isEdit ? "#f3f4f6" : "#fff", color: isEdit ? "#6b7280" : "#374151", cursor: isEdit ? "not-allowed" : "text", border: `1.5px solid ${isEdit ? "#e5e7eb" : "#e5e7eb"}` }}
-                />
+              <input
+                type="tel" inputMode="numeric" maxLength={10}
+                value={mobile}
+                onChange={e => !isEdit && setMobile(e.target.value.replace(/\D/g, ""))}
+                readOnly={isEdit}
+                placeholder="10-digit mobile number"
+                style={{ ...inp, background: isEdit ? "#f3f4f6" : "#fff", color: isEdit ? "#9ca3af" : "#1f2937", cursor: isEdit ? "not-allowed" : "text" }} />
+            </div>
+          </div>
+
+          {/* Role — option buttons */}
+          <div style={card}>
+            <div>
+              <label style={sectionLabel}>Role</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {roleOpts.map(({ v, label, desc, icon }) => {
+                  const sel = role === v;
+                  return (
+                    <button key={v} type="button" onClick={() => setRole(v)}
+                      style={{ padding: "12px 10px", borderRadius: 10, border: `2px solid ${sel ? TEAL : "#e5e7eb"}`, background: sel ? "#f0fdfa" : "#fafafa", cursor: "pointer", textAlign: "left", transition: "all 0.15s", outline: "none" }}>
+                      <div style={{ fontSize: 18, marginBottom: 5 }}>{icon}</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: sel ? TEAL : "#374151" }}>{label}</div>
+                      <div style={{ fontSize: 11, color: sel ? "#0d9488" : "#9ca3af", marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Role — dropdown */}
-            <FancySelect
-              label="Role *"
-              value={role}
-              onChange={v => setRole(v)}
-              options={ADMIN_ROLES.map(r => ({ value: r.value, label: r.label }))}
-            />
-
-            {/* Status (edit only) */}
+            {/* Status toggle — edit only */}
             {isEdit && (
-              <FancySelect
-                label="Status"
-                value={status}
-                onChange={v => setStatus(v as "active" | "inactive")}
-                options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]}
-              />
+              <div>
+                <label style={sectionLabel}>Status</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {([{ v: "active", label: "● Active", color: "#059669", bg: "#f0fdf4", border: "#86efac" }, { v: "inactive", label: "○ Inactive", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" }] as const).map(({ v, label, color, bg, border }) => {
+                    const sel = status === v;
+                    return (
+                      <button key={v} type="button" onClick={() => setStatus(v)}
+                        style={{ flex: 1, height: 40, borderRadius: 9, border: `2px solid ${sel ? border : "#e5e7eb"}`, background: sel ? bg : "#fafafa", color: sel ? color : "#9ca3af", fontSize: 12.5, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
-
           </div>
+
+          {/* Section Access — only for staff (admin) */}
+          {role === "admin" && (
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e8edf2", padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <label style={sectionLabel}>Section Access</label>
+                <button type="button"
+                  onClick={() => setSections(prev => prev.length === ALL_SECTION_IDS.length ? [] : [...ALL_SECTION_IDS])}
+                  style={{ fontSize: 11, fontWeight: 700, color: TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  {sections.length === ALL_SECTION_IDS.length ? "Clear all" : "Select all"}
+                </button>
+              </div>
+
+              {SECTION_GROUPS.map(({ group, items }) => {
+                const ids = items.map(i => i.id);
+                const allSel = ids.every(id => sections.includes(id));
+                return (
+                  <div key={group} style={{ marginBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ fontSize: 9.5, fontWeight: 800, color: "#9ca3af", letterSpacing: "0.12em", textTransform: "uppercase" }}>{group}</span>
+                      <button type="button" onClick={() => toggleGroup(ids)}
+                        style={{ fontSize: 10.5, fontWeight: 700, color: allSel ? "#9ca3af" : TEAL, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                        {allSel ? "Deselect all" : "Select all"}
+                      </button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,170px),1fr))", gap: 6 }}>
+                      {items.map(({ id, label }) => {
+                        const checked = sections.includes(id);
+                        return (
+                          <button key={id} type="button" onClick={() => toggleSection(id)}
+                            style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 11px", borderRadius: 8, border: `1.5px solid ${checked ? TEAL : "#e5e7eb"}`, background: checked ? "#f0fdfa" : "#fafafa", cursor: "pointer", transition: "all 0.12s", textAlign: "left" }}>
+                            <div style={{ width: 17, height: 17, borderRadius: 4, border: `2px solid ${checked ? TEAL : "#d1d5db"}`, background: checked ? TEAL : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              {checked && <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                            </div>
+                            <span style={{ fontSize: 12, fontWeight: checked ? 600 : 400, color: checked ? TEAL : "#6b7280", lineHeight: 1.3 }}>{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Superadmin access note */}
+          {role === "superadmin" && (
+            <div style={{ background: "#f0fdfa", borderRadius: 10, border: "1px solid rgba(13,148,136,0.22)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>🛡️</span>
+              <p style={{ fontSize: 12, color: TEAL, fontWeight: 600, lineHeight: 1.5 }}>
+                Super admins have full access to all sections automatically — no section restrictions apply.
+              </p>
+            </div>
+          )}
 
           {/* Error */}
           {err && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, padding: "11px 14px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", fontSize: 13, fontWeight: 600 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", fontSize: 13, fontWeight: 600 }}>
               <AlertCircle size={15} /> {err}
             </div>
           )}
 
           {/* Submit */}
           <button type="submit" disabled={saving}
-            style={{ width: "100%", height: 50, marginTop: 20, borderRadius: 12, border: "none", background: saving ? "rgba(13,148,136,0.4)" : "linear-gradient(135deg,#0d9488,#0d9488)", color: "#fff", fontWeight: 700, fontSize: 15, cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, boxShadow: "0 4px 18px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>
-            {saving ? "Saving…" : isEdit ? <><Pencil size={16} /> Update Admin</> : <><UserPlus size={16} /> Add Admin</>}
+            style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: saving ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontWeight: 700, fontSize: 14, cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: saving ? "none" : "0 4px 16px rgba(13,148,136,0.35)", transition: "all 0.2s" }}>
+            {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Staff Member"}
           </button>
         </form>
       </motion.div>
@@ -3865,6 +3977,7 @@ export default function AdminPage() {
     sessionStorage.removeItem("admin_name");
     sessionStorage.removeItem("admin_mobile");
     sessionStorage.removeItem("admin_role");
+    sessionStorage.removeItem("admin_sections");
     setAuthed(false);
     setLoggedName("");
     setLoggedMobile("");
@@ -3885,13 +3998,23 @@ export default function AdminPage() {
   }, [admins, loggedMobile]);
   const isSuperAdmin = loggedRole === "superadmin";
   const isGuruji     = loggedRole === "guruji";
+  const loggedAdmin = useMemo(() => admins.find(a => a.mobile === loggedMobile), [admins, loggedMobile]);
+  const canAccess = (section: string) => {
+    if (isSuperAdmin || isGuruji) return true;
+    // For staff: admins list is empty (only fetched for superadmin), so read from sessionStorage
+    const secs: string[] | null = loggedAdmin?.allowedSections ?? (() => {
+      try {
+        const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_sections") : null;
+        return s && s !== "null" ? JSON.parse(s) : null;
+      } catch { return null; }
+    })();
+    if (!secs) return true; // null = no restrictions set
+    return secs.includes(section);
+  };
 
   /* redirect non-superadmin away from the Admins tab (cannot call router in render) */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (tab === "admins" && !isSuperAdmin) tabChange("today");
-  // tabChange is recreated each render — intentionally omitted from deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (tab === "admins" && !isSuperAdmin) setTab("today");
   }, [tab, isSuperAdmin]);
 
   if (!authed) return (
@@ -3999,7 +4122,7 @@ export default function AdminPage() {
         <nav style={{ flex: 1, padding: "16px 10px", overflowY: "auto" }}>
 
           {/* Today — command center */}
-          {([
+          {canAccess("today") && ([
             { key: "today" as const, label: "Today", icon: "🏛️", urgent: (bookings.length + contacts.length) > 0 },
           ]).map(({ key, label, icon, urgent }) => (
             <button key={key} onClick={() => tabChange(key)}
@@ -4017,11 +4140,11 @@ export default function AdminPage() {
             Operations
           </p>
           {([
-            { key: "trikala"     as const, label: "Trikala Cases",    icon: "⭕" },
-            { key: "appointments"as const, label: "Appointments",     icon: "📅" },
-            { key: "bookings"    as const, label: "Appointment Requests", icon: "📋" },
-            { key: "contacts"    as const, label: "Contact Messages",  icon: "📬" },
-          ]).map(({ key, label, icon }) => (
+            { key: "trikala"     as const, label: "Trikala Cases",        icon: "⭕", section: "trikala" },
+            { key: "appointments"as const, label: "Appointments",         icon: "📅", section: "appointments" },
+            { key: "bookings"    as const, label: "Appointment Requests", icon: "📋", section: "bookings" },
+            { key: "contacts"    as const, label: "Contact Messages",     icon: "📬", section: "contacts" },
+          ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{icon}</span>
@@ -4029,8 +4152,8 @@ export default function AdminPage() {
             </button>
           ))}
 
-          {/* Guruji Darshan — only guruji and superadmin may enter this console */}
-          {(isGuruji || isSuperAdmin) && (() => {
+          {/* Guruji Darshan */}
+          {(isGuruji || isSuperAdmin || canAccess("guruji")) && (() => {
             const gurujiActive = pathname?.includes("/admin/guruji") ?? false;
             return (
               <button
@@ -4050,9 +4173,8 @@ export default function AdminPage() {
             Spiritual Records
           </p>
           {([
-            { key: "devotees" as const, label: "Devotee Contacts",  icon: "🙏" },
-            // { key: "reports"  as const, label: "Reports & PDFs",    icon: "📄" },
-          ]).map(({ key, label, icon }) => (
+            { key: "devotees" as const, label: "Devotee Contacts", icon: "🙏", section: "devotees" },
+          ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{icon}</span>
@@ -4069,9 +4191,9 @@ export default function AdminPage() {
                 Configuration
               </p>
               {([
-                ...(isSuperAdmin ? [{ key: "admins" as const, label: "Admin Users", icon: "👥" }] : []),
-                { key: "settings" as const, label: "Settings", icon: "⚙️" },
-              ]).map(({ key, label, icon }) => (
+                ...(isSuperAdmin ? [{ key: "admins" as const, label: "Admin Users", icon: "👥", section: "admins" }] : []),
+                { key: "settings" as const, label: "Settings", icon: "⚙️", section: "settings" },
+              ]).filter(({ section }) => section === "admins" ? isSuperAdmin : canAccess(section)).map(({ key, label, icon }) => (
                 <button key={key} onClick={() => tabChange(key)}
                   style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
                   <span style={{ fontSize: 14 }}>{icon}</span>
@@ -5179,7 +5301,7 @@ export default function AdminPage() {
                       const roleBg    = a.role === "superadmin" ? "#f0fdfa"              : a.role === "guruji" ? "#fffbeb"              : "#ede9fe";
                       const roleClr   = a.role === "superadmin" ? "#0d9488"              : a.role === "guruji" ? "#b45309"              : "#7c3aed";
                       const roleBdr   = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)"  : "rgba(124,58,237,0.3)";
-                      const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "ADMIN";
+                      const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "STAFF";
                       return (
                         <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}

@@ -6,22 +6,27 @@ export interface AdminUser {
   name: string;
   mobile: string;
   role: "superadmin" | "admin" | "guruji";
-  sectionsCount: number;
   status: "active" | "inactive";
   lastLogin?: string;
   createdAt?: string;
+  allowedSections?: string[] | null;
 }
 
 function mapAdminUser(r: Record<string, any>): AdminUser {
+  let secs: string[] | null = null;
+  if (r.allowed_sections) {
+    try { secs = typeof r.allowed_sections === "string" ? JSON.parse(r.allowed_sections) : r.allowed_sections; }
+    catch { secs = null; }
+  }
   return {
-    id:            r.id,
-    name:          r.name,
-    mobile:        r.mobile,
-    role:          r.role,
-    sectionsCount: r.sections_count ?? r.sectionsCount ?? 0,
-    status:        r.status,
-    lastLogin:     r.last_login ?? r.lastLogin,
-    createdAt:     r.created_at ?? r.createdAt,
+    id:             r.id,
+    name:           r.name,
+    mobile:         r.mobile,
+    role:           r.role,
+    status:         r.status ?? "active",
+    lastLogin:      r.last_login ?? r.lastLogin,
+    createdAt:      r.created_at ?? r.createdAt,
+    allowedSections: secs,
   };
 }
 
@@ -39,7 +44,7 @@ export async function createAdminUser(payload: {
 }
 
 export async function updateAdminUser(id: number, payload: {
-  name: string; role: string; status: string;
+  name: string; role: string; status: string; allowedSections?: string[] | null;
 }): Promise<AdminUser> {
   const data = await sendJson(`/api/admin-users/${id}`, "PATCH", payload);
   return mapAdminUser(data.data);
@@ -60,7 +65,7 @@ export async function adminSendOtp(mobile: string): Promise<{ otp: string }> {
   return data;
 }
 
-export async function adminVerifyOtp(mobile: string, otp: string): Promise<{ name: string; role: string }> {
+export async function adminVerifyOtp(mobile: string, otp: string): Promise<{ name: string; role: string; allowedSections?: string[] | null }> {
   const res = await fetch(`${BASE}/api/admin-users/verify-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -852,9 +857,8 @@ export async function convertBookingToAppointment(
 ══════════════════════════════════════════════════════════════════ */
 export const ADMIN_ROLES = [
   { value: "superadmin", label: "Super Admin", desc: "Full access to all modules" },
-  { value: "guruji",     label: "Guruji",      desc: "Guruji Vakya + Read all" },
-  { value: "admin",      label: "Admin",        desc: "General admin access" },
-] as const;
+  { value: "admin",      label: "Staff",        desc: "Section-based access" },
+];
 
 /* ══════════════════════════════════════════════════════════════════
    AUDIT LOG viewer (PRD §11, §19)

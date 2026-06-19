@@ -2,37 +2,11 @@
 
 import React from "react";
 import { createPortal } from "react-dom";
-import { Calendar, CalendarPlus, ChevronLeft, ChevronRight, Clock } from "lucide-react";
-
-/* ── Branded calendar — scrollable hour/minute column ──────────── */
-function TimeCol({ refEl, label, items, sel, onPick }: {
-  refEl: React.RefObject<HTMLDivElement | null>;
-  label: string; items: number; sel: number | null; onPick: (n: number) => void;
-}) {
-  const p2 = (n: number) => String(n).padStart(2, "0");
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 9.5, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginBottom: 3 }}>{label}</div>
-      <div ref={refEl} className="dtp-scroll" style={{ height: 92, overflowY: "auto", border: "1px solid #f0f0f0", borderRadius: 7, padding: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-        {Array.from({ length: items }, (_, i) => i).map(n => {
-          const on = sel === n;
-          return (
-            <button key={n} type="button" data-sel={on} onClick={() => onPick(n)}
-              onMouseEnter={e => { if (!on) e.currentTarget.style.background = "#f0fdfa"; }}
-              onMouseLeave={e => { if (!on) e.currentTarget.style.background = "transparent"; }}
-              style={{ flexShrink: 0, height: 22, borderRadius: 5, border: "none", background: on ? "#0d9488" : "transparent", color: on ? "#fff" : "#374151", fontSize: 11, fontWeight: on ? 700 : 500, cursor: "pointer", transition: "background 0.1s" }}>
-              {p2(n)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import { Calendar, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 
 /* ── Reusable branded date / date-time picker (teal, matches site) ──
-   Replaces the native datetime-local popup (which can't be themed on
-   Windows). value format: "YYYY-MM-DD" (date) or "YYYY-MM-DDTHH:mm". */
+   value format: "YYYY-MM-DD" (date) or "YYYY-MM-DDTHH:mm".
+   Time is entered via a native typable <input type="time"> — no scroll drums. */
 export function DateTimePicker({ value, onChange, mode = "datetime", placeholder, maxDate }: {
   value: string;
   onChange: (v: string) => void;
@@ -41,22 +15,26 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
   maxDate?: string;
 }) {
   const TEAL = "#0d9488";
-  const WD = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const WD  = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const MON = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const p2 = (n: number) => String(n).padStart(2, "0");
+  const p2  = (n: number) => String(n).padStart(2, "0");
 
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
-  const popRef = React.useRef<HTMLDivElement>(null);
-  const hourColRef = React.useRef<HTMLDivElement>(null);
-  const minColRef = React.useRef<HTMLDivElement>(null);
+  const popRef  = React.useRef<HTMLDivElement>(null);
   const [coords, setCoords] = React.useState({ left: 0, top: 0, width: 0, flip: false });
+  const [showMonthDrop, setShowMonthDrop] = React.useState(false);
+  const [showYearDrop,  setShowYearDrop]  = React.useState(false);
+  const monthDropRef = React.useRef<HTMLDivElement>(null);
+  const yearDropRef  = React.useRef<HTMLDivElement>(null);
+  const monthListRef = React.useRef<HTMLDivElement>(null);
+  const yearListRef  = React.useRef<HTMLDivElement>(null);
 
   const reposition = React.useCallback(() => {
     const el = wrapRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    const POP_H = mode === "datetime" ? 370 : 290;
+    const POP_H = mode === "datetime" ? 330 : 270;
     const width = Math.min(Math.max(r.width, 244), window.innerWidth - 16);
     const spaceBelow = window.innerHeight - r.bottom;
     const flip = spaceBelow < POP_H && r.top > spaceBelow;
@@ -91,18 +69,6 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
   React.useEffect(() => { if (open && parsed) setView({ year: parsed.y, month: parsed.m }); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    if (!open || mode !== "datetime") return;
-    const id = requestAnimationFrame(() => {
-      [hourColRef, minColRef].forEach(ref => {
-        const col = ref.current;
-        const selEl = col?.querySelector("[data-sel='true']") as HTMLElement | null;
-        if (col && selEl) col.scrollTop = selEl.offsetTop - col.clientHeight / 2 + selEl.clientHeight / 2;
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [open, mode, value]);
-
-  React.useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
       const t = e.target as Node;
@@ -115,18 +81,43 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     return () => { document.removeEventListener("mousedown", h); document.removeEventListener("keydown", k); };
   }, [open]);
 
+  /* Close month/year dropdowns on outside click */
+  React.useEffect(() => {
+    if (!showMonthDrop && !showYearDrop) return;
+    const h = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (monthDropRef.current && !monthDropRef.current.contains(t)) setShowMonthDrop(false);
+      if (yearDropRef.current  && !yearDropRef.current.contains(t))  setShowYearDrop(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [showMonthDrop, showYearDrop]);
+
+  /* Auto-scroll to selected item when dropdowns open */
+  React.useEffect(() => {
+    if (showMonthDrop && monthListRef.current)
+      monthListRef.current.scrollTop = Math.max(0, (view.month - 1) * 34);
+  }, [showMonthDrop]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    if (showYearDrop && yearListRef.current) {
+      const idx = yearList.indexOf(view.year);
+      yearListRef.current.scrollTop = Math.max(0, (idx - 1) * 34);
+    }
+  }, [showYearDrop]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const emit = (y: number, mo: number, d: number, hh: number, mm: number) => {
     const dp = `${y}-${p2(mo + 1)}-${p2(d)}`;
     onChange(mode === "date" ? dp : `${dp}T${p2(hh)}:${p2(mm)}`);
   };
 
   const firstDow = new Date(view.year, view.month, 1).getDay();
-  const dim = new Date(view.year, view.month + 1, 0).getDate();
+  const dim      = new Date(view.year, view.month + 1, 0).getDate();
   const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-  const maxKey = maxDate ? new Date(maxDate + "T23:59:59") : null;
+  const maxKey   = maxDate ? new Date(maxDate + "T23:59:59") : null;
 
-  const isSel = (d: number) => !!parsed && parsed.y === view.year && parsed.m === view.month && parsed.d === d;
-  const isToday = (d: number) => `${view.year}-${view.month}-${d}` === todayKey;
+  const isSel     = (d: number) => !!parsed && parsed.y === view.year && parsed.m === view.month && parsed.d === d;
+  const isToday   = (d: number) => `${view.year}-${view.month}-${d}` === todayKey;
   const isDisabled = (d: number) => maxKey ? new Date(view.year, view.month, d) > maxKey : false;
 
   const prevMonth = () => setView(v => v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 });
@@ -137,11 +128,17 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     const dt = new Date(parsed.y, parsed.m, parsed.d, parsed.hh, parsed.mm);
     const dpart = dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
     if (mode === "date") return dpart;
-    return `${dpart} · ${dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`;
+    return `${dpart} · ${p2(parsed.hh)}:${p2(parsed.mm)}`;
   };
 
   const navBtn: React.CSSProperties = { background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
   const footBtn = (color: string): React.CSSProperties => ({ background: "transparent", border: "none", fontSize: 11, fontWeight: 700, color, cursor: "pointer", padding: "4px 7px", borderRadius: 6 });
+  const yearList = React.useMemo(() => Array.from({ length: 81 }, (_, i) => now.getFullYear() - 50 + i), []);
+
+  /* Shared styles for custom dropdowns */
+  const dropTrigger: React.CSSProperties = { background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, padding: "4px 8px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, outline: "none" };
+  const dropPanel: React.CSSProperties = { position: "absolute", top: "calc(100% + 5px)", left: 0, zIndex: 10002, background: "#fff", borderRadius: 8, border: "1.5px solid rgba(13,148,136,0.22)", boxShadow: "0 8px 28px rgba(13,148,136,0.18)", maxHeight: "min(204px, 40vh)", overflowY: "auto", minWidth: 110 };
+  const dropItem = (sel: boolean): React.CSSProperties => ({ padding: "8px 14px", fontSize: 12, fontWeight: sel ? 700 : 400, color: sel ? "#fff" : "#374151", background: sel ? TEAL : "transparent", cursor: "pointer", whiteSpace: "nowrap" });
 
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
@@ -154,16 +151,62 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
       {open && typeof document !== "undefined" && createPortal(
         <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: "1.5px solid rgba(13,148,136,0.25)", boxShadow: "0 12px 40px rgba(13,148,136,0.20)", overflow: "hidden" }}>
           {/* Teal header */}
-          <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "7px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "7px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
             <button type="button" onClick={prevMonth} style={navBtn}><ChevronLeft size={15} color="#fff" /></button>
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>{MON[view.month]} {view.year}</span>
+
+            <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1, justifyContent: "center" }}>
+
+              {/* ── Month picker ── */}
+              <div ref={monthDropRef} style={{ position: "relative" }}>
+                <button type="button" style={dropTrigger}
+                  onClick={() => { setShowMonthDrop(d => !d); setShowYearDrop(false); }}>
+                  {MON[view.month]}
+                  <ChevronDown size={9} color="#fff" />
+                </button>
+                {showMonthDrop && (
+                  <div ref={monthListRef} style={dropPanel}>
+                    {MON.map((m, i) => (
+                      <div key={i} style={dropItem(i === view.month)}
+                        onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
+                        onMouseEnter={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = "#f0fdfa"; }}
+                        onMouseLeave={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >{m}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Year picker ── */}
+              <div ref={yearDropRef} style={{ position: "relative" }}>
+                <button type="button" style={dropTrigger}
+                  onClick={() => { setShowYearDrop(d => !d); setShowMonthDrop(false); }}>
+                  {view.year}
+                  <ChevronDown size={9} color="#fff" />
+                </button>
+                {showYearDrop && (
+                  <div ref={yearListRef} style={{ ...dropPanel, minWidth: 76 }}>
+                    {yearList.map(y => (
+                      <div key={y} style={dropItem(y === view.year)}
+                        onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
+                        onMouseEnter={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = "#f0fdfa"; }}
+                        onMouseLeave={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >{y}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
             <button type="button" onClick={nextMonth} style={navBtn}><ChevronRight size={15} color="#fff" /></button>
           </div>
 
           <div style={{ padding: "8px 10px" }}>
+            {/* Weekday labels */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 2 }}>
               {WD.map(w => <div key={w} style={{ textAlign: "center", fontSize: 9.5, fontWeight: 700, color: "#9ca3af", padding: "2px 0" }}>{w}</div>)}
             </div>
+            {/* Day grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
               {Array.from({ length: firstDow }).map((_, i) => <div key={`b${i}`} />)}
               {Array.from({ length: dim }, (_, i) => i + 1).map(d => {
@@ -180,19 +223,25 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
               })}
             </div>
 
+            {/* Time input — typable, 24-hour, no scroll drums */}
             {mode === "datetime" && (
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <Clock size={12} color={TEAL} />
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280" }}>Time</span>
-                  <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 800, color: TEAL }}>{parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : "--:--"}</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280" }}>Time (HH:MM)</span>
                 </div>
-                <div style={{ display: "flex", gap: 7 }}>
-                  <TimeCol refEl={hourColRef} label="Hour" items={24} sel={parsed?.hh ?? null}
-                    onPick={h => emit(view.year, view.month, parsed?.d ?? now.getDate(), h, parsed?.mm ?? 0)} />
-                  <TimeCol refEl={minColRef} label="Min" items={60} sel={parsed?.mm ?? null}
-                    onPick={mi => emit(view.year, view.month, parsed?.d ?? now.getDate(), parsed?.hh ?? 9, mi)} />
-                </div>
+                <input
+                  type="time"
+                  value={parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : ""}
+                  onChange={e => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    if (!isNaN(h) && !isNaN(m))
+                      emit(view.year, view.month, parsed?.d ?? now.getDate(), h, m);
+                  }}
+                  style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#f8fafc", fontSize: 14, fontWeight: 600, color: "#1f2937", outline: "none", boxSizing: "border-box", cursor: "text" }}
+                  onFocus={e => { e.target.style.borderColor = TEAL; e.target.style.background = "#f0fdfa"; }}
+                  onBlur={e =>  { e.target.style.borderColor = "#e5e7eb"; e.target.style.background = "#f8fafc"; }}
+                />
               </div>
             )}
 
@@ -205,7 +254,8 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                   emit(n.getFullYear(), n.getMonth(), n.getDate(), mode === "date" ? 0 : n.getHours(), mode === "date" ? 0 : n.getMinutes());
                   if (mode === "date") setOpen(false);
                 }} style={footBtn(TEAL)}>{mode === "date" ? "Today" : "Now"}</button>
-                <button type="button" onClick={() => setOpen(false)} style={{ background: TEAL, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
+                <button type="button" onClick={() => setOpen(false)}
+                  style={{ background: TEAL, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
               </div>
             </div>
           </div>
@@ -216,112 +266,226 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
   );
 }
 
-/* ── Standalone time picker — matches DateTimePicker branding ──────
-   value: "HH:mm" | ""   onChange: (v: string) => void
-   */
-export function TimePicker({ value, onChange, placeholder }: {
+/* ── Standalone time picker — inline HH : MM  AM/PM  ─── */
+export function TimePicker({ value, onChange }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
   const TEAL = "#0d9488";
-  const p2 = (n: number) => String(n).padStart(2, "0");
+  const hourRef = React.useRef<HTMLInputElement>(null);
+  const minRef  = React.useRef<HTMLInputElement>(null);
+  const lastVal = React.useRef(value);
+  /* digit buffers — accumulate typed digits independently of cursor position */
+  const hourBuf = React.useRef("");
+  const minBuf  = React.useRef("");
 
-  const [open, setOpen] = React.useState(false);
-  const wrapRef  = React.useRef<HTMLDivElement>(null);
-  const popRef   = React.useRef<HTMLDivElement>(null);
-  const hourRef  = React.useRef<HTMLDivElement>(null);
-  const minRef   = React.useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = React.useState({ left: 0, top: 0, width: 0, flip: false });
+  const parse12 = (v: string): { h: string; m: string; a: "AM" | "PM" } => {
+    if (!v) return { h: "", m: "", a: "AM" };
+    const [hh, mm] = v.split(":").map(Number);
+    return {
+      h: String(hh === 0 ? 12 : hh > 12 ? hh - 12 : hh).padStart(2, "0"),
+      m: String(mm).padStart(2, "0"),
+      a: hh < 12 ? "AM" : "PM",
+    };
+  };
 
-  const parsed = React.useMemo(() => {
-    if (!value) return null;
-    const [h, m] = value.split(":").map(Number);
-    if (isNaN(h) || isNaN(m)) return null;
-    return { hh: h, mm: m };
+  const init = parse12(value);
+  const [hour, setHour] = React.useState(init.h);
+  const [min,  setMin]  = React.useState(init.m);
+  const [ampm, setAmpm] = React.useState<"AM" | "PM">(init.a);
+  const [focused, setFocused] = React.useState(false);
+
+  React.useEffect(() => {
+    if (value !== lastVal.current) {
+      lastVal.current = value;
+      const p = parse12(value);
+      setHour(p.h); setMin(p.m); setAmpm(p.a);
+      hourBuf.current = ""; minBuf.current = "";
+    }
   }, [value]);
 
-  const reposition = React.useCallback(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const POP_H = 175;
-    const width = Math.min(Math.max(r.width, 180), window.innerWidth - 16);
-    const spaceBelow = window.innerHeight - r.bottom;
-    const flip = spaceBelow < POP_H && r.top > spaceBelow;
-    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
-    setCoords({ left, top: flip ? r.top - 6 : r.bottom + 6, width, flip });
-  }, []);
+  const emit = (h: string, m: string, a: "AM" | "PM") => {
+    const hN = parseInt(h, 10), mN = parseInt(m, 10);
+    if (!h || isNaN(hN) || hN < 1 || hN > 12 || isNaN(mN) || mN < 0 || mN > 59) return;
+    const h24 = hN === 12 ? (a === "AM" ? 0 : 12) : (a === "PM" ? hN + 12 : hN);
+    const v = `${String(h24).padStart(2, "0")}:${String(mN).padStart(2, "0")}`;
+    lastVal.current = v;
+    onChange(v);
+  };
 
-  React.useEffect(() => {
-    if (!open) return;
-    reposition();
-    window.addEventListener("scroll", reposition, true);
-    window.addEventListener("resize", reposition);
-    return () => { window.removeEventListener("scroll", reposition, true); window.removeEventListener("resize", reposition); };
-  }, [open, reposition]);
+  const goMin  = () => setTimeout(() => { minRef.current?.focus();  minRef.current?.select();  minBuf.current  = ""; }, 10);
+  const goHour = () => setTimeout(() => { hourRef.current?.focus(); hourRef.current?.select(); hourBuf.current = ""; }, 10);
 
-  React.useEffect(() => {
-    if (!open) return;
-    const id = requestAnimationFrame(() => {
-      [hourRef, minRef].forEach(ref => {
-        const col = ref.current;
-        const sel = col?.querySelector("[data-sel='true']") as HTMLElement | null;
-        if (col && sel) col.scrollTop = sel.offsetTop - col.clientHeight / 2 + sel.clientHeight / 2;
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [open, value]);
+  /* ── Hour keyboard handler ── */
+  const onHourKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowRight") { e.preventDefault(); goMin(); return; }
+    if (e.key === "Tab") return; // let Tab move focus naturally
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const n = ((parseInt(hour, 10) || 0) % 12) + 1;
+      const s = String(n).padStart(2, "0");
+      setHour(s); emit(s, min, ampm); return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const cur = parseInt(hour, 10) || 1;
+      const n = cur <= 1 ? 12 : cur - 1;
+      const s = String(n).padStart(2, "0");
+      setHour(s); emit(s, min, ampm); return;
+    }
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      setHour(""); hourBuf.current = ""; return;
+    }
+    if (/^\d$/.test(e.key)) {
+      e.preventDefault();
+      /* append digit to buffer (max 2), then validate */
+      const buf = (hourBuf.current + e.key).slice(-2);
+      const n = parseInt(buf, 10);
+      if (n >= 1 && n <= 12) {
+        const s = String(n).padStart(2, "0");
+        setHour(s); emit(s, min, ampm);
+        if (buf.length >= 2 || n >= 2) {
+          hourBuf.current = ""; goMin(); // auto-advance when unambiguous
+        } else {
+          hourBuf.current = buf;
+        }
+      }
+    }
+  };
 
-  React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (wrapRef.current?.contains(t) || popRef.current?.contains(t)) return;
-      setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  /* Mobile fallback: onChange fires when onKeyDown's preventDefault isn't respected */
+  const onHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    if (!raw) { setHour(""); hourBuf.current = ""; return; }
+    const newChar = raw.slice(-1);
+    const buf = (hourBuf.current + newChar).slice(-2);
+    const n = parseInt(buf, 10);
+    if (n >= 1 && n <= 12) {
+      const s = String(n).padStart(2, "0");
+      setHour(s); emit(s, min, ampm);
+      if (buf.length >= 2 || n >= 2) { hourBuf.current = ""; goMin(); }
+      else hourBuf.current = buf;
+    }
+  };
 
-  const emit = (hh: number, mm: number) => onChange(`${p2(hh)}:${p2(mm)}`);
+  /* ── Minute keyboard handler ── */
+  const onMinKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); goHour(); return; }
+    if (e.key === "Tab") return;
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      if (!min || min === "00") { goHour(); return; }
+      setMin(""); minBuf.current = ""; return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const n = ((parseInt(min, 10) || 0) + 1) % 60;
+      const s = String(n).padStart(2, "0");
+      setMin(s); emit(hour, s, ampm); return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const cur = parseInt(min, 10) || 0;
+      const n = cur <= 0 ? 59 : cur - 1;
+      const s = String(n).padStart(2, "0");
+      setMin(s); emit(hour, s, ampm); return;
+    }
+    if (/^\d$/.test(e.key)) {
+      e.preventDefault();
+      const buf = (minBuf.current + e.key).slice(-2);
+      const n = parseInt(buf, 10);
+      if (n >= 0 && n <= 59) {
+        const s = String(n).padStart(2, "0");
+        setMin(s); emit(hour, s, ampm);
+        minBuf.current = buf.length >= 2 ? "" : buf;
+      }
+    }
+  };
 
-  const borderColor = open ? TEAL : "#e5e7eb";
+  /* Mobile fallback for minute */
+  const onMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    if (!raw) { setMin(""); minBuf.current = ""; return; }
+    const newChar = raw.slice(-1);
+    const buf = (minBuf.current + newChar).slice(-2);
+    const n = parseInt(buf, 10);
+    if (n >= 0 && n <= 59) {
+      const s = String(n).padStart(2, "0");
+      setMin(s); emit(hour, s, ampm);
+      minBuf.current = buf.length >= 2 ? "" : buf;
+    }
+  };
+
+  const toggleAmpm = (a: "AM" | "PM") => { setAmpm(a); emit(hour, min, a); };
+
+  const inputStyle: React.CSSProperties = {
+    width: 22, border: "none", outline: "none", textAlign: "center",
+    fontSize: 13, fontWeight: 600, color: "#1f2937", background: "transparent",
+    padding: 0, fontFamily: "inherit",
+  };
 
   return (
-    <div ref={wrapRef} style={{ position: "relative" }}>
-      <button type="button" onClick={() => { if (!open) reposition(); setOpen(o => !o); }}
-        style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${borderColor}`, background: open ? "#f0fdfa" : "#fff", fontSize: 13, color: parsed ? "#1f2937" : "#9ca3af", fontWeight: parsed ? 600 : 400, outline: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, boxSizing: "border-box", transition: "border-color 0.15s, background 0.15s" }}>
-        <span>{parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : (placeholder || "Select time")}</span>
-        <Clock size={15} color={TEAL} style={{ flexShrink: 0 }} />
-      </button>
-
-      {open && typeof document !== "undefined" && createPortal(
-        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: "1.5px solid rgba(13,148,136,0.25)", boxShadow: "0 12px 40px rgba(13,148,136,0.20)", overflow: "hidden" }}>
-          <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "7px 12px", display: "flex", alignItems: "center", gap: 7 }}>
-            <Clock size={13} color="#fff" />
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>Select Time</span>
-            <span style={{ marginLeft: "auto", fontSize: 13, fontWeight: 800, color: "#fff" }}>{parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : "--:--"}</span>
-          </div>
-          <div style={{ padding: "10px 10px 8px" }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <TimeCol refEl={hourRef} label="Hour" items={24} sel={parsed?.hh ?? null}
-                onPick={h => emit(h, parsed?.mm ?? 0)} />
-              <TimeCol refEl={minRef}  label="Min"  items={60} sel={parsed?.mm ?? null}
-                onPick={m => emit(parsed?.hh ?? 0, m)} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 7, paddingTop: 7, borderTop: "1px solid #f0f0f0" }}>
-              <button type="button" onClick={() => onChange("")}
-                style={{ background: "transparent", border: "none", fontSize: 11, fontWeight: 700, color: "#9ca3af", cursor: "pointer", padding: "4px 7px", borderRadius: 6 }}>Clear</button>
-              <button type="button" onClick={() => setOpen(false)}
-                style={{ background: TEAL, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+    <div
+      onFocus={() => setFocused(true)}
+      onBlur={e => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setFocused(false);
+          hourBuf.current = ""; minBuf.current = "";
+        }
+      }}
+      style={{
+        display: "flex", alignItems: "center",
+        height: 40, padding: "0 10px 0 13px",
+        borderRadius: 9,
+        border: `1.5px solid ${focused ? TEAL : "#e5e7eb"}`,
+        background: focused ? "#f0fdfa" : "#fff",
+        boxSizing: "border-box",
+        transition: "border-color 0.15s, background 0.15s",
+        gap: 2,
+      }}
+    >
+      {/* Hour — 01-12 */}
+      <input
+        ref={hourRef}
+        type="text" inputMode="numeric"
+        value={hour} placeholder="--"
+        onChange={onHourChange}
+        onKeyDown={onHourKey}
+        onFocus={e => { e.target.select(); hourBuf.current = ""; }}
+        maxLength={2}
+        style={inputStyle}
+      />
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", lineHeight: 1, padding: "0 1px" }}>:</span>
+      {/* Minute — 00-59, always 2 digits */}
+      <input
+        ref={minRef}
+        type="text" inputMode="numeric"
+        value={min} placeholder="--"
+        onChange={onMinChange}
+        onKeyDown={onMinKey}
+        onFocus={e => { e.target.select(); minBuf.current = ""; }}
+        maxLength={2}
+        style={inputStyle}
+      />
+      {/* Divider */}
+      <div style={{ width: 1, height: 18, background: "#e5e7eb", margin: "0 8px", flexShrink: 0 }} />
+      {/* AM / PM pills */}
+      {(["AM", "PM"] as const).map((a, i) => (
+        <button key={a} type="button" onClick={() => toggleAmpm(a)}
+          style={{
+            height: 26, padding: "0 8px", fontSize: 11, fontWeight: 700,
+            border: `1.5px solid ${ampm === a ? TEAL : "#e5e7eb"}`,
+            borderRadius: 5,
+            background: ampm === a ? "#f0fdfa" : "transparent",
+            color: ampm === a ? TEAL : "#9ca3af",
+            cursor: "pointer", marginLeft: i === 0 ? 0 : 3,
+            transition: "all 0.12s",
+          }}>
+          {a}
+        </button>
+      ))}
     </div>
   );
 }
