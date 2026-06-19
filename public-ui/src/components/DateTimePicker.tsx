@@ -218,12 +218,11 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
 
 /* ── Standalone time picker — matches DateTimePicker branding ──────
    value: "HH:mm" | ""   onChange: (v: string) => void
-   error: show red border when field is required but empty           */
-export function TimePicker({ value, onChange, placeholder, error }: {
+   */
+export function TimePicker({ value, onChange, placeholder }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  error?: boolean;
 }) {
   const TEAL = "#0d9488";
   const p2 = (n: number) => String(n).padStart(2, "0");
@@ -289,7 +288,7 @@ export function TimePicker({ value, onChange, placeholder, error }: {
 
   const emit = (hh: number, mm: number) => onChange(`${p2(hh)}:${p2(mm)}`);
 
-  const borderColor = open ? TEAL : error ? "#ef4444" : "#e5e7eb";
+  const borderColor = open ? TEAL : "#e5e7eb";
 
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>

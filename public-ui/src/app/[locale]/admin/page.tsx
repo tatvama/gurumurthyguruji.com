@@ -1548,12 +1548,12 @@ function DetailPanel({
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date *</label>
                               <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" />
-                              {!scheduleDate && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required</p>}
+                              {!scheduleDate && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>⚠ Required</p>}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Time *</label>
-                              <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" error={!scheduleTime} />
-                              {!scheduleTime && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required</p>}
+                              <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" />
+                              {!scheduleTime && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>⚠ Required</p>}
                             </div>
                           </div>
 
@@ -1576,8 +1576,8 @@ function DetailPanel({
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Meeting Link *</label>
                               <input type="url" value={scheduleMeetingLink} onChange={e => setScheduleMeetingLink(e.target.value)}
                                 placeholder="https://meet.google.com/…"
-                                style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 9, border: `1.5px solid ${!scheduleMeetingLink.trim() ? "#ef4444" : "#e5e7eb"}`, background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
-                              {!scheduleMeetingLink.trim() && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required for video appointments</p>}
+                                style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                              {!scheduleMeetingLink.trim() && <p style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 500, margin: "4px 0 0" }}>Enter a meeting link to continue</p>}
                             </div>
                           )}
                         </div>
