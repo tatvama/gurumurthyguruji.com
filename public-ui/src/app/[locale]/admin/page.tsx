@@ -5,11 +5,11 @@ export const dynamic = "force-dynamic";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { DateTimePicker } from "@/components/DateTimePicker";
+import { DateTimePicker, TimePicker } from "@/components/DateTimePicker";
 import { useRouter, useSearchParams, useParams, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  getAudienceBookings,
+  getAppointmentBookings,
   getContacts,
   getAdminUsers,
   createAdminUser,
@@ -44,7 +44,7 @@ import {
   type NotificationEvent,
   TRIKALA_STATUSES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, APPOINTMENT_MODES,
   WHATSAPP_TEMPLATES, ADMIN_ROLES,
-  type AudienceBooking,
+  type AppointmentBooking,
   type ContactMessage,
   type AdminUser,
   type TrikalaReading,
@@ -1046,7 +1046,7 @@ function CheckInPanel({ appt, onClose, onSaved }: { appt: Appointment; onClose: 
 ══════════════════════════════════════════════════════════════════ */
 function downloadPdfDirect(
   type: "bookings" | "contacts",
-  data: AudienceBooking[] | ContactMessage[],
+  data: AppointmentBooking[] | ContactMessage[],
 ) {
   const doc   = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const PW    = 210;
@@ -1134,7 +1134,7 @@ function downloadPdfDirect(
     autoTable(doc, {
       startY: 40,
       head: [["#", "Name", "Mobile", "Profession", "Location", "Ashram", "How Known", "Message", "Date"]],
-      body: (data as AudienceBooking[]).map((b, i) => [
+      body: (data as AppointmentBooking[]).map((b, i) => [
         i + 1, b.fullName || "—", b.mobile || "—",
         b.profession || "—", b.location || "—",
         b.nearestAshram || "—", b.howKnown || "—",
@@ -1322,7 +1322,7 @@ function DetailPanel({
   onClose,
   onScheduled,
 }: {
-  item: AudienceBooking | ContactMessage;
+  item: AppointmentBooking | ContactMessage;
   tab: Tab;
   onClose: () => void;
   onScheduled?: (id: string | number) => void;
@@ -1335,8 +1335,10 @@ function DetailPanel({
 
   /* ── Schedule popup state ── */
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [scheduleDateTime, setScheduleDateTime] = useState("");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
   const [scheduleMode, setScheduleMode] = useState("in-person");
+  const [scheduleMeetingLink, setScheduleMeetingLink] = useState("");
 
   /* ── Comments state (bookings only) ── */
   const [comments, setComments] = useState<BookingComment[]>([]);
@@ -1347,14 +1349,14 @@ function DetailPanel({
 
   React.useEffect(() => {
     if (!isBooking) return;
-    getBookingComments((item as AudienceBooking).id).then(setComments).catch(() => {});
-  }, [(item as AudienceBooking).id, isBooking]);
+    getBookingComments((item as AppointmentBooking).id).then(setComments).catch(() => {});
+  }, [(item as AppointmentBooking).id, isBooking]);
 
   async function submitComment() {
     if (!commentText.trim()) return;
     setSendingComment(true);
     try {
-      const c = await addBookingComment((item as AudienceBooking).id, commentText, isInternal);
+      const c = await addBookingComment((item as AppointmentBooking).id, commentText, isInternal);
       setComments(prev => [...prev, c]);
       setCommentText("");
     } catch { /* ignore */ } finally { setSendingComment(false); }
@@ -1363,19 +1365,21 @@ function DetailPanel({
   async function removeComment(id: number) {
     setDeletingId(id);
     try {
-      await deleteBookingComment((item as AudienceBooking).id, id);
+      await deleteBookingComment((item as AppointmentBooking).id, id);
       setComments(prev => prev.filter(c => c.id !== id));
     } catch { /* ignore */ } finally { setDeletingId(null); }
   }
 
   async function convertToAppt() {
-    if (!isBooking || !scheduleDateTime) return;
+    if (!isBooking || !scheduleDate || !scheduleTime) return;
+    if (scheduleMode === "video" && !scheduleMeetingLink.trim()) return;
     setConverting(true); setConvertMsg(null); setScheduleOpen(false);
     try {
-      const params: { start_time?: string; mode?: string } = { mode: scheduleMode };
-      if (scheduleDateTime) params.start_time = new Date(scheduleDateTime).toISOString();
-      await convertBookingToAppointment((item as AudienceBooking).id, params);
-      onScheduled?.((item as AudienceBooking).id);
+      const params: { start_time?: string; mode?: string; meeting_link?: string } = { mode: scheduleMode };
+      params.start_time = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+      if (scheduleMode === "video") params.meeting_link = scheduleMeetingLink.trim();
+      await convertBookingToAppointment((item as AppointmentBooking).id, params);
+      onScheduled?.((item as AppointmentBooking).id);
     } catch (e: any) {
       if (e?.status === 409) {
         setConvertMsg({ type: "warn", text: "An appointment already exists for this booking." });
@@ -1400,20 +1404,20 @@ function DetailPanel({
       setConvertDevoteeMsg({ type: "err", text: e?.message || "Conversion failed." });
     } finally { setConvertingDevotee(false); }
   }
-  const name    = isBooking ? (item as AudienceBooking).fullName  : (item as ContactMessage).name;
+  const name    = isBooking ? (item as AppointmentBooking).fullName  : (item as ContactMessage).name;
   const initial = (name || "?")[0].toUpperCase();
-  const sub     = isBooking ? (item as AudienceBooking).mobile    : (item as ContactMessage).email;
+  const sub     = isBooking ? (item as AppointmentBooking).mobile    : (item as ContactMessage).email;
   const [activeTab, setActiveTab] = useState<"details"|"comments">("details");
 
   const detailRows: { icon: string; label: string; val: string }[] = isBooking
     ? [
-        { icon: "👤", label: "Full Name",      val: (item as AudienceBooking).fullName },
-        { icon: "📱", label: "Mobile",         val: (item as AudienceBooking).mobile },
-        { icon: "💼", label: "Profession",     val: (item as AudienceBooking).profession },
-        { icon: "📍", label: "Location",       val: (item as AudienceBooking).location },
-        { icon: "🕌", label: "Nearest Ashram", val: (item as AudienceBooking).nearestAshram },
-        { icon: "🔗", label: "How Known",      val: (item as AudienceBooking).howKnown },
-        { icon: "💬", label: "Message",        val: (item as AudienceBooking).message || "—" },
+        { icon: "👤", label: "Full Name",      val: (item as AppointmentBooking).fullName },
+        { icon: "📱", label: "Mobile",         val: (item as AppointmentBooking).mobile },
+        { icon: "💼", label: "Profession",     val: (item as AppointmentBooking).profession },
+        { icon: "📍", label: "Location",       val: (item as AppointmentBooking).location },
+        { icon: "🕌", label: "Nearest Ashram", val: (item as AppointmentBooking).nearestAshram },
+        { icon: "🔗", label: "How Known",      val: (item as AppointmentBooking).howKnown },
+        { icon: "💬", label: "Message",        val: (item as AppointmentBooking).message || "—" },
       ]
     : [
         { icon: "👤", label: "Name",    val: (item as ContactMessage).name },
@@ -1505,7 +1509,7 @@ function DetailPanel({
               {/* Schedule Appointment */}
               {isBooking && (
                 <div>
-                  <button onClick={() => { setScheduleOpen(true); setConvertMsg(null); }} disabled={converting}
+                  <button onClick={() => { setScheduleOpen(true); setConvertMsg(null); setScheduleMeetingLink(""); }} disabled={converting}
                     style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: converting ? "#ccfbf1" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: converting ? "#0d9488" : "#fff", fontSize: 13, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: converting ? "none" : "0 4px 14px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>
                     <CalendarPlus size={16} />
                     {converting ? "Creating appointment…" : "Schedule Appointment"}
@@ -1528,7 +1532,7 @@ function DetailPanel({
                             <CalendarPlus size={18} color="#fff" />
                             <div>
                               <p style={{ fontSize: 13, fontWeight: 800, color: "#fff", margin: 0 }}>Schedule Appointment</p>
-                              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", margin: 0, marginTop: 1 }}>{(item as AudienceBooking).fullName}</p>
+                              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", margin: 0, marginTop: 1 }}>{(item as AppointmentBooking).fullName}</p>
                             </div>
                           </div>
                           <button onClick={() => setScheduleOpen(false)}
@@ -1539,11 +1543,22 @@ function DetailPanel({
 
                         {/* Body */}
                         <div style={{ padding: "20px 20px 16px" }}>
-                          <div style={{ marginBottom: 14 }}>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date &amp; Time *</label>
-                            <DateTimePicker value={scheduleDateTime} onChange={setScheduleDateTime} />
+                          {/* Date + Time — two separate columns, error under each */}
+                          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Date *</label>
+                              <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" />
+                              {!scheduleDate && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required</p>}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Time *</label>
+                              <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" error={!scheduleTime} />
+                              {!scheduleTime && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required</p>}
+                            </div>
                           </div>
-                          <div style={{ marginBottom: 6 }}>
+
+                          {/* Mode */}
+                          <div style={{ marginBottom: scheduleMode === "video" ? 12 : 6 }}>
                             <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Mode</label>
                             <div style={{ display: "flex", gap: 8 }}>
                               {[{ v: "in-person", label: "In-person" }, { v: "video", label: "Video" }, { v: "phone", label: "Phone" }].map(({ v, label }) => (
@@ -1554,8 +1569,16 @@ function DetailPanel({
                               ))}
                             </div>
                           </div>
-                          {!scheduleDateTime && (
-                            <p style={{ fontSize: 11, color: "#dc2626", marginTop: 10, fontWeight: 600 }}>⚠ Date &amp; Time is required to schedule an appointment.</p>
+
+                          {/* Meeting link — required for video, error directly below */}
+                          {scheduleMode === "video" && (
+                            <div style={{ marginBottom: 6 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em" }}>Meeting Link *</label>
+                              <input type="url" value={scheduleMeetingLink} onChange={e => setScheduleMeetingLink(e.target.value)}
+                                placeholder="https://meet.google.com/…"
+                                style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 9, border: `1.5px solid ${!scheduleMeetingLink.trim() ? "#ef4444" : "#e5e7eb"}`, background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                              {!scheduleMeetingLink.trim() && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "4px 0 0" }}>⚠ Required for video appointments</p>}
+                            </div>
                           )}
                         </div>
 
@@ -1565,8 +1588,9 @@ function DetailPanel({
                             style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                             Cancel
                           </button>
-                          <button onClick={convertToAppt} disabled={converting || !scheduleDateTime}
-                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDateTime) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDateTime) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: !scheduleDateTime ? 0.55 : 1 }}>
+                          <button onClick={convertToAppt}
+                            disabled={converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())}
+                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: (!scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? 0.55 : 1 }}>
                             <CalendarPlus size={15} />
                             {converting ? "Scheduling…" : "Confirm & Schedule"}
                           </button>
@@ -1647,7 +1671,7 @@ function DetailPanel({
           <div style={{ flexShrink: 0, padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
             <textarea value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
-              placeholder={`Reply to ${(item as AudienceBooking).fullName} — they'll get a notification.`}
+              placeholder={`Reply to ${(item as AppointmentBooking).fullName} — they'll get a notification.`}
               rows={2}
               style={{ width: "100%", padding: "9px 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#f9fafb", fontSize: 12.5, color: "#1f2937", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit", lineHeight: 1.5, transition: "border-color 0.15s" }}
               onFocus={e => (e.target.style.borderColor = "#0d9488")}
@@ -3641,14 +3665,14 @@ export default function AdminPage() {
   const VALID_TABS: Tab[] = ["today", "bookings", "contacts", "admins", "trikala", "devotees", "appointments", "reports", "settings"];
   const initTab = (searchParams.get("tab") as Tab | null);
   const [tab, setTab] = useState<Tab>(VALID_TABS.includes(initTab as Tab) ? (initTab as Tab) : "today");
-  const [bookings, setBookings] = useState<AudienceBooking[]>([]);
+  const [bookings, setBookings] = useState<AppointmentBooking[]>([]);
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
   const [admins,   setAdmins]   = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [detail, setDetail] = useState<AudienceBooking | ContactMessage | null>(null);
+  const [detail, setDetail] = useState<AppointmentBooking | ContactMessage | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [adminPanel, setAdminPanel] = useState<{ open: boolean; user: AdminUser | null }>({ open: false, user: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -3738,7 +3762,7 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const [b, c, a] = await Promise.all([getAudienceBookings(), getContacts(), getAdminUsers()]);
+      const [b, c, a] = await Promise.all([getAppointmentBookings(), getContacts(), getAdminUsers()]);
       setBookings(b);
       setContacts(c);
       setAdmins(a);
@@ -3871,7 +3895,7 @@ export default function AdminPage() {
     let match = true;
     if (q) {
       if (tab === "bookings") {
-        const b = r as AudienceBooking;
+        const b = r as AppointmentBooking;
         match =
           !!b.fullName?.toLowerCase().includes(q) ||
           !!b.mobile?.includes(q) ||
@@ -3889,7 +3913,7 @@ export default function AdminPage() {
 
     /* dropdown filter */
     if (tab === "bookings" && filterBooking !== "all") {
-      return (r as AudienceBooking).nearestAshram === filterBooking;
+      return (r as AppointmentBooking).nearestAshram === filterBooking;
     }
     if (tab === "contacts" && filterContact !== "all") {
       const d   = new Date(r.createdAt ?? "");
@@ -5245,7 +5269,7 @@ export default function AdminPage() {
                       {slice.length === 0 ? (
                         <tr><td colSpan={7} style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</td></tr>
                       ) : slice.map((row, i) => {
-                        const bk = row as AudienceBooking;
+                        const bk = row as AppointmentBooking;
                         const idx = (safePage - 1) * PAGE_SIZE + i + 1;
                         const isEven = i % 2 === 0;
                         return (
@@ -5305,7 +5329,7 @@ export default function AdminPage() {
                   slice.length === 0 ? (
                     <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
                   ) : slice.map((row, i) => {
-                    const bk = row as AudienceBooking;
+                    const bk = row as AppointmentBooking;
                     const idx = (safePage - 1) * PAGE_SIZE + i + 1;
                     return (
                       <div key={row.id} onClick={() => setDetail(row)}

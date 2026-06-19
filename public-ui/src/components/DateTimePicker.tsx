@@ -215,3 +215,114 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     </div>
   );
 }
+
+/* ── Standalone time picker — matches DateTimePicker branding ──────
+   value: "HH:mm" | ""   onChange: (v: string) => void
+   error: show red border when field is required but empty           */
+export function TimePicker({ value, onChange, placeholder, error }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  error?: boolean;
+}) {
+  const TEAL = "#0d9488";
+  const p2 = (n: number) => String(n).padStart(2, "0");
+
+  const [open, setOpen] = React.useState(false);
+  const wrapRef  = React.useRef<HTMLDivElement>(null);
+  const popRef   = React.useRef<HTMLDivElement>(null);
+  const hourRef  = React.useRef<HTMLDivElement>(null);
+  const minRef   = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = React.useState({ left: 0, top: 0, width: 0, flip: false });
+
+  const parsed = React.useMemo(() => {
+    if (!value) return null;
+    const [h, m] = value.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) return null;
+    return { hh: h, mm: m };
+  }, [value]);
+
+  const reposition = React.useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const POP_H = 175;
+    const width = Math.min(Math.max(r.width, 180), window.innerWidth - 16);
+    const spaceBelow = window.innerHeight - r.bottom;
+    const flip = spaceBelow < POP_H && r.top > spaceBelow;
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+    setCoords({ left, top: flip ? r.top - 6 : r.bottom + 6, width, flip });
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    reposition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => { window.removeEventListener("scroll", reposition, true); window.removeEventListener("resize", reposition); };
+  }, [open, reposition]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => {
+      [hourRef, minRef].forEach(ref => {
+        const col = ref.current;
+        const sel = col?.querySelector("[data-sel='true']") as HTMLElement | null;
+        if (col && sel) col.scrollTop = sel.offsetTop - col.clientHeight / 2 + sel.clientHeight / 2;
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open, value]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t) || popRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const emit = (hh: number, mm: number) => onChange(`${p2(hh)}:${p2(mm)}`);
+
+  const borderColor = open ? TEAL : error ? "#ef4444" : "#e5e7eb";
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <button type="button" onClick={() => { if (!open) reposition(); setOpen(o => !o); }}
+        style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${borderColor}`, background: open ? "#f0fdfa" : "#fff", fontSize: 13, color: parsed ? "#1f2937" : "#9ca3af", fontWeight: parsed ? 600 : 400, outline: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, boxSizing: "border-box", transition: "border-color 0.15s, background 0.15s" }}>
+        <span>{parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : (placeholder || "Select time")}</span>
+        <Clock size={15} color={TEAL} style={{ flexShrink: 0 }} />
+      </button>
+
+      {open && typeof document !== "undefined" && createPortal(
+        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: "1.5px solid rgba(13,148,136,0.25)", boxShadow: "0 12px 40px rgba(13,148,136,0.20)", overflow: "hidden" }}>
+          <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "7px 12px", display: "flex", alignItems: "center", gap: 7 }}>
+            <Clock size={13} color="#fff" />
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>Select Time</span>
+            <span style={{ marginLeft: "auto", fontSize: 13, fontWeight: 800, color: "#fff" }}>{parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : "--:--"}</span>
+          </div>
+          <div style={{ padding: "10px 10px 8px" }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <TimeCol refEl={hourRef} label="Hour" items={24} sel={parsed?.hh ?? null}
+                onPick={h => emit(h, parsed?.mm ?? 0)} />
+              <TimeCol refEl={minRef}  label="Min"  items={60} sel={parsed?.mm ?? null}
+                onPick={m => emit(parsed?.hh ?? 0, m)} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 7, paddingTop: 7, borderTop: "1px solid #f0f0f0" }}>
+              <button type="button" onClick={() => onChange("")}
+                style={{ background: "transparent", border: "none", fontSize: 11, fontWeight: 700, color: "#9ca3af", cursor: "pointer", padding: "4px 7px", borderRadius: 6 }}>Clear</button>
+              <button type="button" onClick={() => setOpen(false)}
+                style={{ background: TEAL, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}

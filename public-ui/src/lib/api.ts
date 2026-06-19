@@ -87,7 +87,7 @@ export async function adminVerifyOtp(mobile: string, otp: string): Promise<{ nam
 }
 
 /* ── Admin read types (camelCase, matching DB snake_case mapped below) */
-export interface AudienceBooking {
+export interface AppointmentBooking {
   id: string;
   fullName: string;
   mobile: string;
@@ -115,7 +115,7 @@ export interface ContactMessage {
 }
 
 /* ── snake_case → camelCase mappers ─────────────────────────────── */
-function mapBooking(r: Record<string, any>): AudienceBooking {
+function mapBooking(r: Record<string, any>): AppointmentBooking {
   return {
     id:            r.id ?? r._id,
     fullName:      r.full_name   ?? r.fullName,
@@ -147,8 +147,8 @@ function mapContact(r: Record<string, any>): ContactMessage {
 }
 
 /* ── Admin GET functions ─────────────────────────────────────────── */
-export async function getAudienceBookings(): Promise<AudienceBooking[]> {
-  const res = await fetch(`${BASE}/api/audience-bookings`);
+export async function getAppointmentBookings(): Promise<AppointmentBooking[]> {
+  const res = await fetch(`${BASE}/api/appointment-bookings`);
   if (!res.ok) throw new Error(`Server error: ${res.status}`);
   const json = await res.json();
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? json.bookings ?? []);
@@ -191,13 +191,13 @@ function mapBookingComment(r: Record<string, any>): BookingComment {
   return { id: r.id, bookingId: r.booking_id, text: r.text, isInternal: r.is_internal, createdAt: r.created_at };
 }
 export async function getBookingComments(bookingId: string | number): Promise<BookingComment[]> {
-  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments`);
+  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments`);
   const data = await res.json();
   if (!res.ok) throw data;
   return (data.data ?? []).map(mapBookingComment);
 }
 export async function addBookingComment(bookingId: string | number, text: string, isInternal = false): Promise<BookingComment> {
-  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments`, {
+  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, is_internal: isInternal }),
   });
@@ -206,11 +206,11 @@ export async function addBookingComment(bookingId: string | number, text: string
   return mapBookingComment(data.data);
 }
 export async function deleteBookingComment(bookingId: string | number, commentId: number): Promise<void> {
-  const res = await fetch(`${BASE}/api/audience-bookings/${bookingId}/comments/${commentId}`, { method: "DELETE" });
+  const res = await fetch(`${BASE}/api/appointment-bookings/${bookingId}/comments/${commentId}`, { method: "DELETE" });
   if (!res.ok) { const d = await res.json(); throw d; }
 }
 
-export async function postAudienceBooking(payload: {
+export async function postAppointmentBooking(payload: {
   fullName: string;
   mobile: string;
   email?: string;
@@ -224,7 +224,7 @@ export async function postAudienceBooking(payload: {
   message?: string;
   photo?: string;
 }) {
-  const res = await fetch(`${BASE}/api/audience-bookings`, {
+  const res = await fetch(`${BASE}/api/appointment-bookings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -886,7 +886,7 @@ export async function logWhatsAppSent(payload: { devotee_id?: number; case_refer
 ══════════════════════════════════════════════════════════════════ */
 export async function convertBookingToAppointment(
   bookingId: string | number,
-  params?: { start_time?: string; mode?: string }
+  params?: { start_time?: string; mode?: string; meeting_link?: string }
 ): Promise<Appointment> {
   const data = await sendJson(`/api/appointments/from-booking/${bookingId}`, "POST", params || {});
   return mapAppointment(data.data);

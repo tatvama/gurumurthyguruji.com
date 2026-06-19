@@ -33,8 +33,32 @@ export const initDB = async () => {
       );
     `);
 
+    /* Migrate legacy audience_bookings → appointment_bookings (one-time) */
     await client.query(`
-      CREATE TABLE IF NOT EXISTS audience_bookings (
+      DO $$ BEGIN
+        /* Case 1: only old table exists → rename cleanly */
+        IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='audience_bookings')
+        AND NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='appointment_bookings')
+        THEN
+          ALTER TABLE audience_bookings RENAME TO appointment_bookings;
+
+        /* Case 2: both tables exist → copy rows then drop old */
+        ELSIF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='audience_bookings')
+          AND EXISTS (SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='appointment_bookings')
+        THEN
+          INSERT INTO appointment_bookings
+            (id, full_name, mobile, profession, location, how_known, nearest_ashram, message, status, created_at)
+          SELECT
+            id, full_name, mobile, profession, location, how_known, nearest_ashram, message, status, created_at
+          FROM audience_bookings
+          ON CONFLICT (id) DO NOTHING;
+          DROP TABLE audience_bookings;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS appointment_bookings (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(120) NOT NULL,
         mobile VARCHAR(20) NOT NULL,
@@ -117,15 +141,15 @@ export const initDB = async () => {
         ADD COLUMN IF NOT EXISTS palm_image TEXT;
     `);
 
-    /* Add new columns to audience_bookings if not present */
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS email VARCHAR(200);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS city VARCHAR(120);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS devotee_id INTEGER;`);
+    /* Add new columns to appointment_bookings if not present */
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS email VARCHAR(200);`);
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS city VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
+    await client.query(`ALTER TABLE appointment_bookings ADD COLUMN IF NOT EXISTS devotee_id INTEGER;`);
     /* photo column removed from intake form — drop from existing databases */
-    await client.query(`ALTER TABLE audience_bookings DROP COLUMN IF EXISTS photo;`);
+    await client.query(`ALTER TABLE appointment_bookings DROP COLUMN IF EXISTS photo;`);
 
     /* ════════════════════════════════════════════════════════════════════
        GURUJI SEVA MANAGEMENT SYSTEM — PRD core tables

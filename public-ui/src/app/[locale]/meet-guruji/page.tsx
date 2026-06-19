@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useRef, useEffect } from "react";
-import { postAudienceBooking } from "@/lib/api";
+import { postAppointmentBooking } from "@/lib/api";
 import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -187,7 +187,7 @@ export default function MeetGurujiPage() {
   const onSubmit = async (data: FormValues) => {
     setServerError("");
     try {
-      await postAudienceBooking({ ...data });
+      await postAppointmentBooking({ ...data });
       setIsSubmitted(true);
     } catch (err: any) {
       setServerError(err?.message || "Something went wrong. Please try again.");

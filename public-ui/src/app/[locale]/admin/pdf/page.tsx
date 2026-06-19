@@ -4,12 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
-import type { AudienceBooking, ContactMessage } from "@/lib/api";
+import type { AppointmentBooking, ContactMessage } from "@/lib/api";
 
 /* ── types ── */
 interface PdfPayload {
   type: "bookings" | "contacts";
-  data: (AudienceBooking | ContactMessage)[];
+  data: (AppointmentBooking | ContactMessage)[];
   generatedAt: string;
 }
 
@@ -518,8 +518,8 @@ function ContactsPdf({ data }: { data: ContactMessage[] }) {
 }
 
 /* ── Bookings PDF ── */
-function BookingsPdf({ data }: { data: AudienceBooking[] }) {
-  const fields: Array<[string, keyof AudienceBooking]> = [
+function BookingsPdf({ data }: { data: AppointmentBooking[] }) {
+  const fields: Array<[string, keyof AppointmentBooking]> = [
     ["Profession", "profession"],
     ["Location", "location"],
     ["Nearest Ashram", "nearestAshram"],
@@ -684,7 +684,7 @@ function PdfRenderer() {
             </div>
 
             {isBooking ? (
-              <BookingsPdf data={payload.data as AudienceBooking[]} />
+              <BookingsPdf data={payload.data as AppointmentBooking[]} />
             ) : (
               <ContactsPdf data={payload.data as ContactMessage[]} />
             )}

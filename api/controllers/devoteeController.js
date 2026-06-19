@@ -43,7 +43,7 @@ export const getDevoteeHistory = async (req, res, next) => {
                   FROM case_remedies WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
       Devotee.getTimeline(id),
       pool.query(`SELECT id, nearest_ashram, location, status, created_at
-                  FROM audience_bookings WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
+                  FROM appointment_bookings WHERE devotee_id = $1 ORDER BY created_at DESC`, [id]),
       DevoteeAttention.getByDevotee(id),
     ]);
 

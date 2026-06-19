@@ -55,7 +55,7 @@ router.get("/:id/timeline", getTimeline);
 /* POST /from-booking/:bookingId — one-click convert Appointment booking → appointment (PRD §8) */
 router.post("/from-booking/:bookingId", async (req, res, next) => {
   try {
-    const { rows } = await pool.query(`SELECT * FROM audience_bookings WHERE id = $1`, [req.params.bookingId]);
+    const { rows } = await pool.query(`SELECT * FROM appointment_bookings WHERE id = $1`, [req.params.bookingId]);
     if (!rows.length) return res.status(404).json({ success: false, message: "Booking not found" });
     const b = rows[0];
     /* Guard: don't create a duplicate if one already exists for this booking */
@@ -76,6 +76,7 @@ router.post("/from-booking/:bookingId", async (req, res, next) => {
       priority:         "Normal",
       start_time:       req.body.start_time || null,
       location:         b.nearest_ashram || "",
+      meeting_link:     req.body.meeting_link || null,
       purpose:          b.message || "",
     });
     res.status(201).json({ success: true, data: appt });

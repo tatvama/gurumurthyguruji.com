@@ -58,7 +58,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/contacts", contactRoutes);
-app.use("/api/audience-bookings", audienceRoutes);
+app.use("/api/appointment-bookings", audienceRoutes);
 app.use("/api/admin-users", adminUserRoutes);
 app.use("/api/trikala-readings", trikalaRoutes);
 app.use("/api/case-notes",      caseNotesRoutes);
