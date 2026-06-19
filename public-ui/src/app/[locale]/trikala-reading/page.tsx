@@ -11,6 +11,7 @@ import { Footer } from "@/components/layout/Footer";
 import { postTrikalaReading } from "@/lib/api";
 import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import { useLanguage } from "@/lib/i18n";
+import { DateTimePicker, TimePicker } from "@/components/DateTimePicker";
 
 /* ═══════════════════════════════════════════════════════
    TYPES
@@ -997,25 +998,67 @@ function PlaceAutocomplete({ value, onChange, placeholder }: { value: string; on
 function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormData, v: string) => void; next: () => void; back: () => void }) {
   const { t } = useLanguage();
   const [err, setErr] = useState("");
-  const dobRef = useRef<HTMLInputElement>(null);
-  const tobRef = useRef<HTMLInputElement>(null);
 
   function validate() {
     if (!form.dob || !form.pob.trim()) { setErr(t("reading.s2.err")); return false; }
     setErr(""); return true;
   }
+
+  /* Shared styles for the field wrapper boxes */
+  const fieldBox: React.CSSProperties = {
+    border: "1.5px solid rgba(200,170,130,0.50)", borderRadius: 12,
+    padding: "12px 14px", background: "#fff",
+    boxShadow: "0 1px 6px rgba(42,28,19,0.05)",
+    transition: "border-color 0.18s, box-shadow 0.18s",
+  };
+  const fieldLabel: React.CSSProperties = {
+    fontSize: 9.5, fontWeight: 800, letterSpacing: "0.14em",
+    textTransform: "uppercase" as const, color: KO, marginBottom: 6, display: "block",
+  };
+  const hintText: React.CSSProperties = {
+    fontSize: 11.5, color: "rgba(107,18,28,0.60)", marginTop: 6, paddingLeft: 2,
+    fontFamily: "var(--font-nunito), Nunito, sans-serif",
+  };
+
   return (
     <div style={{ padding: "28px 22px 28px" }}>
       <StepIcon>🌟</StepIcon>
       <StepTitle title={t("reading.s2.title")} sub={t("reading.s2.sub")} />
       <div className="flex flex-col gap-4">
         <div className="kundli-grid-2">
-          <LabeledBox label={t("reading.s2.dob")} hint={t("reading.s2.dob.hint")} icon={<Ico.Cal />} iconRight onIconRightClick={() => { try { (dobRef.current as any)?.showPicker(); } catch { dobRef.current?.click(); } }}>
-            <input ref={dobRef} type="date" style={{ ...iBase, fontSize: 13, WebkitAppearance: "none" as const }} value={form.dob} onChange={e => set("dob", e.target.value)} />
-          </LabeledBox>
-          <LabeledBox label={t("reading.s2.tob")} hint={t("reading.s2.tob.hint")} icon={<Ico.Clock />} iconRight onIconRightClick={() => { try { (tobRef.current as any)?.showPicker(); } catch { tobRef.current?.click(); } }}>
-            <input ref={tobRef} type="time" style={{ ...iBase, fontSize: 13, WebkitAppearance: "none" as const }} value={form.tob} onChange={e => set("tob", e.target.value)} />
-          </LabeledBox>
+
+          {/* ── Date of Birth ── */}
+          <div>
+            <div style={fieldBox}>
+              <span style={fieldLabel}>{t("reading.s2.dob")}</span>
+              <DateTimePicker
+                mode="date"
+                value={form.dob}
+                onChange={v => set("dob", v)}
+                placeholder="dd-mm-yyyy"
+                accentColor={KO}
+                accentLight={KOL}
+                naked
+              />
+            </div>
+            <p style={hintText}>{t("reading.s2.dob.hint")}</p>
+          </div>
+
+          {/* ── Time of Birth ── */}
+          <div>
+            <div style={fieldBox}>
+              <span style={fieldLabel}>{t("reading.s2.tob")}</span>
+              <TimePicker
+                value={form.tob}
+                onChange={v => set("tob", v)}
+                accentColor={KO}
+                accentLight={KOL}
+                naked
+              />
+            </div>
+            <p style={hintText}>{t("reading.s2.tob.hint")}</p>
+          </div>
+
         </div>
         <LabeledBox label={t("reading.s2.pob")} hint={t("reading.s2.pob.hint")} icon={<Ico.Pin />}>
           <PlaceAutocomplete value={form.pob} onChange={v => set("pob", v)} placeholder={t("reading.s2.pob.placeholder")} />

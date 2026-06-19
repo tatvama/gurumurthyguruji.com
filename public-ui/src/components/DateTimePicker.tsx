@@ -4,17 +4,21 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { Calendar, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 
-/* ── Reusable branded date / date-time picker (teal, matches site) ──
-   value format: "YYYY-MM-DD" (date) or "YYYY-MM-DDTHH:mm".
-   Time is entered via a native typable <input type="time"> — no scroll drums. */
-export function DateTimePicker({ value, onChange, mode = "datetime", placeholder, maxDate }: {
+/* ── Reusable branded date / date-time picker.
+   Supports teal (admin, default) and maroon (public UI) via accentColor/accentLight.
+   `naked` strips the trigger button's own border so it can live inside a parent field box. */
+export function DateTimePicker({ value, onChange, mode = "datetime", placeholder, maxDate, accentColor, accentLight, naked }: {
   value: string;
   onChange: (v: string) => void;
   mode?: "date" | "datetime";
   placeholder?: string;
   maxDate?: string;
+  accentColor?: string;
+  accentLight?: string;
+  naked?: boolean;
 }) {
-  const TEAL = "#0d9488";
+  const ACCENT = accentColor ?? "#0d9488";
+  const LIGHT  = accentLight ?? "#f0fdfa";
   const WD  = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const MON = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const p2  = (n: number) => String(n).padStart(2, "0");
@@ -35,7 +39,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     if (!el) return;
     const r = el.getBoundingClientRect();
     const POP_H = mode === "datetime" ? 330 : 270;
-    const width = Math.min(Math.max(r.width, 244), window.innerWidth - 16);
+    const width = Math.min(Math.max(r.width, 260), window.innerWidth - 16);
     const spaceBelow = window.innerHeight - r.bottom;
     const flip = spaceBelow < POP_H && r.top > spaceBelow;
     const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
@@ -81,7 +85,6 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     return () => { document.removeEventListener("mousedown", h); document.removeEventListener("keydown", k); };
   }, [open]);
 
-  /* Close month/year dropdowns on outside click */
   React.useEffect(() => {
     if (!showMonthDrop && !showYearDrop) return;
     const h = (e: MouseEvent) => {
@@ -93,7 +96,6 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     return () => document.removeEventListener("mousedown", h);
   }, [showMonthDrop, showYearDrop]);
 
-  /* Auto-scroll to selected item when dropdowns open */
   React.useEffect(() => {
     if (showMonthDrop && monthListRef.current)
       monthListRef.current.scrollTop = Math.max(0, (view.month - 1) * 34);
@@ -116,8 +118,8 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
   const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
   const maxKey   = maxDate ? new Date(maxDate + "T23:59:59") : null;
 
-  const isSel     = (d: number) => !!parsed && parsed.y === view.year && parsed.m === view.month && parsed.d === d;
-  const isToday   = (d: number) => `${view.year}-${view.month}-${d}` === todayKey;
+  const isSel      = (d: number) => !!parsed && parsed.y === view.year && parsed.m === view.month && parsed.d === d;
+  const isToday    = (d: number) => `${view.year}-${view.month}-${d}` === todayKey;
   const isDisabled = (d: number) => maxKey ? new Date(view.year, view.month, d) > maxKey : false;
 
   const prevMonth = () => setView(v => v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 });
@@ -131,32 +133,56 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
     return `${dpart} · ${p2(parsed.hh)}:${p2(parsed.mm)}`;
   };
 
-  const navBtn: React.CSSProperties = { background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
-  const footBtn = (color: string): React.CSSProperties => ({ background: "transparent", border: "none", fontSize: 11, fontWeight: 700, color, cursor: "pointer", padding: "4px 7px", borderRadius: 6 });
   const yearList = React.useMemo(() => Array.from({ length: 81 }, (_, i) => now.getFullYear() - 50 + i), []);
 
+  /* Calendar header gradient — slightly lighter shade for stop 2 */
+  const headerGradient = ACCENT === "#0d9488"
+    ? "linear-gradient(135deg,#0d9488,#14b8a6)"
+    : `linear-gradient(135deg,${ACCENT},${ACCENT}cc)`;
+
   /* Shared styles for custom dropdowns */
+  const navBtn: React.CSSProperties = { background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 6, width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 };
+  const footBtn = (color: string): React.CSSProperties => ({ background: "transparent", border: "none", fontSize: 11, fontWeight: 700, color, cursor: "pointer", padding: "4px 7px", borderRadius: 6 });
   const dropTrigger: React.CSSProperties = { background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, padding: "4px 8px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, outline: "none" };
-  const dropPanel: React.CSSProperties = { position: "absolute", top: "calc(100% + 5px)", left: 0, zIndex: 10002, background: "#fff", borderRadius: 8, border: "1.5px solid rgba(13,148,136,0.22)", boxShadow: "0 8px 28px rgba(13,148,136,0.18)", maxHeight: "min(204px, 40vh)", overflowY: "auto", minWidth: 110 };
-  const dropItem = (sel: boolean): React.CSSProperties => ({ padding: "8px 14px", fontSize: 12, fontWeight: sel ? 700 : 400, color: sel ? "#fff" : "#374151", background: sel ? TEAL : "transparent", cursor: "pointer", whiteSpace: "nowrap" });
+  const dropPanel: React.CSSProperties = { position: "absolute", top: "calc(100% + 5px)", left: 0, zIndex: 10002, background: "#fff", borderRadius: 8, border: `1.5px solid ${ACCENT}33`, boxShadow: `0 8px 28px ${ACCENT}30`, maxHeight: "min(204px, 40vh)", overflowY: "auto", minWidth: 110 };
+  const dropItem = (sel: boolean): React.CSSProperties => ({ padding: "8px 14px", fontSize: 12, fontWeight: sel ? 700 : 400, color: sel ? "#fff" : "#374151", background: sel ? ACCENT : "transparent", cursor: "pointer", whiteSpace: "nowrap" });
+
+  /* Trigger button styles — naked = no own border (parent provides it) */
+  const triggerStyle: React.CSSProperties = naked ? {
+    width: "100%", padding: 0, border: "none", background: "transparent",
+    fontSize: 13.5, color: parsed ? "#2A1C13" : "rgba(42,28,19,0.38)",
+    fontWeight: parsed ? 600 : 400, outline: "none", cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+    fontFamily: "var(--font-nunito), Nunito, 'Segoe UI', sans-serif",
+  } : {
+    width: "100%", height: 40, padding: "0 13px", borderRadius: 9,
+    border: `1.5px solid ${open ? ACCENT : "#e5e7eb"}`,
+    background: open ? LIGHT : "#fff",
+    fontSize: 13, color: parsed ? "#1f2937" : "#9ca3af",
+    fontWeight: parsed ? 600 : 400, outline: "none", cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+    boxSizing: "border-box" as const, transition: "border-color 0.15s, background 0.15s",
+  };
 
   return (
-    <div ref={wrapRef} style={{ position: "relative" }}>
-      <button type="button" onClick={() => { if (!open) reposition(); setOpen(o => !o); }}
-        style={{ width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: `1.5px solid ${open ? TEAL : "#e5e7eb"}`, background: open ? "#f0fdfa" : "#fff", fontSize: 13, color: parsed ? "#1f2937" : "#9ca3af", fontWeight: parsed ? 600 : 400, outline: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, boxSizing: "border-box", transition: "border-color 0.15s, background 0.15s" }}>
+    <div ref={wrapRef} style={{ position: "relative", width: "100%" }}>
+      <button type="button" onClick={() => { if (!open) reposition(); setOpen(o => !o); }} style={triggerStyle}>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label()}</span>
-        {mode === "date" ? <Calendar size={15} color={TEAL} style={{ flexShrink: 0 }} /> : <CalendarPlus size={15} color={TEAL} style={{ flexShrink: 0 }} />}
+        {mode === "date"
+          ? <Calendar size={naked ? 18 : 15} color={ACCENT} style={{ flexShrink: 0 }} />
+          : <CalendarPlus size={naked ? 18 : 15} color={ACCENT} style={{ flexShrink: 0 }} />}
       </button>
 
       {open && typeof document !== "undefined" && createPortal(
-        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: "1.5px solid rgba(13,148,136,0.25)", boxShadow: "0 12px 40px rgba(13,148,136,0.20)", overflow: "hidden" }}>
-          {/* Teal header */}
-          <div style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", padding: "7px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: `1.5px solid ${ACCENT}40`, boxShadow: `0 12px 40px ${ACCENT}33`, overflow: "hidden" }}>
+
+          {/* ── Coloured header ── */}
+          <div style={{ background: headerGradient, padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
             <button type="button" onClick={prevMonth} style={navBtn}><ChevronLeft size={15} color="#fff" /></button>
 
             <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1, justifyContent: "center" }}>
 
-              {/* ── Month picker ── */}
+              {/* Month picker */}
               <div ref={monthDropRef} style={{ position: "relative" }}>
                 <button type="button" style={dropTrigger}
                   onClick={() => { setShowMonthDrop(d => !d); setShowYearDrop(false); }}>
@@ -168,7 +194,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                     {MON.map((m, i) => (
                       <div key={i} style={dropItem(i === view.month)}
                         onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
-                        onMouseEnter={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = "#f0fdfa"; }}
+                        onMouseEnter={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
                         onMouseLeave={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                       >{m}</div>
                     ))}
@@ -176,7 +202,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                 )}
               </div>
 
-              {/* ── Year picker ── */}
+              {/* Year picker */}
               <div ref={yearDropRef} style={{ position: "relative" }}>
                 <button type="button" style={dropTrigger}
                   onClick={() => { setShowYearDrop(d => !d); setShowMonthDrop(false); }}>
@@ -188,7 +214,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                     {yearList.map(y => (
                       <div key={y} style={dropItem(y === view.year)}
                         onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
-                        onMouseEnter={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = "#f0fdfa"; }}
+                        onMouseEnter={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
                         onMouseLeave={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                       >{y}</div>
                     ))}
@@ -214,20 +240,20 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                 return (
                   <button key={d} type="button" disabled={dis}
                     onClick={() => { emit(view.year, view.month, d, parsed?.hh ?? 9, parsed?.mm ?? 0); if (mode === "date") setOpen(false); }}
-                    onMouseEnter={e => { if (!sel && !dis) e.currentTarget.style.background = "#f0fdfa"; }}
+                    onMouseEnter={e => { if (!sel && !dis) e.currentTarget.style.background = LIGHT; }}
                     onMouseLeave={e => { if (!sel && !dis) e.currentTarget.style.background = "transparent"; }}
-                    style={{ height: 27, borderRadius: 7, border: td && !sel ? `1.5px solid ${TEAL}` : "1.5px solid transparent", background: sel ? TEAL : "transparent", color: dis ? "#d1d5db" : sel ? "#fff" : "#374151", fontSize: 11.5, fontWeight: sel || td ? 700 : 500, cursor: dis ? "not-allowed" : "pointer", transition: "background 0.12s" }}>
+                    style={{ height: 28, borderRadius: 7, border: td && !sel ? `1.5px solid ${ACCENT}` : "1.5px solid transparent", background: sel ? ACCENT : "transparent", color: dis ? "#d1d5db" : sel ? "#fff" : "#374151", fontSize: 11.5, fontWeight: sel || td ? 700 : 500, cursor: dis ? "not-allowed" : "pointer", transition: "background 0.12s" }}>
                     {d}
                   </button>
                 );
               })}
             </div>
 
-            {/* Time input — typable, 24-hour, no scroll drums */}
+            {/* Time input — only in datetime mode */}
             {mode === "datetime" && (
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <Clock size={12} color={TEAL} />
+                  <Clock size={12} color={ACCENT} />
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280" }}>Time (HH:MM)</span>
                 </div>
                 <input
@@ -238,8 +264,8 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                     if (!isNaN(h) && !isNaN(m))
                       emit(view.year, view.month, parsed?.d ?? now.getDate(), h, m);
                   }}
-                  style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#f8fafc", fontSize: 14, fontWeight: 600, color: "#1f2937", outline: "none", boxSizing: "border-box", cursor: "text" }}
-                  onFocus={e => { e.target.style.borderColor = TEAL; e.target.style.background = "#f0fdfa"; }}
+                  style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 8, border: `1.5px solid #e5e7eb`, background: "#f8fafc", fontSize: 14, fontWeight: 600, color: "#1f2937", outline: "none", boxSizing: "border-box", cursor: "text" }}
+                  onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.background = LIGHT; }}
                   onBlur={e =>  { e.target.style.borderColor = "#e5e7eb"; e.target.style.background = "#f8fafc"; }}
                 />
               </div>
@@ -253,9 +279,9 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                   setView({ year: n.getFullYear(), month: n.getMonth() });
                   emit(n.getFullYear(), n.getMonth(), n.getDate(), mode === "date" ? 0 : n.getHours(), mode === "date" ? 0 : n.getMinutes());
                   if (mode === "date") setOpen(false);
-                }} style={footBtn(TEAL)}>{mode === "date" ? "Today" : "Now"}</button>
+                }} style={footBtn(ACCENT)}>{mode === "date" ? "Today" : "Now"}</button>
                 <button type="button" onClick={() => setOpen(false)}
-                  style={{ background: TEAL, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
+                  style={{ background: ACCENT, border: "none", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", padding: "5px 13px", borderRadius: 7 }}>Done</button>
               </div>
             </div>
           </div>
@@ -266,13 +292,18 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
   );
 }
 
-/* ── Standalone time picker — inline HH : MM  AM/PM  ─── */
-export function TimePicker({ value, onChange }: {
+/* ── Standalone time picker — inline HH : MM  AM/PM ── */
+export function TimePicker({ value, onChange, accentColor, accentLight, naked }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  accentColor?: string;
+  accentLight?: string;
+  naked?: boolean;
 }) {
-  const TEAL = "#0d9488";
+  const ACCENT = accentColor ?? "#0d9488";
+  const LIGHT  = accentLight ?? "#f0fdfa";
+
   const hourRef = React.useRef<HTMLInputElement>(null);
   const minRef  = React.useRef<HTMLInputElement>(null);
   const lastVal = React.useRef(value);
@@ -317,10 +348,9 @@ export function TimePicker({ value, onChange }: {
   const goMin  = () => setTimeout(() => { minRef.current?.focus();  minRef.current?.select();  minBuf.current  = ""; }, 10);
   const goHour = () => setTimeout(() => { hourRef.current?.focus(); hourRef.current?.select(); hourBuf.current = ""; }, 10);
 
-  /* ── Hour keyboard handler ── */
   const onHourKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowRight") { e.preventDefault(); goMin(); return; }
-    if (e.key === "Tab") return; // let Tab move focus naturally
+    if (e.key === "Tab") return;
     if (e.key === "ArrowUp") {
       e.preventDefault();
       const n = ((parseInt(hour, 10) || 0) % 12) + 1;
@@ -340,22 +370,17 @@ export function TimePicker({ value, onChange }: {
     }
     if (/^\d$/.test(e.key)) {
       e.preventDefault();
-      /* append digit to buffer (max 2), then validate */
       const buf = (hourBuf.current + e.key).slice(-2);
       const n = parseInt(buf, 10);
       if (n >= 1 && n <= 12) {
         const s = String(n).padStart(2, "0");
         setHour(s); emit(s, min, ampm);
-        if (buf.length >= 2 || n >= 2) {
-          hourBuf.current = ""; goMin(); // auto-advance when unambiguous
-        } else {
-          hourBuf.current = buf;
-        }
+        if (buf.length >= 2 || n >= 2) { hourBuf.current = ""; goMin(); }
+        else hourBuf.current = buf;
       }
     }
   };
 
-  /* Mobile fallback: onChange fires when onKeyDown's preventDefault isn't respected */
   const onHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
     if (!raw) { setHour(""); hourBuf.current = ""; return; }
@@ -370,7 +395,6 @@ export function TimePicker({ value, onChange }: {
     }
   };
 
-  /* ── Minute keyboard handler ── */
   const onMinKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowLeft") { e.preventDefault(); goHour(); return; }
     if (e.key === "Tab") return;
@@ -404,7 +428,6 @@ export function TimePicker({ value, onChange }: {
     }
   };
 
-  /* Mobile fallback for minute */
   const onMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
     if (!raw) { setMin(""); minBuf.current = ""; return; }
@@ -421,9 +444,26 @@ export function TimePicker({ value, onChange }: {
   const toggleAmpm = (a: "AM" | "PM") => { setAmpm(a); emit(hour, min, a); };
 
   const inputStyle: React.CSSProperties = {
-    width: 22, border: "none", outline: "none", textAlign: "center",
-    fontSize: 13, fontWeight: 600, color: "#1f2937", background: "transparent",
-    padding: 0, fontFamily: "inherit",
+    width: naked ? 28 : 22, border: "none", outline: "none", textAlign: "center",
+    fontSize: naked ? 13.5 : 13, fontWeight: 600,
+    color: naked ? "#2A1C13" : "#1f2937",
+    background: "transparent", padding: 0,
+    fontFamily: naked ? "var(--font-nunito), Nunito, 'Segoe UI', sans-serif" : "inherit",
+  };
+
+  /* Outer container — naked = borderless (parent LabeledBox provides the frame) */
+  const containerStyle: React.CSSProperties = naked ? {
+    display: "flex", alignItems: "center", gap: 2,
+    background: "transparent",
+  } : {
+    display: "flex", alignItems: "center",
+    height: 40, padding: "0 10px 0 13px",
+    borderRadius: 9,
+    border: `1.5px solid ${focused ? ACCENT : "#e5e7eb"}`,
+    background: focused ? LIGHT : "#fff",
+    boxSizing: "border-box",
+    transition: "border-color 0.15s, background 0.15s",
+    gap: 2,
   };
 
   return (
@@ -435,51 +475,30 @@ export function TimePicker({ value, onChange }: {
           hourBuf.current = ""; minBuf.current = "";
         }
       }}
-      style={{
-        display: "flex", alignItems: "center",
-        height: 40, padding: "0 10px 0 13px",
-        borderRadius: 9,
-        border: `1.5px solid ${focused ? TEAL : "#e5e7eb"}`,
-        background: focused ? "#f0fdfa" : "#fff",
-        boxSizing: "border-box",
-        transition: "border-color 0.15s, background 0.15s",
-        gap: 2,
-      }}
+      style={containerStyle}
     >
-      {/* Hour — 01-12 */}
-      <input
-        ref={hourRef}
-        type="text" inputMode="numeric"
-        value={hour} placeholder="--"
-        onChange={onHourChange}
-        onKeyDown={onHourKey}
+      <input ref={hourRef} type="text" inputMode="numeric" value={hour} placeholder="--"
+        onChange={onHourChange} onKeyDown={onHourKey}
         onFocus={e => { e.target.select(); hourBuf.current = ""; }}
-        maxLength={2}
-        style={inputStyle}
-      />
-      <span style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", lineHeight: 1, padding: "0 1px" }}>:</span>
-      {/* Minute — 00-59, always 2 digits */}
-      <input
-        ref={minRef}
-        type="text" inputMode="numeric"
-        value={min} placeholder="--"
-        onChange={onMinChange}
-        onKeyDown={onMinKey}
+        maxLength={2} style={inputStyle} />
+      <span style={{ fontSize: naked ? 13.5 : 13, fontWeight: 700, color: naked ? "rgba(42,28,19,0.45)" : "#9ca3af", lineHeight: 1, padding: "0 1px" }}>:</span>
+      <input ref={minRef} type="text" inputMode="numeric" value={min} placeholder="--"
+        onChange={onMinChange} onKeyDown={onMinKey}
         onFocus={e => { e.target.select(); minBuf.current = ""; }}
-        maxLength={2}
-        style={inputStyle}
-      />
-      {/* Divider */}
-      <div style={{ width: 1, height: 18, background: "#e5e7eb", margin: "0 8px", flexShrink: 0 }} />
-      {/* AM / PM pills */}
+        maxLength={2} style={inputStyle} />
+
+      <div style={{ width: 1, height: 18, background: naked ? "rgba(42,28,19,0.18)" : "#e5e7eb", margin: "0 8px", flexShrink: 0 }} />
+
       {(["AM", "PM"] as const).map((a, i) => (
         <button key={a} type="button" onClick={() => toggleAmpm(a)}
           style={{
-            height: 26, padding: "0 8px", fontSize: 11, fontWeight: 700,
-            border: `1.5px solid ${ampm === a ? TEAL : "#e5e7eb"}`,
+            height: naked ? 28 : 26,
+            padding: naked ? "0 9px" : "0 8px",
+            fontSize: 11, fontWeight: 700,
+            border: `1.5px solid ${ampm === a ? ACCENT : naked ? "rgba(200,170,130,0.45)" : "#e5e7eb"}`,
             borderRadius: 5,
-            background: ampm === a ? "#f0fdfa" : "transparent",
-            color: ampm === a ? TEAL : "#9ca3af",
+            background: ampm === a ? LIGHT : "transparent",
+            color: ampm === a ? ACCENT : naked ? "rgba(42,28,19,0.40)" : "#9ca3af",
             cursor: "pointer", marginLeft: i === 0 ? 0 : 3,
             transition: "all 0.12s",
           }}>
