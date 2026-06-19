@@ -859,8 +859,6 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
           </div>
           <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input value={f.location} readOnly disabled title="Location cannot be changed" placeholder="—" style={{ ...inp, background: "#f9fafb", color: "#6b7280", cursor: "not-allowed" }} /></div>
           {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Google Meet Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} /></div>}
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Purpose</label><textarea value={f.purpose} onChange={e => set("purpose", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>
-          {appt && <div style={{ marginBottom: 13 }}><label style={lbl}>Outcome Note (after meeting)</label><textarea value={f.outcomeNote} onChange={e => set("outcomeNote", e.target.value)} rows={2} style={{ ...inp, height: "auto", padding: "10px 13px", resize: "vertical", fontFamily: "inherit" }} /></div>}
           {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
         </div>
         <div className="apf-footer" style={{ borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
