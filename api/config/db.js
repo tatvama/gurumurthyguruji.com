@@ -123,8 +123,9 @@ export const initDB = async () => {
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS district VARCHAR(120);`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS pincode VARCHAR(12);`);
-    await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS photo TEXT;`);
     await client.query(`ALTER TABLE audience_bookings ADD COLUMN IF NOT EXISTS devotee_id INTEGER;`);
+    /* photo column removed from intake form — drop from existing databases */
+    await client.query(`ALTER TABLE audience_bookings DROP COLUMN IF EXISTS photo;`);
 
     /* ════════════════════════════════════════════════════════════════════
        GURUJI SEVA MANAGEMENT SYSTEM — PRD core tables

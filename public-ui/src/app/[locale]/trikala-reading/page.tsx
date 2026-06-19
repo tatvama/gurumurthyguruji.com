@@ -94,7 +94,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
 
   return (
     <section
-      className="section-cosmic relative flex min-h-screen items-center justify-center overflow-hidden pb-20 pt-28"
+      className="section-cosmic relative flex items-center justify-center overflow-hidden pb-10 pt-20 sm:pb-12 sm:pt-24 lg:h-[60vh] lg:max-h-[60vh] lg:pb-4 lg:pt-16"
     >
 
       {/* Chakra texture pattern */}
@@ -112,7 +112,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
       <motion.div
         animate={{ scale: [1, 1.1, 1], opacity: [0.13, 0.24, 0.13] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[8%] top-1/2 z-0 h-[650px] w-[650px] -translate-y-1/2 rounded-full blur-[140px]"
+        className="pointer-events-none absolute right-[8%] top-1/2 z-0 h-[400px] w-[400px] lg:h-[50vh] lg:w-[50vh] -translate-y-1/2 rounded-full blur-[120px]"
         style={{ background: "rgba(216,183,106,0.18)" }}
       />
       {/* Secondary glow — left accent */}
@@ -136,42 +136,12 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
         ))}
       </div>
 
-      {/* Orange border line — visible at bottom of 100vh hero */}
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 z-10"
-        style={{ height: 2.5, background: `linear-gradient(90deg, transparent 0%, ${GOLD} 20%, ${GOLD} 80%, transparent 100%)` }}
-      >
-        {/* Sunlight glow drifting right → left; masked so it peaks mid-span and softens toward both corners */}
-        <div
-          className="absolute inset-0"
-          style={{
-            WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
-            maskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
-          }}
-        >
-          <motion.div
-            className="absolute"
-            style={{
-              top: "50%",
-              y: "-50%",
-              height: 84,
-              width: "86%",
-              borderRadius: 9999,
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,178,72,0.55) 25%, rgba(255,214,122,1) 45%, rgba(255,244,210,1) 50%, rgba(255,214,122,1) 55%, rgba(255,178,72,0.55) 75%, transparent 100%)",
-              boxShadow:
-                "0 0 52px 24px rgba(255,184,80,0.85), 0 0 110px 40px rgba(255,160,50,0.50)",
-              filter: "blur(5px)",
-            }}
-            animate={{ left: ["110%", "-66%"] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
-      </div>
+      {/* Gold sweep border — same as ImpactStats section */}
+      <div className="gold-band-border hero bottom" />
 
       {/* ── Main content ─────────────────────────────────── */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-14">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-10">
 
           {/* Left: text column */}
           <motion.div
@@ -181,7 +151,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             className="text-center lg:text-left"
           >
             {/* Badge */}
-            <div className="badge-dark mx-auto mb-7 w-fit lg:mx-0">
+            <div className="badge-dark mx-auto mb-4 w-fit lg:mx-0">
               <span style={{ color: GOLD, fontSize: 9 }}>●</span>
               <span style={{ fontSize: 10.5, letterSpacing: "0.2em" }}>{t("reading.hero.eyebrow")}</span>
             </div>
@@ -190,23 +160,23 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             <p
               style={{
                 fontFamily: "var(--font-dm-serif), serif",
-                fontSize: "clamp(44px, 6vw, 64px)",
+                fontSize: "clamp(36px, 4.5vw, 52px)",
                 color: GOLD,
                 lineHeight: 1,
-                marginBottom: 12,
+                marginBottom: 8,
               }}
             >
               ॐ
             </p>
 
-            {/* Main headline — Cinzel 64px #FFFFFF (exact from inspector) */}
+            {/* Main headline */}
             <h1
               style={{
                 fontFamily: "var(--font-cinzel), serif",
-                fontSize: "clamp(42px, 5.2vw, 64px)",
+                fontSize: "clamp(28px, 4vw, 54px)",
                 fontWeight: 700,
                 lineHeight: 1.1,
-                margin: "0 0 16px",
+                margin: "0 0 10px",
                 letterSpacing: "0.015em",
               }}
             >
@@ -224,11 +194,11 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             <p
               style={{
                 fontFamily: "var(--font-dm-serif), serif",
-                fontSize: "clamp(15px, 1.85vw, 20.8px)",
+                fontSize: "clamp(13px, 1.5vw, 18px)",
                 color: "#FFDCAA",
-                lineHeight: 1.78,
-                maxWidth: 640,
-                margin: "0 auto 28px",
+                lineHeight: 1.65,
+                maxWidth: 560,
+                margin: "0 auto 14px",
                 fontStyle: "italic",
               }}
               className="lg:!mx-0"
@@ -282,8 +252,7 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, ease: "easeOut", delay: 0.15 }}
-            className="relative mx-auto w-full"
-            style={{ maxWidth: 560 }}
+            className="relative mx-auto w-full max-w-[75vw] sm:max-w-[55vw] lg:max-w-[440px]"
           >
             <div className="relative flex flex-col items-center">
               {/* Golden radial glow behind image */}
@@ -301,8 +270,8 @@ function KundliHero({ onBegin }: { onBegin: () => void }) {
                 alt="Pujya Sri Gurumurthy Guruji"
                 width={560}
                 height={650}
-                sizes="(max-width: 768px) 90vw, 560px"
-                className="relative z-10 w-full h-auto object-contain"
+                sizes="(max-width: 768px) 80vw, (max-width: 1024px) 45vw, 480px"
+                className="relative z-10 w-full h-auto object-contain lg:max-h-[44vh]"
                 priority
               />
 

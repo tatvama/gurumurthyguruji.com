@@ -764,12 +764,14 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
     const payload: any = {
       devotee_name: f.devoteeName, mobile: f.mobile, appointment_type: f.appointmentType,
       mode: f.mode, start_time: f.startTime ? new Date(f.startTime).toISOString() : null,
-      duration_minutes: parseInt(f.durationMinutes) || null, status: f.status, priority: f.priority,
+      duration_minutes: parseInt(f.durationMinutes) || null, priority: f.priority,
       location: f.location, meeting_link: f.meetingLink, purpose: f.purpose, outcome_note: f.outcomeNote,
     };
     try {
+      // Status is read-only here; the backend rejects any edit that includes it
+      // (status changes must go through workflow actions). Only send it on create.
       if (appt) await updateAppointment(appt.id, payload);
-      else      await createAppointment(payload);
+      else      await createAppointment({ ...payload, status: f.status });
       onSaved();
     } catch (e: any) { setErr(e?.message || "Failed to save"); }
     finally { setSaving(false); }

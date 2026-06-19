@@ -830,6 +830,40 @@ a:focus-visible, button:focus-visible {
 .gold-band-border.bottom { bottom: 0; }
 .gold-band-border.bottom::after { animation-delay: -1.5s; }
 
+/* Hero variant — seamless continuous sweep with shimmer (trikala-reading hero)
+   200%-wide ::after holds two identical bands; sliding -50% = one full tile = gapless loop. */
+.gold-band-border.hero { height: 2px; }
+.gold-band-border.hero::after {
+  width: 200%;
+  animation: goldSweepHero 7s linear infinite;
+  background: linear-gradient(90deg,
+    /* ── band 1 (0–50% of element = 0–100% of container) ── */
+    transparent            0%,
+    rgba(216,183,106,0.2)  2%,
+    rgba(216,183,106,1)    6%,
+    rgba(255,245,180,1)   11%,   /* golden-white shimmer highlight */
+    rgba(216,183,106,1)   17%,
+    rgba(216,183,106,1)   42%,
+    rgba(216,183,106,0.3) 47%,
+    transparent           50%,
+    /* ── band 2 — identical, offset +50% ── */
+    transparent           50%,
+    rgba(216,183,106,0.2) 52%,
+    rgba(216,183,106,1)   56%,
+    rgba(255,245,180,1)   61%,
+    rgba(216,183,106,1)   67%,
+    rgba(216,183,106,1)   92%,
+    rgba(216,183,106,0.3) 97%,
+    transparent          100%
+  );
+}
+.gold-band-border.hero.bottom::after { animation-delay: 0s; }
+
+@keyframes goldSweepHero {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 @keyframes goldSweep {
   0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
@@ -841,10 +875,7 @@ a:focus-visible, button:focus-visible {
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.025em;
-  background: linear-gradient(135deg, #A67C2A 0%, #C8A848 40%, #D8B76A 70%, #B99345 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-deep-brown);
 }
 
 /* ─── FROSTED PANEL ─────────────────────────────────────────────── */

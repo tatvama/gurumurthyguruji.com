@@ -111,7 +111,24 @@ export function usePlacesAutocomplete(
           componentRestrictions: country ? { country: country.split(",") } : undefined,
         });
         listener = ac.addListener("place_changed", () => {
-          cb.current(parsePlace(ac.getPlace()));
+          const place = ac.getPlace();
+          const parsed = parsePlace(place);
+
+          // City-level picks rarely include postal_code; fall back to reverse geocode
+          if (!parsed.pincode && place.geometry?.location) {
+            const geocoder = new g.maps.Geocoder();
+            geocoder.geocode({ location: place.geometry.location }, (results: any[], status: string) => {
+              if (status === "OK" && results?.length) {
+                for (const result of results) {
+                  const pc = result.address_components?.find((c: any) => c.types?.includes("postal_code"));
+                  if (pc) { parsed.pincode = pc.long_name; break; }
+                }
+              }
+              cb.current(parsed);
+            });
+          } else {
+            cb.current(parsed);
+          }
         });
       })
       .catch(() => { /* key missing / offline → input still works as plain text */ });

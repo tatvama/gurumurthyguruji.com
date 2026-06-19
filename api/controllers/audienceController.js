@@ -4,7 +4,7 @@ import { pool } from "../config/db.js";
 
 export const submitBooking = async (req, res, next) => {
   try {
-    const { fullName, mobile, email, profession, city, district, state, pincode, location, howKnown, nearestAshram, message, photo } = req.body;
+    const { fullName, mobile, email, profession, city, district, state, pincode, location, howKnown, nearestAshram, message } = req.body;
     const record = await AudienceBooking.create({
       full_name: fullName,
       mobile,
@@ -18,7 +18,6 @@ export const submitBooking = async (req, res, next) => {
       how_known: howKnown,
       nearest_ashram: nearestAshram,
       message,
-      photo,
     });
     res.status(201).json({
       success: true,
