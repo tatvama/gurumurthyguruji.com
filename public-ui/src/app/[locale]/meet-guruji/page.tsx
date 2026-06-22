@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState, useRef, useEffect } from "react";
 import { postAppointmentBooking } from "@/lib/api";
-import { usePlacesAutocomplete } from "@/lib/googlePlaces";
+import { usePlacesAutocomplete, BROWN_THEME } from "@/lib/googlePlaces";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -171,13 +171,14 @@ export default function MeetGurujiPage() {
   } = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
   /* Google Places: typing/selecting a city auto-fills district, state & pincode */
-  const cityInputRef = useRef<HTMLInputElement | null>(null);
+  const cityInputRef     = useRef<HTMLInputElement | null>(null);
+  const districtInputRef = useRef<HTMLInputElement | null>(null);
   usePlacesAutocomplete(cityInputRef, (p) => {
     if (p.city)     setValue("city", p.city, { shouldValidate: true });
     if (p.district) setValue("district", p.district, { shouldValidate: true });
     if (p.state)    setValue("state", p.state, { shouldValidate: true });
     if (p.pincode)  setValue("pincode", p.pincode, { shouldValidate: true });
-  });
+  }, { theme: BROWN_THEME, widthRef: districtInputRef });
   const cityReg = register("city");
 
   const ashramOptions: { value: string; label: string }[] = ashrams
@@ -351,6 +352,7 @@ export default function MeetGurujiPage() {
                         <Input
                           id="district"
                           {...register("district")}
+                          ref={(el) => { districtInputRef.current = el; }}
                           placeholder="District"
                           readOnly
                           disabled

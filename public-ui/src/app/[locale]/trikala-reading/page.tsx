@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { postTrikalaReading } from "@/lib/api";
-import { usePlacesAutocomplete } from "@/lib/googlePlaces";
+import { usePlacesAutocomplete, BROWN_THEME } from "@/lib/googlePlaces";
 import { useLanguage } from "@/lib/i18n";
 import { DateTimePicker, TimePicker } from "@/components/DateTimePicker";
 
@@ -892,7 +892,7 @@ function Step1({ form, set, next }: { form: FormData; set: (k: keyof FormData, v
     set("district", p.district);
     set("state",    p.state);
     set("pincode",  p.pincode);
-  });
+  }, { theme: BROWN_THEME });
 
   function validate() {
     const e: typeof errs = {};
@@ -979,7 +979,7 @@ function PlaceAutocomplete({ value, onChange, placeholder }: { value: string; on
   const ref = useRef<HTMLInputElement>(null);
   usePlacesAutocomplete(ref, (p) => {
     onChange(p.formatted || [p.city, p.district, p.state, p.country].filter(Boolean).join(", "));
-  });
+  }, { theme: BROWN_THEME });
   return (
     <input
       ref={ref}

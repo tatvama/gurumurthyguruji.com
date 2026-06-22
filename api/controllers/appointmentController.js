@@ -20,9 +20,15 @@ const EDITABLE_FIELDS = [
   "outcome_note", "assigned_to", "guruji_remarks", "office_remarks",
 ];
 
-/* Resolve the acting staff/guruji name from the request */
-const getActor = (req) =>
-  req.body?.actor || req.headers["x-admin-name"] || req.query?.actor || "Office Staff";
+/* Resolve the acting staff/guruji name (+ role) from the authenticated request.
+   Format: "Name (role)" so the timeline can show who did each action and in
+   what capacity. Falls back gracefully when role/name are unavailable. */
+const getActor = (req) => {
+  const name =
+    req.user?.name || req.body?.actor || req.headers["x-admin-name"] || req.query?.actor || "Office Staff";
+  const role = req.user?.role || req.headers["x-admin-role"];
+  return role ? `${name} (${role})` : name;
+};
 
 /* GET /api/appointments — list with status / date-range filters */
 export const getAppointments = async (req, res, next) => {
@@ -147,6 +153,7 @@ export const startDarshan          = action(wf.startDarshan);
 export const completeAppointment   = action(wf.completeAppointment);
 export const cancelAppointment     = action(wf.cancelAppointment);
 export const markNoShow            = action(wf.markNoShow);
+export const unholdAppointment     = action(wf.unholdAppointment);
 
 export const closeAppointment = async (req, res, next) => {
   try {

@@ -44,7 +44,7 @@ app.use(
       callback(new Error("CORS: origin not allowed"));
     },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "x-admin-name", "x-admin-mobile", "x-admin-key"],
+    allowedHeaders: ["Content-Type", "x-admin-name", "x-admin-mobile", "x-admin-key", "x-admin-role"],
     credentials: false,
   })
 );

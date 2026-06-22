@@ -386,9 +386,7 @@ export async function cancelAppointment(id, body = {}, actor = "Office Staff") {
       requires_follow_up: true,
     });
   }
-  if (body.notify_devotee !== false) {
-    notify("appointment_cancelled", updated, { reason: updated.cancellation_reason });
-  }
+  /* Notification on cancel removed per requirement — no WhatsApp/devotee alert. */
   return updated;
 }
 
@@ -429,7 +427,36 @@ export async function markNoShow(id, body = {}, actor = "Office Staff") {
   return closed || updated;
 }
 
-/* ── 10. CLOSE LEAD ────────────────────────────────────────────────────── */
+/* ── 10. UNHOLD (release time slot → back to Requested) ────────────────── */
+export async function unholdAppointment(id, body = {}, actor = "Office Staff") {
+  const appt = await getOr404(id);
+  if (!["Scheduled", "Confirmed", "Reminder Sent"].includes(appt.status)) {
+    const e = new Error("Appointment can only be unheld from Scheduled, Confirmed, or Reminder Sent status.");
+    e.status = 422; throw e;
+  }
+
+  const updated = await Appointment.update(id, {
+    status: "Requested",
+    start_time: null,
+    scheduled_by: null,
+    confirmed_at: null,
+    confirmed_by: null,
+    reminder_sent_at: null,
+  });
+
+  await logEvent(updated, {
+    event_type: "appointment_unhold", from_status: appt.status, to_status: "Requested",
+    title: "Appointment unheld — time slot released",
+    description: body.note || "Appointment returned to requested status; slot released.",
+    icon: "🔓", actor,
+    metadata: { previous_status: appt.status, previous_start_time: appt.start_time },
+  });
+  await logAudit({ userName: actor, action: "UNHOLD_APPOINTMENT", entityType: "appointment", entityId: updated.appointment_ref || String(updated.id), oldValue: { status: appt.status, start_time: appt.start_time }, newValue: { status: "Requested" } });
+
+  return updated;
+}
+
+/* ── 11. CLOSE LEAD ────────────────────────────────────────────────────── */
 export async function closeAppointmentLead(id, reason, actor = "system", opts = {}) {
   const appt = await getOr404(id);
   if (appt.status === "Closed") return appt;

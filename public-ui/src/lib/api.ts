@@ -137,10 +137,19 @@ function mapContact(r: Record<string, any>): ContactMessage {
 }
 
 /* ── Admin GET functions ─────────────────────────────────────────── */
+export async function getAppointmentBookingById(id: string | number): Promise<AppointmentBooking> {
+  const json = await getJson(`/api/appointment-bookings/${id}`);
+  return mapBooking(json.data ?? json);
+}
 export async function getAppointmentBookings(): Promise<AppointmentBooking[]> {
   const json = await getJson(`/api/appointment-bookings`);
   const rows: any[] = Array.isArray(json) ? json : (json.data ?? json.bookings ?? []);
   return rows.map(mapBooking);
+}
+
+export async function updateBookingStatus(id: string | number, status: string): Promise<AppointmentBooking> {
+  const data = await sendJson(`/api/appointment-bookings/${id}/status`, "PATCH", { status });
+  return mapBooking(data.data ?? data);
 }
 
 export async function getContacts(): Promise<ContactMessage[]> {
@@ -419,9 +428,11 @@ function adminAuthHeaders(withContentType = false): Record<string, string> {
     const mobile = sessionStorage.getItem("admin_mobile");
     const key    = sessionStorage.getItem("admin_key");
     const who    = sessionStorage.getItem("admin_name");
+    const role   = sessionStorage.getItem("admin_role");
     if (mobile) headers["x-admin-mobile"] = mobile;
     if (key)    headers["x-admin-key"]    = key;
     if (who)    headers["x-admin-name"]   = who;
+    if (role)   headers["x-admin-role"]   = role;
   }
   return headers;
 }
@@ -718,6 +729,10 @@ export async function cancelAppointment(id: number, payload: { reason: string; c
   const data = await sendJson(`/api/appointments/${id}/cancel`, "PATCH", payload);
   return mapAppointment(data.data);
 }
+export async function unholdAppointment(id: number, payload: { note?: string } = {}): Promise<Appointment> {
+  const data = await sendJson(`/api/appointments/${id}/unhold`, "PATCH", payload);
+  return mapAppointment(data.data);
+}
 export async function markNoShow(id: number, payload: { reason?: string; contacted?: boolean; follow_up_required?: boolean; note?: string } = {}): Promise<Appointment> {
   const data = await sendJson(`/api/appointments/${id}/no-show`, "PATCH", payload);
   return mapAppointment(data.data);
@@ -846,7 +861,7 @@ export async function logWhatsAppSent(payload: { devotee_id?: number; case_refer
 ══════════════════════════════════════════════════════════════════ */
 export async function convertBookingToAppointment(
   bookingId: string | number,
-  params?: { start_time?: string; mode?: string; meeting_link?: string }
+  params?: { start_time?: string; mode?: string; meeting_link?: string; location?: string }
 ): Promise<Appointment> {
   const data = await sendJson(`/api/appointments/from-booking/${bookingId}`, "POST", params || {});
   return mapAppointment(data.data);

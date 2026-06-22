@@ -4,9 +4,10 @@ import {
   updateAppointment, deleteAppointment, getArrivedToday, checkInAppointment,
   scheduleAppointment, rescheduleAppointment, confirmAppointment, sendReminder,
   startDarshan, completeAppointment, cancelAppointment, markNoShow, closeAppointment,
-  bookFollowUp, addNote, getNotes, getTimeline,
+  unholdAppointment, bookFollowUp, addNote, getNotes, getTimeline,
 } from "../controllers/appointmentController.js";
 import Appointment from "../models/Appointment.js";
+import AppointmentTimeline from "../models/AppointmentTimeline.js";
 import { pool } from "../config/db.js";
 import { requireRole } from "../middleware/requireAuth.js";
 
@@ -50,6 +51,7 @@ router.patch("/:id/complete",      GURUJI_SUPER, completeAppointment);
 router.patch("/:id/cancel",        ADMIN_SUPER,  cancelAppointment);
 router.patch("/:id/no-show",       ADMIN_SUPER,  markNoShow);
 router.patch("/:id/close",         ADMIN_SUPER,  closeAppointment);
+router.patch("/:id/unhold",        ADMIN_SUPER,  unholdAppointment);
 router.post("/:id/book-follow-up", ALL_ADMIN,    bookFollowUp);
 
 /* ── Notes & timeline ──────────────────────────────────────────────────── */
@@ -80,10 +82,25 @@ router.post("/from-booking/:bookingId", ADMIN_SUPER, async (req, res, next) => {
       status:           req.body.start_time ? "Scheduled" : "Requested",
       priority:         "Normal",
       start_time:       req.body.start_time || null,
-      location:         b.nearest_ashram || "",
+      location:         req.body.location || b.nearest_ashram || "",
       meeting_link:     req.body.meeting_link || null,
       purpose:          b.message || "",
     });
+    /* Mark the source booking as converted so it no longer appears in Appointment Requests */
+    await pool.query(`UPDATE appointment_bookings SET status = 'converted' WHERE id = $1`, [b.id]).catch(() => {});
+
+    /* Log the conversion so it appears in the appointment's activity log */
+    const actorName = req.user?.name || req.headers["x-admin-name"] || "Office Staff";
+    const actorRole = req.user?.role || req.headers["x-admin-role"];
+    await AppointmentTimeline.create({
+      appointment_id: appt.id,
+      devotee_id:     appt.devotee_id || null,
+      event_type:     "appointment_created",
+      to_status:      appt.status,
+      title:          "Appointment created from booking",
+      description:    appt.start_time ? new Date(appt.start_time).toLocaleString("en-IN") : "Awaiting scheduling.",
+      created_by:     actorRole ? `${actorName} (${actorRole})` : actorName,
+    }).catch(() => {});
     res.status(201).json({ success: true, data: appt });
   } catch (err) { next(err); }
 });

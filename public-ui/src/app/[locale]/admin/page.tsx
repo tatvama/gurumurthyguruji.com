@@ -8,6 +8,8 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { DateTimePicker, TimePicker } from "@/components/DateTimePicker";
 import { useRouter, useSearchParams, useParams, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   getAppointmentBookings,
   getContacts,
@@ -28,11 +30,15 @@ import {
   getAnalytics,
   getDevotees, getDevotee, getDevoteeHistory, createDevotee, updateDevotee, checkDuplicateDevotee,
   getAppointments, createAppointment, updateAppointment, deleteAppointment,
+  unholdAppointment, rescheduleAppointment, scheduleAppointment as scheduleAppointmentApi, updateBookingStatus,
   checkInAppointment, convertCaseToAppointment,
   getAiReport, generateAiReport,
   getChatMessages, sendChatMessage, clearChatHistory,
   generateWhatsAppMessage, logWhatsAppSent,
   convertBookingToAppointment,
+  getAppointmentBookingById,
+  getAppointmentTimeline,
+  type AppointmentEvent,
   getBookingComments, addBookingComment, deleteBookingComment,
   type BookingComment,
   getAuditLogs,
@@ -763,18 +769,113 @@ function toLocalInput(iso?: string) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/* Split a stored actor string "Name (role)" → { name, role } */
+function parseActor(raw?: string): { name: string; role: string } {
+  if (!raw) return { name: "", role: "" };
+  const m = raw.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (m) return { name: m[1].trim(), role: m[2].trim() };
+  return { name: raw.trim(), role: "" };
+}
+
+/* Format an ISO timestamp like "15 Jun 2026 at 06:36 pm" */
+function fmtEventTime(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const date = d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase();
+  return `${date} at ${time}`;
+}
+
+/* Short action label per timeline event type (falls back to the stored title) */
+function eventLabel(type?: string, fallback?: string): string {
+  const t = (type || "").toLowerCase();
+  if (t.includes("created") || t.includes("booking")) return "Booking Received";
+  if (t.includes("reschedule"))                       return "Appointment Rescheduled";
+  if (t.includes("schedule"))                         return "Appointment Scheduled";
+  if (t.includes("confirm"))                          return "Appointment Confirmed";
+  if (t.includes("reminder"))                         return "Reminder Sent";
+  if (t.includes("checkin") || t.includes("arriv"))   return "Checked In";
+  if (t.includes("darshan"))                          return "Darshan Started";
+  if (t.includes("complete"))                         return "Appointment Completed";
+  if (t.includes("cancel"))                           return "Appointment Cancelled";
+  if (t.includes("no_show") || t.includes("no-show")) return "Marked No-Show";
+  if (t.includes("close"))                            return "Appointment Closed";
+  if (t.includes("unhold"))                           return "Appointment Unheld";
+  if (t.includes("note"))                             return "Note Added";
+  return fallback || "Update";
+}
+
+/* Icon + colour per timeline event type */
+function eventTone(type?: string): { icon: string; bg: string; border: string; cardBg: string; text: string } {
+  const t = (type || "").toLowerCase();
+  const green  = { icon: "✓", bg: "#dcfce7", border: "#bbf7d0", cardBg: "#f0fdf4", text: "#15803d" };
+  const teal   = { icon: "🗓️", bg: "#ccfbf1", border: "#99f6e4", cardBg: "#f0fdfa", text: "#0f766e" };
+  const purple = { icon: "🔁", bg: "#ede9fe", border: "#ddd6fe", cardBg: "#faf5ff", text: "#6d28d9" };
+  const blue   = { icon: "🔔", bg: "#dbeafe", border: "#bfdbfe", cardBg: "#eff6ff", text: "#1d4ed8" };
+  const red    = { icon: "✕", bg: "#fee2e2", border: "#fecaca", cardBg: "#fef2f2", text: "#b91c1c" };
+  const amber  = { icon: "🙏", bg: "#fef3c7", border: "#fde68a", cardBg: "#fffbeb", text: "#b45309" };
+  const grey   = { icon: "•", bg: "#f3f4f6", border: "#e5e7eb", cardBg: "#f9fafb", text: "#374151" };
+  if (t.includes("created") || t.includes("booking")) return green;
+  if (t.includes("schedule") && t.includes("re"))     return purple;
+  if (t.includes("reschedule"))                       return purple;
+  if (t.includes("schedule"))                         return teal;
+  if (t.includes("confirm"))                          return green;
+  if (t.includes("reminder"))                         return blue;
+  if (t.includes("checkin") || t.includes("arriv"))   return amber;
+  if (t.includes("darshan"))                          return amber;
+  if (t.includes("complete"))                         return green;
+  if (t.includes("cancel"))                           return red;
+  if (t.includes("no_show") || t.includes("no-show")) return red;
+  if (t.includes("close"))                            return grey;
+  if (t.includes("unhold"))                           return teal;
+  return grey;
+}
+
 function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({
     devoteeName: appt?.devoteeName || "", mobile: appt?.mobile || "",
-    appointmentType: appt?.appointmentType || "General Appointment", mode: appt?.mode || "in-person",
+    appointmentType: appt?.appointmentType || "General Audience", mode: appt?.mode || "in-person",
     startTime: toLocalInput(appt?.startTime), durationMinutes: String(appt?.durationMinutes || 30),
     status: appt?.status || "Requested", priority: appt?.priority || "Normal",
     location: appt?.location || "", meetingLink: appt?.meetingLink || "",
     purpose: appt?.purpose || "", outcomeNote: appt?.outcomeNote || "",
+    officeRemarks: appt?.officeRemarks || "", assignedTo: appt?.assignedTo || "",
   });
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState("");
+  const [booking, setBooking]   = useState<AppointmentBooking | null>(null);
+  const [timeline, setTimeline] = useState<AppointmentEvent[]>([]);
+  const [saving, setSaving]     = useState(false);
+  const [err, setErr]           = useState("");
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }));
+  const locationRef = React.useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(locationRef, (p) => set("location", p.formatted || p.city || ""));
+
+  useEffect(() => {
+    if (appt?.bookingId) {
+      getAppointmentBookingById(appt.bookingId).then(setBooking).catch(() => {});
+    }
+  }, [appt?.bookingId]);
+
+  useEffect(() => {
+    if (appt?.id) {
+      getAppointmentTimeline(appt.id).then(setTimeline).catch(() => {});
+    }
+  }, [appt?.id]);
+
+  /* Full activity log: booking arrival (synthesised from the linked booking)
+     + every appointment timeline event, oldest → newest, nothing skipped. */
+  const events = useMemo<AppointmentEvent[]>(() => {
+    const list: AppointmentEvent[] = [...timeline];
+    if (booking?.createdAt && !list.some(e => /booking|created/i.test(e.eventType))) {
+      list.push({
+        id: -1, eventType: "booking_received", title: "Booking Received",
+        createdBy: booking.fullName ? `${booking.fullName} (devotee)` : "Devotee",
+        createdAt: booking.createdAt,
+      });
+    }
+    return list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }, [timeline, booking]);
 
   async function save() {
     if (!f.devoteeName.trim()) { setErr("Devotee name is required"); return; }
@@ -783,88 +884,199 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
       devotee_name: f.devoteeName, mobile: f.mobile, appointment_type: f.appointmentType,
       mode: f.mode, start_time: f.startTime ? new Date(f.startTime).toISOString() : null,
       duration_minutes: parseInt(f.durationMinutes) || null, priority: f.priority,
-      location: f.location, meeting_link: f.meetingLink, purpose: f.purpose, outcome_note: f.outcomeNote,
+      location: f.location, meeting_link: f.meetingLink, purpose: f.purpose,
+      outcome_note: f.outcomeNote, office_remarks: f.officeRemarks, assigned_to: f.assignedTo,
     };
     try {
-      // Status is read-only here; the backend rejects any edit that includes it
-      // (status changes must go through workflow actions). Only send it on create.
       if (appt) await updateAppointment(appt.id, payload);
       else      await createAppointment({ ...payload, status: f.status });
       onSaved();
     } catch (e: any) { setErr(e?.message || "Failed to save"); }
     finally { setSaving(false); }
   }
-  async function remove() {
-    if (!appt) return;
-    setSaving(true);
-    try { await deleteAppointment(appt.id); onSaved(); }
-    catch (e: any) { setErr(e?.message || "Failed to delete"); setSaving(false); }
-  }
-
-  const lbl = { fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 } as const;
-  const inp = { width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" } as const;
+  const lbl   = { fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em", textTransform: "uppercase" as const } as const;
+  const inp   = { width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" } as const;
+  const ro    = { ...inp, background: "#f9fafb", color: "#374151", display: "flex", alignItems: "center", cursor: "default", userSelect: "none" as const, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const } as const;
 
   return (
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
         style={{ position: "fixed", inset: 0, zIndex: 210, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 440, maxWidth: "100%", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+        style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 460, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
         <style>{`
           .apf-body    { padding: 20px 22px; }
           .apf-footer  { padding: 14px 22px; }
-          .apf-header  { padding: 18px 22px; }
-          .apf-grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .apf-header  { padding: 16px 22px; }
+          .apf-grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+          .apf-grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
           .apf-grid-dt { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
-          @media (max-width: 420px) {
+          .apf-section-title { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #0d9488; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+          .apf-section-title::after { content: ""; flex: 1; height: 1px; background: rgba(13,148,136,0.18); }
+          @media (max-width: 440px) {
             .apf-grid-2  { grid-template-columns: 1fr !important; }
+            .apf-grid-3  { grid-template-columns: 1fr 1fr !important; }
             .apf-grid-dt { grid-template-columns: 1fr 80px !important; }
             .apf-body    { padding: 14px 14px !important; }
             .apf-footer  { padding: 10px 14px !important; }
-            .apf-header  { padding: 14px 14px !important; }
-          }
-          @media (max-width: 360px) {
-            .apf-grid-dt { grid-template-columns: 1fr 70px !important; }
-            .apf-body    { padding: 12px 12px !important; }
-            .apf-footer  { padding: 8px 12px !important; }
-          }
-          @media (max-width: 300px) {
-            .apf-grid-dt { grid-template-columns: 1fr !important; }
+            .apf-header  { padding: 12px 14px !important; }
           }
         `}</style>
-        <div className="apf-header" style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", color: "#1f2937", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(17,24,39,0.5)" }}>Appointment{appt?.appointmentRef ? ` · ${appt.appointmentRef}` : ""}</p><h2 style={{ fontSize: 17, fontWeight: 800 }}>{appt ? "Edit Appointment" : "New Appointment"}</h2></div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937", flexShrink: 0 }}><X size={16} /></button>
+
+        {/* Header */}
+        <div className="apf-header" style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.65)", marginBottom: 2 }}>
+              {appt?.appointmentRef || "New Appointment"}
+            </p>
+            <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{appt ? appt.devoteeName || "Edit Appointment" : "New Appointment"}</h2>
+            {appt?.status && (
+              <span style={{ display: "inline-block", marginTop: 4, fontSize: 10.5, fontWeight: 700, background: "rgba(255,255,255,0.18)", borderRadius: 20, padding: "2px 10px", color: "#fff" }}>{appt.status}</span>
+            )}
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.18)", border: "none", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0 }}><X size={16} /></button>
         </div>
+
         <div className="apf-body" style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Devotee Name *</label><input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} /></div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Mobile</label><input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} /></div>
-          <div style={{ marginBottom: 13 }}>
+
+          {/* ── Devotee ── */}
+          <div className="apf-grid-2" style={{ marginBottom: 13 }}>
+            <div>
+              <label style={lbl}>Full Name *</label>
+              <input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} placeholder="Full name" />
+            </div>
+            <div>
+              <label style={lbl}>Mobile</label>
+              <input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} placeholder="10-digit number" />
+            </div>
+          </div>
+
+          {booking && (
+            <>
+              <div className="apf-grid-2" style={{ marginBottom: 13 }}>
+                <div>
+                  <label style={lbl}>Profession</label>
+                  <div style={ro}>{booking.profession || "—"}</div>
+                </div>
+                <div>
+                  <label style={lbl}>Nearest Ashram</label>
+                  <div style={ro}>{booking.nearestAshram || "—"}</div>
+                </div>
+              </div>
+              <div className="apf-grid-2" style={{ marginBottom: 13 }}>
+                <div>
+                  <label style={lbl}>Location</label>
+                  <div style={ro}>{booking.location || [booking.city, booking.district, booking.state].filter(Boolean).join(", ") || "—"}</div>
+                </div>
+                <div>
+                  <label style={lbl}>How Known</label>
+                  <div style={ro}>{booking.howKnown || "—"}</div>
+                </div>
+              </div>
+              {booking.email && (
+                <div style={{ marginBottom: 13 }}>
+                  <label style={lbl}>Email</label>
+                  <div style={ro}>{booking.email}</div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Appointment ── */}
+          <div className="apf-grid-2" style={{ marginBottom: 13 }}>
             <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)}
               options={[...APPOINTMENT_MODES]} />
-          </div>
-          <div className="apf-grid-dt">
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Date &amp; Time</label><DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} /></div>
-            <div style={{ marginBottom: 13 }}><label style={lbl}>Minutes</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
-          </div>
-          <div className="apf-grid-2" style={{ alignItems: "start" }}>
-            <div style={{ marginBottom: 13 }}>
-              <label style={lbl}>Status</label>
-              <div style={{ ...inp, display: "flex", alignItems: "center", background: "#f9fafb", color: "#374151", pointerEvents: "none", userSelect: "none" as const }}>
-                {f.status || "—"}
-              </div>
-            </div>
             <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
               options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />
           </div>
-          <div style={{ marginBottom: 13 }}><label style={lbl}>Location</label><input value={f.location} readOnly disabled title="Location cannot be changed" placeholder="—" style={{ ...inp, background: "#f9fafb", color: "#6b7280", cursor: "not-allowed" }} /></div>
-          {f.mode === "video" && <div style={{ marginBottom: 13 }}><label style={lbl}>Google Meet Link</label><input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)} placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} /></div>}
-          {err && <p style={{ fontSize: 12.5, color: "#dc2626" }}>{err}</p>}
+
+          <div className="apf-grid-dt" style={{ marginBottom: 13 }}>
+            <div><label style={lbl}>Date &amp; Time</label><DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} /></div>
+            <div><label style={lbl}>Duration (min)</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
+          </div>
+
+          <div style={{ marginBottom: 13 }}>
+            <label style={lbl}>Status</label>
+            <div style={ro}>{f.status || "—"}</div>
+          </div>
+
+          <div style={{ marginBottom: f.mode === "video" ? 13 : 8 }}>
+            <label style={lbl}>Venue / Location</label>
+            <input ref={locationRef} value={f.location} onChange={e => set("location", e.target.value)}
+              placeholder="Type to search location…" autoComplete="off" style={inp} />
+          </div>
+
+          {f.mode === "video" && (
+            <div style={{ marginBottom: 8 }}>
+              <label style={lbl}>Google Meet Link</label>
+              <input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)}
+                placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} />
+            </div>
+          )}
+
+          {/* ── Activity log — every action, when, and who did it ── */}
+          {appt && events.length > 0 && (
+            <div style={{ marginTop: 22 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>
+                Activity Log
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {events.map((ev, i) => {
+                  const who   = parseActor(ev.createdBy);
+                  const tone  = eventTone(ev.eventType);
+                  const first = i === 0;
+                  const last  = i === events.length - 1;
+                  const GAP   = 16;
+                  return (
+                    <div key={ev.id} style={{ display: "flex", gap: 12, marginBottom: last ? 0 : GAP }}>
+                      {/* icon column — stretches to card height, circle vertically centered, line behind */}
+                      <div style={{ position: "relative", width: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {!(first && last) && (
+                          <div style={{ position: "absolute", left: 14, top: first ? "50%" : 0, bottom: last ? "50%" : -GAP, width: 2, background: "#e5e7eb" }} />
+                        )}
+                        <div style={{ width: 30, height: 30, borderRadius: "50%", background: tone.bg, border: `1.5px solid ${tone.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0, position: "relative", zIndex: 1 }}>
+                          {tone.icon}
+                        </div>
+                      </div>
+                      {/* content card */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ background: tone.cardBg, border: `1px solid ${tone.border}`, borderRadius: 10, padding: "10px 13px" }}>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: tone.text, margin: 0, lineHeight: 1.3 }}>{eventLabel(ev.eventType, ev.title)}</p>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 7 }}>
+                            <span style={{ fontSize: 11, color: "#6b7280", flexShrink: 0 }}>{fmtEventTime(ev.createdAt)}</span>
+                            {who.name && (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "#374151", fontWeight: 600, minWidth: 0, justifyContent: "flex-end" }}>
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{who.name}</span>
+                                {who.role && (
+                                  <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase", color: "#0d9488", background: "rgba(13,148,136,0.1)", borderRadius: 5, padding: "1px 6px", flexShrink: 0 }}>
+                                    {who.role}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {err && <p style={{ fontSize: 12.5, color: "#dc2626", marginTop: 8 }}>{err}</p>}
         </div>
-        <div className="apf-footer" style={{ borderTop: "1px solid #e5e7eb", display: "flex", gap: 10 }}>
-          {appt && <button onClick={remove} disabled={saving} style={{ padding: "11px 14px", borderRadius: 10, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Trash2 size={14} /></button>}
-          <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-          <button onClick={save} disabled={saving} style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}>{saving ? "Saving…" : appt ? "Save Changes" : "Create Appointment"}</button>
+
+        {/* Footer */}
+        <div className="apf-footer" style={{ borderTop: "1px solid #e5e7eb", display: "flex", gap: 10, flexShrink: 0 }}>
+          <button onClick={onClose}
+            style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            Close
+          </button>
+          <button onClick={save} disabled={saving}
+            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saving ? "rgba(13,148,136,0.4)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(13,148,136,0.3)" }}>
+            {saving ? "Saving…" : appt ? "Save Changes" : "Create Appointment"}
+          </button>
         </div>
       </motion.div>
     </>
@@ -1198,6 +1410,162 @@ function downloadPdfDirect(
 
 
 /* ════════════════════════════════════════════════════════════════════
+   RESCHEDULE MODAL — calls proper /reschedule workflow endpoint so that
+   the timeline logs "appointment_rescheduled" and counters are updated.
+════════════════════════════════════════════════════════════════════ */
+function RescheduleModal({ appt, onClose, onSaved }: { appt: Appointment; onClose: () => void; onSaved: (a: Appointment) => void }) {
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [reason,  setReason]  = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [err,     setErr]     = useState("");
+
+  async function save() {
+    if (!newDate || !newTime) { setErr("Please select a new date and time."); return; }
+    if (!reason.trim()) { setErr("Reason is required."); return; }
+    const new_scheduled_at = new Date(`${newDate}T${newTime}`).toISOString();
+    setSaving(true); setErr("");
+    try {
+      const { appointment } = await rescheduleAppointment(appt.id, { new_scheduled_at, reason: reason.trim() });
+      onSaved(appointment);
+    } catch (e: any) { setErr(e?.message || "Reschedule failed."); }
+    finally { setSaving(false); }
+  }
+
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" };
+  const inp: React.CSSProperties = { width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 220, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center" }} />
+      <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }} transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{ position: "fixed", inset: 0, zIndex: 221, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        <div style={{ width: 420, maxWidth: "calc(100vw - 32px)", background: "#fff", borderRadius: 18, boxShadow: "0 20px 60px rgba(0,0,0,0.22)", fontFamily: "'Inter','Segoe UI',sans-serif", overflow: "hidden", pointerEvents: "auto" }}>
+
+        {/* Header */}
+        <div style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", padding: "16px 20px", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>Reschedule · {appt.appointmentRef || `#${appt.id}`}</p>
+            <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{appt.devoteeName}</h2>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}><X size={16} /></button>
+        </div>
+
+        {/* Current slot info */}
+        {appt.startTime && (
+          <div style={{ background: "#faf5ff", borderBottom: "1px solid #ede9fe", padding: "10px 20px", fontSize: 12.5, color: "#6d28d9", fontWeight: 600 }}>
+            Current slot: {new Date(appt.startTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+          </div>
+        )}
+
+        {/* Body */}
+        <div style={{ padding: "20px 20px 4px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={lbl}>New Date *</label>
+              <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" />
+            </div>
+            <div>
+              <label style={lbl}>New Time *</label>
+              <TimePicker value={newTime} onChange={setNewTime} placeholder="Select time" />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={lbl}>Reason *</label>
+            <input value={reason} onChange={e => { setReason(e.target.value); setErr(""); }} placeholder="e.g. Devotee request, conflict, Guruji unavailable…" style={{ ...inp, border: `1.5px solid ${err && !reason.trim() ? "#dc2626" : "#e5e7eb"}` }} />
+          </div>
+
+          {err && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 12, fontWeight: 600 }}>{err}</p>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "8px 20px 20px", display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={save} disabled={saving}
+            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saving ? "#c4b5fd" : "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            <RefreshCw size={14} style={saving ? { animation: "spin 1s linear infinite" } : {}} />
+            {saving ? "Rescheduling…" : "Confirm Reschedule"}
+          </button>
+        </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SCHEDULE MODAL — for Requested appointments, calls /schedule endpoint
+   so timeline logs "appointment_scheduled" and status → Scheduled.
+════════════════════════════════════════════════════════════════════ */
+function ScheduleApptModal({ appt, onClose, onSaved }: { appt: Appointment; onClose: () => void; onSaved: (a: Appointment) => void }) {
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [err,     setErr]     = useState("");
+
+  async function save() {
+    if (!newDate || !newTime) { setErr("Please select a date and time."); return; }
+    setSaving(true); setErr("");
+    try {
+      const scheduled_at = new Date(`${newDate}T${newTime}`).toISOString();
+      const updated = await scheduleAppointmentApi(appt.id, { scheduled_at });
+      onSaved(updated);
+    } catch (e: any) { setErr(e?.message || "Scheduling failed."); }
+    finally { setSaving(false); }
+  }
+
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" };
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 220, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center" }} />
+      <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }} transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{ position: "fixed", inset: 0, zIndex: 221, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        <div style={{ width: 420, maxWidth: "calc(100vw - 32px)", background: "#fff", borderRadius: 18, boxShadow: "0 20px 60px rgba(0,0,0,0.22)", fontFamily: "'Inter','Segoe UI',sans-serif", overflow: "hidden", pointerEvents: "auto" }}>
+
+          {/* Header */}
+          <div style={{ background: "linear-gradient(135deg,#0891b2,#0e7490)", padding: "16px 20px", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>Schedule · {appt.appointmentRef || `#${appt.id}`}</p>
+              <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>{appt.devoteeName}</h2>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}><X size={16} /></button>
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: "20px 20px 4px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={lbl}>Date *</label>
+                <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" />
+              </div>
+              <div>
+                <label style={lbl}>Time *</label>
+                <TimePicker value={newTime} onChange={setNewTime} placeholder="Select time" />
+              </div>
+            </div>
+            {err && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 12, fontWeight: 600 }}>{err}</p>}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: "8px 20px 20px", display: "flex", gap: 10 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+            <button onClick={save} disabled={saving}
+              style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saving ? "#a5f3fc" : "linear-gradient(135deg,#0891b2,#0e7490)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+              <CalendarPlus size={14} style={saving ? { animation: "spin 1s linear infinite" } : {}} />
+              {saving ? "Scheduling…" : "Confirm Schedule"}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
    LOGIN SCREEN  (2-step OTP — verified against DB)
 ════════════════════════════════════════════════════════════════════ */
 function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => void }) {
@@ -1330,6 +1698,31 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
   );
 }
 
+/* Self-contained address input — mounts autocomplete when it appears in the DOM */
+function LocationPlacesInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const ref = React.useRef<HTMLInputElement>(null);
+  usePlacesAutocomplete(ref, (p) => onChange(p.formatted || [p.city, p.state].filter(Boolean).join(", ")));
+  return (
+    <input
+      ref={ref}
+      type="text"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder="Type to search address…"
+      autoComplete="off"
+      style={{
+        width: "100%", height: 42, padding: "0 13px 0 38px",
+        borderRadius: 9, border: "1.5px solid #e5e7eb",
+        background: "#fff", fontSize: 13, color: "#1f2937", fontWeight: 500,
+        outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+        transition: "border-color 0.15s",
+      }}
+      onFocus={e => (e.currentTarget.style.borderColor = "#0d9488")}
+      onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")}
+    />
+  );
+}
+
 /* ════════════════════════════════════════════════════════════════════
    DETAIL PANEL  (right-side slide-in)
 ════════════════════════════════════════════════════════════════════ */
@@ -1356,6 +1749,7 @@ function DetailPanel({
   const [scheduleTime, setScheduleTime] = useState("");
   const [scheduleMode, setScheduleMode] = useState("in-person");
   const [scheduleMeetingLink, setScheduleMeetingLink] = useState("");
+  const [scheduleLocation, setScheduleLocation] = useState("");
 
   /* ── Comments state (bookings only) ── */
   const [comments, setComments] = useState<BookingComment[]>([]);
@@ -1392,9 +1786,10 @@ function DetailPanel({
     if (scheduleMode === "video" && !scheduleMeetingLink.trim()) return;
     setConverting(true); setConvertMsg(null); setScheduleOpen(false);
     try {
-      const params: { start_time?: string; mode?: string; meeting_link?: string } = { mode: scheduleMode };
+      const params: { start_time?: string; mode?: string; meeting_link?: string; location?: string } = { mode: scheduleMode };
       params.start_time = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
       if (scheduleMode === "video") params.meeting_link = scheduleMeetingLink.trim();
+      if (scheduleMode === "in-person" && scheduleLocation.trim()) params.location = scheduleLocation.trim();
       await convertBookingToAppointment((item as AppointmentBooking).id, params);
       onScheduled?.((item as AppointmentBooking).id);
     } catch (e: any) {
@@ -1526,7 +1921,7 @@ function DetailPanel({
               {/* Schedule Appointment */}
               {isBooking && (
                 <div>
-                  <button onClick={() => { setScheduleOpen(true); setConvertMsg(null); setScheduleMeetingLink(""); }} disabled={converting}
+                  <button onClick={() => { setScheduleOpen(true); setConvertMsg(null); setScheduleMeetingLink(""); setScheduleLocation(""); }} disabled={converting}
                     style={{ width: "100%", padding: "13px 16px", borderRadius: 12, border: "none", background: converting ? "#ccfbf1" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: converting ? "#0d9488" : "#fff", fontSize: 13, fontWeight: 700, cursor: converting ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: converting ? "none" : "0 4px 14px rgba(13,148,136,0.3)", transition: "all 0.2s" }}>
                     <CalendarPlus size={16} />
                     {converting ? "Creating appointment…" : "Schedule Appointment"}
@@ -1589,6 +1984,17 @@ function DetailPanel({
                               ))}
                             </div>
                           </div>
+
+                          {/* In-person address */}
+                          {scheduleMode === "in-person" && (
+                            <div style={{ marginBottom: 16 }}>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Location / Address</label>
+                              <div style={{ position: "relative" }}>
+                                <svg style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#0d9488"/></svg>
+                                <LocationPlacesInput value={scheduleLocation} onChange={setScheduleLocation} />
+                              </div>
+                            </div>
+                          )}
 
                           {/* Meeting link */}
                           {scheduleMode === "video" && (
@@ -2763,6 +3169,244 @@ function NotificationSettings() {
   );
 }
 
+const ASHRAM_LOCATIONS = [
+  {
+    name: "Shri Gurumurthy Guruji Ashram",
+    city: "Shirdi",
+    state: "Maharashtra",
+    address: "Near Saibaba Sansthan, Shirdi – 423109, Ahmednagar, Maharashtra",
+    phone: "+91 98765 43210",
+    timing: "5:00 AM – 10:00 PM",
+    type: "Main Ashram",
+    mapSrc: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3756.3!2d74.4779!3d19.7664!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bdc5d4b73571e93%3A0x2c673e0a6f7ac8e5!2sShirdi%20Sai%20Baba%20Sansthan%20Temple!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin",
+  },
+  {
+    name: "Seva Kendra – Bangalore",
+    city: "Bangalore",
+    state: "Karnataka",
+    address: "No. 12, 3rd Cross, Sadashivanagar, Bangalore – 560080, Karnataka",
+    phone: "+91 80 2345 6789",
+    timing: "6:00 AM – 8:00 PM",
+    type: "Seva Kendra",
+    mapSrc: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.2!2d77.5793!3d13.0358!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae17d5d7c4e2a1%3A0x12345!2sSadashivanagar%2C%20Bengaluru!5e0!3m2!1sen!2sin!4v1700000000001!5m2!1sen!2sin",
+  },
+  {
+    name: "Gurumurthy Dhyana Kendra",
+    city: "Hyderabad",
+    state: "Telangana",
+    address: "Plot 45, Jubilee Hills, Road No. 36, Hyderabad – 500033, Telangana",
+    phone: "+91 40 6789 0123",
+    timing: "5:30 AM – 9:00 PM",
+    type: "Dhyana Kendra",
+    mapSrc: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.5!2d78.4072!3d17.4318!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb977b50000001%3A0xabcde!2sJubilee%20Hills%2C%20Hyderabad!5e0!3m2!1sen!2sin!4v1700000000002!5m2!1sen!2sin",
+  },
+  {
+    name: "Mumbai Seva Sadan",
+    city: "Mumbai",
+    state: "Maharashtra",
+    address: "Flat 8, Om Sai Niwas, Andheri West, Mumbai – 400058, Maharashtra",
+    phone: "+91 22 2637 8900",
+    timing: "6:00 AM – 9:00 PM",
+    type: "Seva Kendra",
+    mapSrc: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3769.5!2d72.8311!3d19.1352!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b7e6b0000001%3A0xfedcba!2sAndheri%20West%2C%20Mumbai!5e0!3m2!1sen!2sin!4v1700000000003!5m2!1sen!2sin",
+  },
+  {
+    name: "Mysuru Satsang Bhavan",
+    city: "Mysuru",
+    state: "Karnataka",
+    address: "No. 7, Vivekananda Road, Kuvempunagar, Mysuru – 570023, Karnataka",
+    phone: "+91 821 245 6789",
+    timing: "6:00 AM – 7:30 PM",
+    type: "Satsang Centre",
+    mapSrc: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3898.5!2d76.6553!3d12.3051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3baf7016f0000001%3A0x112233!2sKuvempunagar%2C%20Mysuru!5e0!3m2!1sen!2sin!4v1700000000004!5m2!1sen!2sin",
+  },
+];
+
+type AshramEntry = typeof ASHRAM_LOCATIONS[number];
+
+function AshramLocationsSection() {
+  const [ashrams, setAshrams]     = useState<AshramEntry[]>(ASHRAM_LOCATIONS);
+  const [editIdx, setEditIdx]     = useState<number | null>(null);
+  const [draft, setDraft]         = useState<AshramEntry | null>(null);
+  const [saved, setSaved]         = useState(false);
+
+  function openModal(i: number) { setEditIdx(i); setDraft({ ...ashrams[i] }); setSaved(false); }
+  function closeModal() { setEditIdx(null); setDraft(null); }
+  function setField(k: keyof AshramEntry, v: string) { setDraft(p => p ? { ...p, [k]: v } : p); }
+  function save() {
+    if (editIdx === null || !draft) return;
+    setAshrams(prev => prev.map((a, i) => i === editIdx ? draft : a));
+    setSaved(true);
+    setTimeout(closeModal, 700);
+  }
+
+  const typeColor = (t: string) =>
+    t === "Main Ashram"   ? { bg: "#fef3c7", text: "#b45309", border: "#fde68a" } :
+    t === "Seva Kendra"   ? { bg: "#ede9fe", text: "#7c3aed", border: "#ddd6fe" } :
+    t === "Dhyana Kendra" ? { bg: "#f0f9ff", text: "#0369a1", border: "#bae6fd" } :
+                            { bg: "#f0f9ff", text: "#0369a1", border: "#bae6fd" };
+
+  const inp: React.CSSProperties = { width: "100%", height: 40, padding: "0 12px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em", textTransform: "uppercase" };
+
+  return (
+    <>
+      <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488" }}>Ashram Locations</p>
+          <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500 }}>{ashrams.length} ashrams</span>
+        </div>
+
+        {/* List */}
+        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          {ashrams.map((a, i) => {
+            const tc = typeColor(a.type);
+            return (
+              <div key={i} onClick={() => openModal(i)}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < ashrams.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", transition: "background 0.13s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                {/* Icon */}
+                <div style={{ width: 42, height: 42, borderRadius: 11, background: "#f0fdfa", border: "1.5px solid #5eead4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>🛕</div>
+                {/* Text */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</p>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0" }}>{a.city} · {a.state}</p>
+                </div>
+                {/* Type badge */}
+                <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, whiteSpace: "nowrap", flexShrink: 0, display: "none" }} className="ashram-type-badge">{a.type}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, whiteSpace: "nowrap", flexShrink: 0 }}>{a.type}</span>
+                {/* Chevron */}
+                <ChevronDown size={15} color="#9ca3af" style={{ transform: "rotate(-90deg)", flexShrink: 0 }} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {editIdx !== null && draft && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+              onClick={closeModal}
+              style={{ position: "fixed", inset: 0, zIndex: 260, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(2px)" }} />
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: "spring", stiffness: 340, damping: 30 }}
+              style={{ position: "fixed", inset: 0, zIndex: 261, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", pointerEvents: "none" }}>
+
+              <div style={{ width: "100%", maxWidth: 560, maxHeight: "90vh", background: "#fff", borderRadius: 20, boxShadow: "0 24px 64px rgba(0,0,0,0.22)", overflow: "hidden", display: "flex", flexDirection: "column", pointerEvents: "auto", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+
+                {/* Header */}
+                <div style={{ background: "linear-gradient(135deg,#0d9488,#0f766e)", padding: "16px 20px", color: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛕</div>
+                    <div>
+                      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", margin: 0 }}>Ashram Details</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>{draft.city}, {draft.state}</p>
+                    </div>
+                  </div>
+                  <button onClick={closeModal} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}>
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Scrollable body */}
+                <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
+                  {/* Name */}
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={lbl}>Ashram Name</label>
+                    <input value={draft.name} onChange={e => setField("name", e.target.value)} style={inp} />
+                  </div>
+
+                  {/* City + State */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                    <div>
+                      <label style={lbl}>City</label>
+                      <input value={draft.city} onChange={e => setField("city", e.target.value)} style={inp} />
+                    </div>
+                    <div>
+                      <label style={lbl}>State</label>
+                      <input value={draft.state} onChange={e => setField("state", e.target.value)} style={inp} />
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={lbl}>Full Address</label>
+                    <textarea value={draft.address} onChange={e => setField("address", e.target.value)} rows={2}
+                      style={{ ...inp, height: "auto", padding: "10px 12px", resize: "vertical", lineHeight: 1.5 }} />
+                  </div>
+
+                  {/* Phone + Timing */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                    <div>
+                      <label style={lbl}>Phone</label>
+                      <input value={draft.phone} onChange={e => setField("phone", e.target.value)} style={inp} placeholder="+91 XXXXX XXXXX" />
+                    </div>
+                    <div>
+                      <label style={lbl}>Timings</label>
+                      <input value={draft.timing} onChange={e => setField("timing", e.target.value)} style={inp} placeholder="5:00 AM – 9:00 PM" />
+                    </div>
+                  </div>
+
+                  {/* Type */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={lbl}>Ashram Type</label>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {["Main Ashram", "Seva Kendra", "Dhyana Kendra", "Satsang Centre"].map(t => {
+                        const tc = typeColor(t);
+                        const active = draft.type === t;
+                        return (
+                          <button key={t} onClick={() => setField("type", t)}
+                            style={{ padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${active ? tc.border : "#e5e7eb"}`, background: active ? tc.bg : "#fafafa", color: active ? tc.text : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.13s" }}>
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Google Maps Embed URL */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={lbl}>Google Maps Embed URL</label>
+                    <input value={draft.mapSrc} onChange={e => setField("mapSrc", e.target.value)} style={{ ...inp, fontSize: 11.5, color: "#6b7280" }} placeholder="https://www.google.com/maps/embed?pb=..." />
+                  </div>
+
+                  {/* Map Preview */}
+                  <div style={{ borderRadius: 12, overflow: "hidden", border: "1.5px solid #e5e7eb", background: "#f9fafb" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9ca3af", padding: "8px 12px", background: "#f9fafb", margin: 0, borderBottom: "1px solid #e5e7eb" }}>Map Preview</p>
+                    {draft.mapSrc.trim() ? (
+                      <iframe title={`map-${editIdx}`} src={draft.mapSrc} width="100%" height="220"
+                        style={{ border: "none", display: "block" }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                    ) : (
+                      <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 13 }}>
+                        Paste a Google Maps embed URL above to preview
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{ padding: "14px 22px", borderTop: "1px solid #f3f4f6", display: "flex", gap: 10, flexShrink: 0, background: "#fff" }}>
+                  <button onClick={closeModal}
+                    style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button onClick={save}
+                    style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saved ? "#059669" : "linear-gradient(135deg,#0d9488,#0f766e)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "background 0.2s" }}>
+                    {saved ? <><CheckCircle2 size={15} /> Saved!</> : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 function SettingsTab({
   todayStats, trikalaCount, devoteeCount, appointmentCount, adminCount, onSidebarToggle,
 }: {
@@ -2861,6 +3505,9 @@ function SettingsTab({
 
         {/* Notification Settings — PRD §10 */}
         <NotificationSettings />
+
+        {/* Ashram Locations */}
+        <AshramLocationsSection />
 
         {/* Audit Log */}
         <div>
@@ -3463,6 +4110,20 @@ function TrikalaDetailPanel({
       }}
     >
       <style>{`
+        .appt-view-btn       { transition: background 0.15s, color 0.15s; }
+        .appt-view-btn:hover { background: rgba(0,0,0,0.06) !important; color: #374151 !important; }
+        .appt-filter-pill    { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+        .appt-filter-pill:hover { border-color: #0d9488 !important; color: #0d9488 !important; }
+        .appt-btn-checkin    { transition: background 0.15s, border-color 0.15s; }
+        .appt-btn-checkin:hover { background: rgba(13,148,136,0.18) !important; border-color: #0d9488 !important; }
+        .appt-btn-reschedule { transition: background 0.15s, border-color 0.15s; }
+        .appt-btn-reschedule:hover { background: rgba(124,58,237,0.16) !important; border-color: rgba(124,58,237,0.6) !important; }
+        .appt-btn-unhold     { transition: background 0.15s, border-color 0.15s; }
+        .appt-btn-unhold:hover:not(:disabled) { background: rgba(8,145,178,0.18) !important; border-color: #0891b2 !important; }
+        .appt-btn-cancel     { transition: background 0.15s, border-color 0.15s; }
+        .appt-btn-cancel:hover:not(:disabled) { background: rgba(220,38,38,0.16) !important; border-color: #dc2626 !important; }
+        .appt-badge-status   { transition: background 0.15s; }
+        .appt-badge-status:hover { filter: brightness(0.88); }
         .tdp-sched-txt { display: inline; }
         .tdp-fname     { display: inline; font-size: 12px; color: #6b7280; font-weight: 600; margin-left: 8px; }
         .tdp-ai-hdr    { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid #F2F3F5; gap: 10px; }
@@ -3843,6 +4504,11 @@ export default function AdminPage() {
   const [calSelDate, setCalSelDate]       = useState<{ year: number; month: number; day: number } | null>(null);
   const [apptPanel, setApptPanel]         = useState<{ open: boolean; appt: Appointment | null }>({ open: false, appt: null });
   const [checkInAppt, setCheckInAppt]     = useState<Appointment | null>(null);
+  const [cancellingApptId, setCancellingApptId]     = useState<number | null>(null);
+  const [unholdingApptId, setUnholdingApptId]       = useState<number | null>(null);
+  const [rescheduleAppt, setRescheduleAppt]         = useState<Appointment | null>(null);
+  const [scheduleAppt, setScheduleAppt]             = useState<Appointment | null>(null);
+  const [apptActionErr, setApptActionErr]           = useState<string | null>(null);
   const [addDevoteeOpen, setAddDevoteeOpen] = useState(false);
 
   /* ── check existing session ── */
@@ -3922,6 +4588,60 @@ export default function AdminPage() {
     try { setDevotees(await getDevotees({ search: devoteeSearch, relationship: devoteeRel })); }
     catch { /* ignore */ } finally { setDevoteesLoading(false); }
   }, [devoteeSearch, devoteeRel]);
+  /* Hard-delete the appointment and mark its source booking cancelled so it
+     disappears everywhere — appointments list AND Appointment Requests. */
+  const doCancelAppt = useCallback(async (a: Appointment) => {
+    setCancellingApptId(a.id);
+    setApptActionErr(null);
+    try {
+      if (a.bookingId) {
+        await updateBookingStatus(a.bookingId, "cancelled").catch(() => {});
+        setBookings(prev => prev.filter(b => String(b.id) !== String(a.bookingId)));
+      }
+      await deleteAppointment(a.id);
+      setAppointments(prev => prev.filter(x => x.id !== a.id));
+      toast.success("Appointment cancelled and removed.", { position: "top-center" });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to cancel appointment.", { position: "top-center" });
+    } finally { setCancellingApptId(null); }
+  }, []);
+
+  /* react-toastify confirmation popup before cancelling */
+  const requestCancelAppt = useCallback((a: Appointment) => {
+    toast(
+      ({ closeToast }: { closeToast?: () => void }) => (
+        <div onClick={e => e.stopPropagation()}>
+          <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: 14, color: "#1f2937" }}>Cancel this appointment?</p>
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "#6b7280", lineHeight: 1.5 }}>
+            <b>{a.devoteeName || "This appointment"}</b> will be permanently removed and won&apos;t appear anywhere.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button onClick={() => closeToast?.()}
+              style={{ fontSize: 12.5, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", border: "1px solid #e5e7eb", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>
+              No
+            </button>
+            <button onClick={() => { closeToast?.(); doCancelAppt(a); }}
+              style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", background: "#dc2626", border: "none", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>
+              Yes, Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { autoClose: false, closeOnClick: false, closeButton: false, draggable: false, position: "top-center" }
+    );
+  }, [doCancelAppt]);
+
+  const handleUnholdAppt = useCallback(async (a: Appointment) => {
+    setUnholdingApptId(a.id);
+    setApptActionErr(null);
+    try {
+      const updated = await unholdAppointment(a.id);
+      setAppointments(prev => prev.map(x => x.id === a.id ? updated : x));
+    } catch (err: any) {
+      setApptActionErr(err?.message || "Failed to unhold appointment.");
+    } finally { setUnholdingApptId(null); }
+  }, []);
+
   const fetchAppointments = useCallback(async () => {
     setApptLoading(true);
     try { setAppointments(await getAppointments({ status: apptFilter })); }
@@ -4027,6 +4747,8 @@ export default function AdminPage() {
   const raw = tab === "bookings" ? bookings : contacts;
   const q   = search.toLowerCase();
   const filtered = raw.filter((r) => {
+    /* hide cancelled and converted bookings from Appointment Requests entirely */
+    if (tab === "bookings" && ["cancelled", "converted"].includes((r as AppointmentBooking).status ?? "")) return false;
     /* text search */
     let match = true;
     if (q) {
@@ -4079,6 +4801,11 @@ export default function AdminPage() {
     params.set("tab", t);
     params.delete("case");
     setTrikalaDetail(null);
+    setDetail(null);
+    setApptPanel({ open: false, appt: null });
+    setCheckInAppt(null);
+    setRescheduleAppt(null);
+    setScheduleAppt(null);
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
@@ -4366,6 +5093,20 @@ export default function AdminPage() {
           const upcoming = appointments.filter(a => a.startTime && new Date(a.startTime) >= new Date());
           return (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f9fafb", minHeight: 0, overflowY: "auto" }}>
+              <style>{`
+                .appt-view-btn       { transition: background 0.15s, color 0.15s; }
+                .appt-view-btn:hover { background: rgba(0,0,0,0.06) !important; color: #374151 !important; }
+                .appt-filter-pill    { transition: background 0.15s, border-color 0.15s, color 0.15s; }
+                .appt-filter-pill:hover { border-color: #0d9488 !important; color: #0d9488 !important; }
+                .appt-btn-checkin    { transition: background 0.15s, border-color 0.15s; }
+                .appt-btn-checkin:hover:not(:disabled) { background: rgba(13,148,136,0.18) !important; border-color: #0d9488 !important; }
+                .appt-btn-reschedule { transition: background 0.15s, border-color 0.15s; }
+                .appt-btn-reschedule:hover:not(:disabled) { background: rgba(124,58,237,0.16) !important; border-color: rgba(124,58,237,0.6) !important; }
+                .appt-btn-unhold     { transition: background 0.15s, border-color 0.15s; }
+                .appt-btn-unhold:hover:not(:disabled) { background: rgba(8,145,178,0.18) !important; border-color: #0891b2 !important; }
+                .appt-btn-cancel     { transition: background 0.15s, border-color 0.15s; }
+                .appt-btn-cancel:hover:not(:disabled) { background: rgba(220,38,38,0.16) !important; border-color: #dc2626 !important; }
+              `}</style>
               <div className="adm-hero-card">
                 <div className="adm-hero-row">
                   <div className="adm-hero-left">
@@ -4383,6 +5124,7 @@ export default function AdminPage() {
                       <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 3, gap: 2, border: "1px solid #e5e7eb" }}>
                         {(["list","calendar"] as const).map(v => (
                           <button key={v} onClick={() => setApptView(v)}
+                            className="appt-view-btn"
                             style={{ padding: "5px 12px", borderRadius: 7, border: "none", background: apptView === v ? "#ffffff" : "transparent", color: apptView === v ? "#0d9488" : "#6b7280", fontSize: 11.5, fontWeight: 600, cursor: "pointer", textTransform: "capitalize", boxShadow: apptView === v ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
                             {v === "list" ? "☰ List" : "📅 Calendar"}
                           </button>
@@ -4416,12 +5158,20 @@ export default function AdminPage() {
                   ))}
                 </div>
 
+                {apptActionErr && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12, padding: "10px 14px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 12.5, fontWeight: 600 }}>
+                    <span>{apptActionErr}</span>
+                    <button onClick={() => setApptActionErr(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#b91c1c", padding: 0, lineHeight: 1 }}><X size={14} /></button>
+                  </div>
+                )}
+
                 {/* status filter */}
                 <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
                   {STATUS_PILLS.map(st => {
                     const active = apptFilter === st;
                     return (
                       <button key={st} onClick={() => setApptFilter(st)}
+                        className="appt-filter-pill"
                         style={{ padding: "4px 12px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 11.5, fontWeight: active ? 700 : 500, cursor: "pointer", textTransform: "capitalize" }}>
                         {st}
                       </button>
@@ -4431,7 +5181,10 @@ export default function AdminPage() {
 
                 {(() => {
                   const apptListEl = (filterFn?: (a: Appointment) => boolean) => {
-                    const base = apptFilter === "all" ? appointments : appointments.filter(a => a.status.toLowerCase() === apptFilter.toLowerCase());
+                    const HIDE_STATUSES = ["Cancelled", "Closed"];
+                    const base = apptFilter === "all"
+                      ? appointments.filter(a => !HIDE_STATUSES.includes(a.status))
+                      : appointments.filter(a => a.status.toLowerCase() === apptFilter.toLowerCase());
                     const filtered = filterFn ? base.filter(filterFn) : base;
                     return (
                       <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
@@ -4459,17 +5212,45 @@ export default function AdminPage() {
                                 {!["Arrived", "Completed", "Cancelled", "No-show", "Closed"].includes(a.status) && (
                                   <button onClick={(e) => { e.stopPropagation(); setCheckInAppt(a); }}
                                     title="Verify details & mark arrived for darshan"
+                                    className="appt-btn-checkin"
                                     style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1.5px solid #5eead4", padding: "5px 11px", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap" }}>
                                     <CheckCircle2 size={13} /> Check In
                                   </button>
                                 )}
+                                {["Requested", "Approved"].includes(a.status) && (
+                                  <button onClick={(e) => { e.stopPropagation(); setScheduleAppt(a); }}
+                                    title="Pick a date & time to schedule this appointment"
+                                    className="appt-btn-reschedule"
+                                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0891b2", background: "rgba(8,145,178,0.07)", border: "1.5px solid rgba(8,145,178,0.35)", padding: "5px 11px", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap" }}>
+                                    <CalendarPlus size={12} /> Schedule
+                                  </button>
+                                )}
                                 {a.status === "Scheduled" && (
-                                  <button onClick={(e) => { e.stopPropagation(); setApptPanel({ open: true, appt: a }); }}
+                                  <button onClick={(e) => { e.stopPropagation(); setRescheduleAppt(a); }}
+                                    className="appt-btn-reschedule"
                                     style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#7c3aed", background: "rgba(124,58,237,0.07)", border: "1.5px solid rgba(124,58,237,0.35)", padding: "5px 11px", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap" }}>
                                     <RefreshCw size={12} /> Reschedule
                                   </button>
                                 )}
-                                <span style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", padding: "4px 10px", borderRadius: 20,
+                                {["Scheduled", "Confirmed", "Reminder Sent"].includes(a.status) && (
+                                  <button onClick={(e) => { e.stopPropagation(); handleUnholdAppt(a); }}
+                                    disabled={unholdingApptId === a.id}
+                                    title="Release time slot — move back to Requested"
+                                    className="appt-btn-unhold"
+                                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#0891b2", background: "rgba(8,145,178,0.07)", border: "1.5px solid rgba(8,145,178,0.35)", padding: "5px 11px", borderRadius: 20, cursor: unholdingApptId === a.id ? "default" : "pointer", whiteSpace: "nowrap", opacity: unholdingApptId === a.id ? 0.5 : 1 }}>
+                                    <RefreshCw size={12} style={unholdingApptId === a.id ? { animation: "spin 1s linear infinite" } : {}} /> Unhold
+                                  </button>
+                                )}
+                                {!["Arrived", "In Darshan", "Completed", "Cancelled", "Closed"].includes(a.status) && (
+                                  <button onClick={(e) => { e.stopPropagation(); requestCancelAppt(a); }}
+                                    disabled={cancellingApptId === a.id}
+                                    title="Cancel this appointment"
+                                    className="appt-btn-cancel"
+                                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#dc2626", background: "rgba(220,38,38,0.07)", border: "1.5px solid rgba(220,38,38,0.3)", padding: "5px 11px", borderRadius: 20, cursor: cancellingApptId === a.id ? "default" : "pointer", whiteSpace: "nowrap", opacity: cancellingApptId === a.id ? 0.5 : 1 }}>
+                                    <X size={12} /> {cancellingApptId === a.id ? "Cancelling…" : "Cancel"}
+                                  </button>
+                                )}
+                                <span className="appt-badge-status" style={{ fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap", padding: "4px 10px", borderRadius: 20,
                                   color: a.status === "Arrived" ? "#15803d" : "#374151",
                                   background: a.status === "Arrived" ? "#dcfce7" : "#f3f4f6" }}>
                                   {a.status === "Arrived" ? "🙏 Arrived" : a.status}
@@ -4524,6 +5305,14 @@ export default function AdminPage() {
               {checkInAppt && (
                 <CheckInPanel appt={checkInAppt} onClose={() => setCheckInAppt(null)}
                   onSaved={() => { setCheckInAppt(null); fetchAppointments(); }} />
+              )}
+              {rescheduleAppt && (
+                <RescheduleModal appt={rescheduleAppt} onClose={() => setRescheduleAppt(null)}
+                  onSaved={(updated) => { setRescheduleAppt(null); setAppointments(prev => prev.map(x => x.id === updated.id ? updated : x)); }} />
+              )}
+              {scheduleAppt && (
+                <ScheduleApptModal appt={scheduleAppt} onClose={() => setScheduleAppt(null)}
+                  onSaved={(updated) => { setScheduleAppt(null); setAppointments(prev => prev.map(x => x.id === updated.id ? updated : x)); }} />
               )}
             </div>
           );
@@ -6131,6 +6920,8 @@ export default function AdminPage() {
           .adm-hero-right    { gap: 8px; }
         }
       `}</style>
+
+      <ToastContainer position="top-center" autoClose={3000} newestOnTop theme="light" style={{ zIndex: 999999 }} />
     </div>
   );
 }
