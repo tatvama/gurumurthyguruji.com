@@ -180,7 +180,7 @@ export function usePlacesAutocomplete(
     document.body.appendChild(dropdown);
 
     function positionDropdown() {
-      const rect = el.getBoundingClientRect();
+      const rect = el!.getBoundingClientRect();
       const rightEl = widthRef?.current;
       const rightEdge = rightEl ? rightEl.getBoundingClientRect().right : rect.right;
       dropdown.style.left  = rect.left + window.scrollX + "px";
