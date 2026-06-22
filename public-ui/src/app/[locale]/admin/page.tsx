@@ -5140,11 +5140,13 @@ export default function AdminPage() {
                   {cards.map(card => (
                     <div key={card.label} className={`today-stat-card accent-${card.accent}${card.urgent ? " is-urgent" : ""}`}>
                       <div className={`today-stat-icon ${card.color}`}>
-                        <span style={{ fontSize: 18 }}>{card.icon}</span>
+                        <span style={{ fontSize: 14 }}>{card.icon}</span>
                       </div>
-                      <div className="today-stat-value">{card.value}</div>
-                      <div className="today-stat-label">{card.label}</div>
-                      <div className="today-stat-sub">{card.sub}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="today-stat-value">{card.value}</div>
+                        <div className="today-stat-label">{card.label}</div>
+                        <div className="today-stat-sub">{card.sub}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
