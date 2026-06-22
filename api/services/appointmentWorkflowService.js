@@ -167,7 +167,7 @@ export async function rescheduleAppointment(id, body = {}, actor = "Office Staff
 
   const oldWhen = appt.start_time;
   const updated = await Appointment.update(id, {
-    status: "Scheduled",
+    status: "Rescheduled",
     start_time: new Date(newWhen).toISOString(),
     last_scheduled_at: oldWhen,
     schedule_attempt_count: (appt.schedule_attempt_count || 0) + 1,
@@ -176,7 +176,7 @@ export async function rescheduleAppointment(id, body = {}, actor = "Office Staff
   });
 
   await logEvent(updated, {
-    event_type: "appointment_rescheduled", from_status: appt.status, to_status: "Scheduled",
+    event_type: "appointment_rescheduled", from_status: appt.status, to_status: "Rescheduled",
     title: `Appointment rescheduled to ${fmtDateTime(updated.start_time)}`,
     description: `From ${fmtDateTime(oldWhen)} to ${fmtDateTime(updated.start_time)}. Reason: ${body.reason}`,
     icon: "🔁", actor,

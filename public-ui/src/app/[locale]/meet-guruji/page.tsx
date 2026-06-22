@@ -167,6 +167,7 @@ export default function MeetGurujiPage() {
     handleSubmit,
     control,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
@@ -174,12 +175,13 @@ export default function MeetGurujiPage() {
   const cityInputRef     = useRef<HTMLInputElement | null>(null);
   const districtInputRef = useRef<HTMLInputElement | null>(null);
   usePlacesAutocomplete(cityInputRef, (p) => {
-    if (p.city)     setValue("city", p.city, { shouldValidate: true });
+    if (p.city)     setValue("city",     p.city,     { shouldValidate: true });
     if (p.district) setValue("district", p.district, { shouldValidate: true });
-    if (p.state)    setValue("state", p.state, { shouldValidate: true });
-    if (p.pincode)  setValue("pincode", p.pincode, { shouldValidate: true });
+    if (p.state)    setValue("state",    p.state,    { shouldValidate: true });
+    if (p.pincode)  setValue("pincode",  p.pincode,  { shouldValidate: true });
   }, { theme: BROWN_THEME, widthRef: districtInputRef });
-  const cityReg = register("city");
+  const cityReg     = register("city");
+  const districtReg = register("district");
 
   const ashramOptions: { value: string; label: string }[] = ashrams
     .filter((a) => a.status === "Active")
@@ -287,7 +289,7 @@ export default function MeetGurujiPage() {
                     <Button
                       className="mt-7 border-saffron-accent text-saffron-accent hover:bg-saffron-accent/5"
                       variant="outline"
-                      onClick={() => setIsSubmitted(false)}
+                      onClick={() => { reset(); setIsSubmitted(false); }}
                     >
                       {t("meet.success.again")}
                     </Button>
@@ -351,8 +353,8 @@ export default function MeetGurujiPage() {
                       <FieldWrap id="district" label="District *" error={(errors as any).district?.message}>
                         <Input
                           id="district"
-                          {...register("district")}
-                          ref={(el) => { districtInputRef.current = el; }}
+                          {...districtReg}
+                          ref={(el) => { districtReg.ref(el); districtInputRef.current = el; }}
                           placeholder="District"
                           readOnly
                           disabled

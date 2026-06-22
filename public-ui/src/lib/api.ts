@@ -650,7 +650,7 @@ export const APPOINTMENT_TYPES = [
 /* Appointment Flow §3 — canonical lifecycle */
 export const APPOINTMENT_STATUSES = [
   "Requested", "Scheduled", "Confirmed", "Reminder Sent",
-  "Arrived", "In Darshan", "Completed", "Cancelled", "No-show", "Closed",
+  "Arrived", "In Darshan", "Completed", "Rescheduled", "Cancelled", "No-show", "Closed",
 ] as const;
 /* Statuses that allow no further action (Flow §15.2) */
 export const FINAL_STATUSES = ["Completed", "Closed"] as const;

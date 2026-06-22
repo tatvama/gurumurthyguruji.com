@@ -192,12 +192,14 @@ export function usePlacesAutocomplete(
     let svc: any        = null;
     let placesSvc: any  = null;
     let sessionToken: any = null;
+    let selecting       = false; // true while we're programmatically setting a selected value
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") dropdown.style.display = "none";
     };
 
     const onInput = () => {
+      if (selecting) return; // ignore the synthetic event fired after selection
       clearTimeout(debounceTimer);
       const val = (el as HTMLInputElement).value.trim();
       // lazy-init: if Maps loaded after this effect ran, create svc now
@@ -247,9 +249,12 @@ export function usePlacesAutocomplete(
                 e.preventDefault(); // keep focus on input
                 dropdown.style.display = "none";
 
-                // Update the visible input value right away
+                // Update the visible input value right away.
+                // Guard with `selecting` so our onInput handler ignores this synthetic event.
+                selecting = true;
                 (el as HTMLInputElement).value = pred.description;
                 el.dispatchEvent(new Event("input", { bubbles: true }));
+                selecting = false;
 
                 // Fetch full address_components
                 if (!placesSvc) {
@@ -266,14 +271,25 @@ export function usePlacesAutocomplete(
                     sessionToken = null; // reset — billing optimization
                     if (detailStatus === "OK" && place) {
                       const parsed = parsePlace(place);
-                      // Reverse-geocode for pincode if missing
-                      if (!parsed.pincode && place.geometry?.location) {
+                      // Reverse-geocode if pincode OR district is missing
+                      if ((!parsed.pincode || !parsed.district) && place.geometry?.location) {
                         const geo = new (window as any).google.maps.Geocoder();
                         geo.geocode({ location: place.geometry.location }, (results: any[], st: string) => {
                           if (st === "OK" && results?.length) {
                             for (const r of results) {
-                              const pc = r.address_components?.find((c: any) => c.types?.includes("postal_code"));
-                              if (pc) { parsed.pincode = pc.long_name; break; }
+                              const comps: any[] = r.address_components || [];
+                              if (!parsed.pincode) {
+                                const pc = comps.find((c: any) => c.types?.includes("postal_code"));
+                                if (pc) parsed.pincode = pc.long_name;
+                              }
+                              if (!parsed.district) {
+                                const dist = comps.find((c: any) =>
+                                  c.types?.includes("administrative_area_level_2") ||
+                                  c.types?.includes("administrative_area_level_3")
+                                );
+                                if (dist) parsed.district = dist.long_name;
+                              }
+                              if (parsed.pincode && parsed.district) break;
                             }
                           }
                           cb.current(parsed);

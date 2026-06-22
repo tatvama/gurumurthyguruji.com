@@ -30,6 +30,7 @@ import {
   getAnalytics,
   getDevotees, getDevotee, getDevoteeHistory, createDevotee, updateDevotee, checkDuplicateDevotee,
   getAppointments, createAppointment, updateAppointment, deleteAppointment,
+  cancelAppointment,
   unholdAppointment, rescheduleAppointment, scheduleAppointment as scheduleAppointmentApi, updateBookingStatus,
   checkInAppointment, convertCaseToAppointment,
   getAiReport, generateAiReport,
@@ -894,9 +895,13 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
     } catch (e: any) { setErr(e?.message || "Failed to save"); }
     finally { setSaving(false); }
   }
+  const TERMINAL = ["Cancelled", "Completed", "Closed", "No-show"];
+  const isTerminal = appt ? TERMINAL.includes(appt.status) : false;
+
   const lbl   = { fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5, letterSpacing: "0.04em", textTransform: "uppercase" as const } as const;
   const inp   = { width: "100%", height: 40, padding: "0 13px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 13, color: "#1f2937", outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" } as const;
   const ro    = { ...inp, background: "#f9fafb", color: "#374151", display: "flex", alignItems: "center", cursor: "default", userSelect: "none" as const, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const } as const;
+  const inpRo = isTerminal ? { ...ro, pointerEvents: "none" as const } : inp;
 
   return (
     <>
@@ -943,11 +948,11 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
           <div className="apf-grid-2" style={{ marginBottom: 13 }}>
             <div>
               <label style={lbl}>Full Name *</label>
-              <input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inp} placeholder="Full name" />
+              <input value={f.devoteeName} onChange={e => set("devoteeName", e.target.value)} style={inpRo} readOnly={isTerminal} placeholder="Full name" />
             </div>
             <div>
               <label style={lbl}>Mobile</label>
-              <input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inp} placeholder="10-digit number" />
+              <input value={f.mobile} onChange={e => set("mobile", e.target.value)} style={inpRo} readOnly={isTerminal} placeholder="10-digit number" />
             </div>
           </div>
 
@@ -984,15 +989,25 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
 
           {/* ── Appointment ── */}
           <div className="apf-grid-2" style={{ marginBottom: 13 }}>
-            <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)}
-              options={[...APPOINTMENT_MODES]} />
-            <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)}
-              options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />
+            {isTerminal
+              ? <div><label style={lbl}>Mode</label><div style={ro}>{f.mode || "—"}</div></div>
+              : <FancySelect label="Mode" value={f.mode} onChange={v => set("mode", v)} options={[...APPOINTMENT_MODES]} />}
+            {isTerminal
+              ? <div><label style={lbl}>Priority</label><div style={ro}>{f.priority || "—"}</div></div>
+              : <FancySelect label="Priority" value={f.priority} onChange={v => set("priority", v)} options={["Normal", "High", "Urgent", "VIP"].map(p => ({ value: p, label: p }))} />}
           </div>
 
           <div className="apf-grid-dt" style={{ marginBottom: 13 }}>
-            <div><label style={lbl}>Date &amp; Time</label><DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} /></div>
-            <div><label style={lbl}>Duration (min)</label><input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inp} /></div>
+            <div>
+              <label style={lbl}>Date &amp; Time</label>
+              {isTerminal
+                ? <div style={ro}>{f.startTime ? new Date(f.startTime).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                : <DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} />}
+            </div>
+            <div>
+              <label style={lbl}>Duration (min)</label>
+              <input type="number" value={f.durationMinutes} onChange={e => set("durationMinutes", e.target.value)} style={inpRo} readOnly={isTerminal} />
+            </div>
           </div>
 
           <div style={{ marginBottom: 13 }}>
@@ -1002,15 +1017,15 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
 
           <div style={{ marginBottom: f.mode === "video" ? 13 : 8 }}>
             <label style={lbl}>Venue / Location</label>
-            <input ref={locationRef} value={f.location} onChange={e => set("location", e.target.value)}
-              placeholder="Type to search location…" autoComplete="off" style={inp} />
+            <input ref={isTerminal ? undefined : locationRef} value={f.location} onChange={e => set("location", e.target.value)}
+              placeholder="Type to search location…" autoComplete="off" style={inpRo} readOnly={isTerminal} />
           </div>
 
           {f.mode === "video" && (
             <div style={{ marginBottom: 8 }}>
               <label style={lbl}>Google Meet Link</label>
               <input value={f.meetingLink} onChange={e => set("meetingLink", e.target.value)}
-                placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inp} />
+                placeholder="https://meet.google.com/xxx-xxxx-xxx" style={inpRo} readOnly={isTerminal} />
             </div>
           )}
 
@@ -1070,13 +1085,15 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
         {/* Footer */}
         <div className="apf-footer" style={{ borderTop: "1px solid #e5e7eb", display: "flex", gap: 10, flexShrink: 0 }}>
           <button onClick={onClose}
-            style={{ flex: 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            style={{ flex: isTerminal ? 2 : 1, padding: "11px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             Close
           </button>
-          <button onClick={save} disabled={saving}
-            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saving ? "rgba(13,148,136,0.4)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(13,148,136,0.3)" }}>
-            {saving ? "Saving…" : appt ? "Save Changes" : "Create Appointment"}
-          </button>
+          {!isTerminal && (
+            <button onClick={save} disabled={saving}
+              style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: saving ? "rgba(13,148,136,0.4)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(13,148,136,0.3)" }}>
+              {saving ? "Saving…" : appt ? "Save Changes" : "Create Appointment"}
+            </button>
+          )}
         </div>
       </motion.div>
     </>
@@ -1422,11 +1439,10 @@ function RescheduleModal({ appt, onClose, onSaved }: { appt: Appointment; onClos
 
   async function save() {
     if (!newDate || !newTime) { setErr("Please select a new date and time."); return; }
-    if (!reason.trim()) { setErr("Reason is required."); return; }
     const new_scheduled_at = new Date(`${newDate}T${newTime}`).toISOString();
     setSaving(true); setErr("");
     try {
-      const { appointment } = await rescheduleAppointment(appt.id, { new_scheduled_at, reason: reason.trim() });
+      const { appointment } = await rescheduleAppointment(appt.id, { new_scheduled_at, reason: "Rescheduled" });
       onSaved(appointment);
     } catch (e: any) { setErr(e?.message || "Reschedule failed."); }
     finally { setSaving(false); }
@@ -1470,11 +1486,6 @@ function RescheduleModal({ appt, onClose, onSaved }: { appt: Appointment; onClos
               <label style={lbl}>New Time *</label>
               <TimePicker value={newTime} onChange={setNewTime} placeholder="Select time" />
             </div>
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <label style={lbl}>Reason *</label>
-            <input value={reason} onChange={e => { setReason(e.target.value); setErr(""); }} placeholder="e.g. Devotee request, conflict, Guruji unavailable…" style={{ ...inp, border: `1.5px solid ${err && !reason.trim() ? "#dc2626" : "#e5e7eb"}` }} />
           </div>
 
           {err && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 12, fontWeight: 600 }}>{err}</p>}
@@ -1694,6 +1705,90 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
           </form>
         )}
       </div>
+    </div>
+  );
+}
+
+/* Ashram location picker — inline list (avoids modal overflow:hidden clipping) */
+function AshramLocationPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = ASHRAM_LOCATIONS.find(a => value === `${a.name}, ${a.city}, ${a.state}`);
+
+  return (
+    <div ref={ref}>
+      {/* Trigger */}
+      <button type="button" onClick={() => setOpen(p => !p)}
+        style={{
+          width: "100%", height: 42, padding: "0 12px",
+          borderRadius: open ? "9px 9px 0 0" : 9,
+          borderTop: `1.5px solid ${open || selected ? "#0d9488" : "#e5e7eb"}`,
+          borderLeft: `1.5px solid ${open || selected ? "#0d9488" : "#e5e7eb"}`,
+          borderRight: `1.5px solid ${open || selected ? "#0d9488" : "#e5e7eb"}`,
+          borderBottom: open ? "1.5px solid #e5e7eb" : `1.5px solid ${selected ? "#0d9488" : "#e5e7eb"}`,
+          background: open ? "#f0fdfa" : "#fff",
+          fontSize: 13, color: selected ? "#0f766e" : "#9ca3af",
+          fontWeight: selected ? 600 : 400, textAlign: "left",
+          cursor: "pointer", outline: "none",
+          boxSizing: "border-box" as const, fontFamily: "inherit",
+          transition: "all 0.15s",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        }}>
+        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {selected ? `${selected.name} — ${selected.city}` : "Select ashram location…"}
+        </span>
+        <svg style={{ flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+          width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="#0d9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {/* Inline list — part of document flow, no absolute positioning */}
+      {open && (
+        <div style={{
+          maxHeight: 196, overflowY: "auto",
+          border: "1.5px solid #0d9488", borderTop: "none",
+          borderRadius: "0 0 9px 9px",
+          background: "#fff",
+          boxShadow: "0 6px 20px rgba(13,148,136,0.10)",
+        }}>
+          {ASHRAM_LOCATIONS.map((a, i) => {
+            const val = `${a.name}, ${a.city}, ${a.state}`;
+            const isActive = value === val;
+            return (
+              <div key={a.name} onClick={() => { onChange(val); setOpen(false); }}
+                style={{
+                  padding: "10px 14px", cursor: "pointer",
+                  background: isActive ? "#f0fdfa" : "#fff",
+                  borderBottom: i < ASHRAM_LOCATIONS.length - 1 ? "1px solid #f0fdf9" : "none",
+                  display: "flex", alignItems: "center", gap: 10,
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "#f0fdfa"; }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = isActive ? "#f0fdfa" : "#fff"; }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#0d9488" : "#d1d5db", flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isActive ? "#0d9488" : "#1f2937", lineHeight: 1.3 }}>{a.name}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{a.city}, {a.state}</div>
+                </div>
+                {isActive && (
+                  <svg style={{ marginLeft: "auto", flexShrink: 0 }} width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="#0d9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1985,14 +2080,11 @@ function DetailPanel({
                             </div>
                           </div>
 
-                          {/* In-person address */}
+                          {/* In-person address — custom ashram picker */}
                           {scheduleMode === "in-person" && (
                             <div style={{ marginBottom: 16 }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Location / Address</label>
-                              <div style={{ position: "relative" }}>
-                                <svg style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#0d9488"/></svg>
-                                <LocationPlacesInput value={scheduleLocation} onChange={setScheduleLocation} />
-                              </div>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Location / Ashram</label>
+                              <AshramLocationPicker value={scheduleLocation} onChange={setScheduleLocation} />
                             </div>
                           )}
 
@@ -3373,18 +3465,6 @@ function AshramLocationsSection() {
                     <input value={draft.mapSrc} onChange={e => setField("mapSrc", e.target.value)} style={{ ...inp, fontSize: 11.5, color: "#6b7280" }} placeholder="https://www.google.com/maps/embed?pb=..." />
                   </div>
 
-                  {/* Map Preview */}
-                  <div style={{ borderRadius: 12, overflow: "hidden", border: "1.5px solid #e5e7eb", background: "#f9fafb" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9ca3af", padding: "8px 12px", background: "#f9fafb", margin: 0, borderBottom: "1px solid #e5e7eb" }}>Map Preview</p>
-                    {draft.mapSrc.trim() ? (
-                      <iframe title={`map-${editIdx}`} src={draft.mapSrc} width="100%" height="220"
-                        style={{ border: "none", display: "block" }} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-                    ) : (
-                      <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 13 }}>
-                        Paste a Google Maps embed URL above to preview
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Footer */}
@@ -4338,25 +4418,44 @@ function TrikalaDetailPanel({
 ════════════════════════════════════════════════════════════════════ */
 function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEvent[]; unread: number; onClear: () => void }) {
   const [open, setOpen] = useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const h = (e: MouseEvent) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        panelRef.current && !panelRef.current.contains(e.target as Node)
+      ) setOpen(false);
+    };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const panelW = 340;
+      const panelH = 420;
+      let left = r.right + 10;
+      if (left + panelW > window.innerWidth - 8) left = r.left - panelW - 10;
+      let top = r.bottom - panelH;
+      if (top < 8) top = 8;
+      setPos({ top, left });
+    }
+    setOpen(v => !v);
+  }
+
   return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        title="Notifications"
+    <>
+      <button ref={btnRef} onClick={toggle} title="Notifications"
         style={{
           position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
           width: 36, height: 36, borderRadius: 10, border: "1.5px solid #e5e7eb",
           background: unread > 0 ? "linear-gradient(135deg,#fef3c7,#fffbeb)" : "#f9fafb",
           cursor: "pointer", transition: "all 0.15s",
-        }}
-      >
+        }}>
         {unread > 0 ? <BellRing size={16} color="#d97706" /> : <Bell size={16} color="#6b7280" />}
         {unread > 0 && (
           <span style={{
@@ -4369,12 +4468,11 @@ function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEve
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 8px)", right: 0, width: 340, maxWidth: "calc(100vw - 16px)", maxHeight: 420,
-          background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+        <div ref={panelRef} style={{
+          position: "fixed", top: pos.top, left: pos.left, width: 340, maxHeight: 420,
+          background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           border: "1.5px solid #e5e7eb", zIndex: 9999, overflow: "hidden", display: "flex", flexDirection: "column",
         }}>
-          {/* Header */}
           <div style={{ padding: "10px 14px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <MessageCircle size={14} color="#0d9488" />
@@ -4385,8 +4483,6 @@ function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEve
               <button onClick={onClear} style={{ fontSize: 10, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}>Clear all</button>
             )}
           </div>
-
-          {/* List */}
           <div style={{ overflowY: "auto", flex: 1 }}>
             {notifs.length === 0 ? (
               <div style={{ padding: 24, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>
@@ -4417,7 +4513,7 @@ function NotificationBell({ notifs, unread, onClear }: { notifs: NotificationEve
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -4588,8 +4684,8 @@ export default function AdminPage() {
     try { setDevotees(await getDevotees({ search: devoteeSearch, relationship: devoteeRel })); }
     catch { /* ignore */ } finally { setDevoteesLoading(false); }
   }, [devoteeSearch, devoteeRel]);
-  /* Hard-delete the appointment and mark its source booking cancelled so it
-     disappears everywhere — appointments list AND Appointment Requests. */
+  /* Cancel the appointment via the workflow endpoint so it moves to Cancelled status
+     and appears in the Cancelled filter. Also marks the source booking as cancelled. */
   const doCancelAppt = useCallback(async (a: Appointment) => {
     setCancellingApptId(a.id);
     setApptActionErr(null);
@@ -4598,9 +4694,9 @@ export default function AdminPage() {
         await updateBookingStatus(a.bookingId, "cancelled").catch(() => {});
         setBookings(prev => prev.filter(b => String(b.id) !== String(a.bookingId)));
       }
-      await deleteAppointment(a.id);
-      setAppointments(prev => prev.filter(x => x.id !== a.id));
-      toast.success("Appointment cancelled and removed.", { position: "top-center" });
+      const updated = await cancelAppointment(a.id, { reason: "Cancelled by staff" });
+      setAppointments(prev => prev.map(x => x.id === a.id ? updated : x));
+      toast.success("Appointment cancelled.", { position: "top-center" });
     } catch (err: any) {
       toast.error(err?.message || "Failed to cancel appointment.", { position: "top-center" });
     } finally { setCancellingApptId(null); }
@@ -4613,7 +4709,7 @@ export default function AdminPage() {
         <div onClick={e => e.stopPropagation()}>
           <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: 14, color: "#1f2937" }}>Cancel this appointment?</p>
           <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "#6b7280", lineHeight: 1.5 }}>
-            <b>{a.devoteeName || "This appointment"}</b> will be permanently removed and won&apos;t appear anywhere.
+            <b>{a.devoteeName || "This appointment"}</b> will be moved to the Cancelled tab.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button onClick={() => closeToast?.()}
@@ -4929,11 +5025,18 @@ export default function AdminPage() {
           )}
         </nav>
 
-        {/* Notification Bell */}
+        {/* Notification Bell — disabled/coming soon */}
         <div style={{ padding: "8px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#9ca3af" }}>Notifications</span>
-            <NotificationBell notifs={notifs} unread={unreadCount} onClear={() => { setNotifs([]); setUnread(0); }} />
+            <button disabled title="Notifications (coming soon)"
+              style={{
+                position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
+                width: 36, height: 36, borderRadius: 10, border: "1.5px solid #e5e7eb",
+                background: "#f3f4f6", cursor: "not-allowed", opacity: 0.45,
+              }}>
+              <Bell size={16} color="#9ca3af" />
+            </button>
           </div>
         </div>
 
@@ -6010,7 +6113,7 @@ export default function AdminPage() {
                   </button>
                   <button
                     className="adm-hero-btn-gold"
-                    onClick={() => downloadPdfDirect(tab, tab === "bookings" ? bookings : contacts)}
+                    onClick={() => downloadPdfDirect(tab, filtered as AppointmentBooking[] | ContactMessage[])}
                   >
                     <FileDown size={14} />
                     <span className="adm-hero-btn-txt">Download PDF</span>
