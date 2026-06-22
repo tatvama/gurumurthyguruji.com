@@ -94,17 +94,9 @@ export default function AboutPage() {
               transition={{ duration: 0.8 }}
               className="grid grid-cols-1 md:grid-cols-12 items-stretch rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
-              {/* Left panel — background image with overlay */}
-              <div
-                className="md:col-span-4 relative flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px]"
-                style={{
-                  backgroundImage: "url('/images/guruji-meditating.png')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center top",
-                }}
-              >
-                <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(255,248,235,0.82) 0%, rgba(255,240,210,0.78) 100%)", backdropFilter: "blur(1px)" }} />
-                <div className="relative z-10 p-8 font-heading text-2xl font-bold text-deep-brown">
+              {/* Left panel */}
+              <div className="md:col-span-4 flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px] bg-champagne/10">
+                <div className="p-8 font-heading text-2xl font-bold text-deep-brown">
                   <span className="text-saffron-accent mr-3">V.</span> {t("aboutpage.s5.title")}
                 </div>
               </div>
@@ -150,18 +142,9 @@ function SectionBlock({ num, title, paras }: { num: string; title: string; paras
       transition={{ duration: 0.8 }}
       className="grid grid-cols-1 md:grid-cols-12 items-stretch bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
     >
-      {/* Left panel — background image with overlay, text on top */}
-      <div
-        className="md:col-span-4 relative flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px]"
-        style={{
-          backgroundImage: "url('/images/guruji-meditating.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center top",
-        }}
-      >
-        {/* Warm cream overlay so text stays readable */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(255,248,235,0.82) 0%, rgba(255,240,210,0.78) 100%)", backdropFilter: "blur(1px)" }} />
-        <div className="relative z-10 p-8 font-heading text-2xl font-bold text-deep-brown">
+      {/* Left panel */}
+      <div className="md:col-span-4 flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px] bg-champagne/10">
+        <div className="p-8 font-heading text-2xl font-bold text-deep-brown">
           <span className="text-saffron-accent mr-3">{num}</span> {title}
         </div>
       </div>

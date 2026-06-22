@@ -184,7 +184,7 @@ export default function TrikalaJnanaPage() {
             <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-pearl/85">
               {t("trikalapage.cta.body")}
             </p>
-            <Button size="lg" className="h-auto px-8 py-4 text-lg" asChild>
+            <Button size="lg" className="h-auto px-5 py-2.5 text-sm sm:px-8 sm:py-4 sm:text-lg" asChild>
               <Link href="/meet-guruji">{t("cta.book")}</Link>
             </Button>
           </div>
