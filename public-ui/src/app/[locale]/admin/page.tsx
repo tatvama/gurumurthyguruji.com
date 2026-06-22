@@ -2064,16 +2064,17 @@ function DetailPanel({
                         {/* ── Body ── */}
                         <div style={{ padding: "20px 20px 4px" }}>
 
-                          {/* Date + Time — side by side on ≥360px, stacked below */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                            <div>
+                          {/* Date + Time — side by side ≥400px, stacked below */}
+                          <style>{`@media(max-width:399px){.sch-dt-row{flex-direction:column!important}.sch-time-col{flex-shrink:unset!important;width:100%}}`}</style>
+                          <div className="sch-dt-row" style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                            <div style={{ flex: "1 1 0", minWidth: 0 }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Date *</label>
                               <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" minDate={todayStr} />
                               {!scheduleDate && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
                             </div>
-                            <div>
+                            <div className="sch-time-col" style={{ flexShrink: 0 }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Time *</label>
-                              <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" />
+                              <div style={{ width: "fit-content" }}><TimePicker value={scheduleTime} onChange={setScheduleTime} /></div>
                               {!scheduleTime && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
                               {scheduleTime && isPastTime && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Time has already passed</p>}
                             </div>
