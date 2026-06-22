@@ -1038,6 +1038,7 @@ function Step2({ form, set, next, back }: { form: FormData; set: (k: keyof FormD
                 placeholder="dd-mm-yyyy"
                 accentColor={KO}
                 accentLight={KOL}
+                maxDate={new Date().toLocaleDateString("en-CA")}
                 naked
               />
             </div>

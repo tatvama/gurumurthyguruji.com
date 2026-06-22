@@ -1002,7 +1002,7 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
               <label style={lbl}>Date &amp; Time</label>
               {isTerminal
                 ? <div style={ro}>{f.startTime ? new Date(f.startTime).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-                : <DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} />}
+                : <DateTimePicker value={f.startTime} onChange={v => set("startTime", v)} minDate={new Date().toISOString().slice(0, 10)} />}
             </div>
             <div>
               <label style={lbl}>Duration (min)</label>
@@ -1480,7 +1480,7 @@ function RescheduleModal({ appt, onClose, onSaved }: { appt: Appointment; onClos
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
             <div>
               <label style={lbl}>New Date *</label>
-              <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" />
+              <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" minDate={new Date().toISOString().slice(0, 10)} />
             </div>
             <div>
               <label style={lbl}>New Time *</label>
@@ -1551,7 +1551,7 @@ function ScheduleApptModal({ appt, onClose, onSaved }: { appt: Appointment; onCl
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div>
                 <label style={lbl}>Date *</label>
-                <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" />
+                <DateTimePicker mode="date" value={newDate} onChange={setNewDate} placeholder="Select date" minDate={new Date().toISOString().slice(0, 10)} />
               </div>
               <div>
                 <label style={lbl}>Time *</label>
@@ -1879,6 +1879,10 @@ function DetailPanel({
   async function convertToAppt() {
     if (!isBooking || !scheduleDate || !scheduleTime) return;
     if (scheduleMode === "video" && !scheduleMeetingLink.trim()) return;
+    if (new Date(`${scheduleDate}T${scheduleTime}`) < new Date()) {
+      setConvertMsg({ type: "warn", text: "Cannot schedule an appointment in the past." });
+      return;
+    }
     setConverting(true); setConvertMsg(null); setScheduleOpen(false);
     try {
       const params: { start_time?: string; mode?: string; meeting_link?: string; location?: string } = { mode: scheduleMode };
@@ -1915,6 +1919,13 @@ function DetailPanel({
   const initial = (name || "?")[0].toUpperCase();
   const sub     = isBooking ? (item as AppointmentBooking).mobile    : (item as ContactMessage).email;
   const [activeTab, setActiveTab] = useState<"details"|"comments">("details");
+
+  /* Past date/time guard — can't schedule before "now" */
+  const nowD       = new Date();
+  const todayStr   = nowD.toLocaleDateString("en-CA");            // local YYYY-MM-DD
+  const nowHHMM    = `${String(nowD.getHours()).padStart(2,"0")}:${String(nowD.getMinutes()).padStart(2,"0")}`;
+  const isPastTime = scheduleDate === todayStr && !!scheduleTime && scheduleTime < nowHHMM;
+  const scheduleBlocked = !scheduleDate || !scheduleTime || isPastTime || (scheduleMode === "video" && !scheduleMeetingLink.trim());
 
   const detailRows: { icon: string; label: string; val: string }[] = isBooking
     ? [
@@ -2057,13 +2068,14 @@ function DetailPanel({
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
                             <div>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Date *</label>
-                              <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" />
+                              <DateTimePicker mode="date" value={scheduleDate} onChange={setScheduleDate} placeholder="Select date" minDate={todayStr} />
                               {!scheduleDate && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
                             </div>
                             <div>
                               <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6, letterSpacing: "0.05em", textTransform: "uppercase" }}>Time *</label>
                               <TimePicker value={scheduleTime} onChange={setScheduleTime} placeholder="Select time" />
                               {!scheduleTime && <p style={{ fontSize: 10.5, color: "#f59e0b", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Required</p>}
+                              {scheduleTime && isPastTime && <p style={{ fontSize: 10.5, color: "#dc2626", fontWeight: 600, margin: "5px 0 0", display: "flex", alignItems: "center", gap: 3 }}>⚠ Time has already passed</p>}
                             </div>
                           </div>
 
@@ -2107,8 +2119,8 @@ function DetailPanel({
                             Cancel
                           </button>
                           <button onClick={convertToAppt}
-                            disabled={converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())}
-                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || !scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.2s", opacity: (!scheduleDate || !scheduleTime || (scheduleMode === "video" && !scheduleMeetingLink.trim())) ? 0.55 : 1, boxShadow: (!scheduleDate || !scheduleTime) ? "none" : "0 4px 14px rgba(13,148,136,0.35)" }}>
+                            disabled={converting || scheduleBlocked}
+                            style={{ flex: 2, padding: "11px", borderRadius: 10, border: "none", background: (converting || scheduleBlocked) ? "rgba(13,148,136,0.35)" : "linear-gradient(135deg,#0d9488,#14b8a6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: (converting || scheduleBlocked) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, transition: "all 0.2s", opacity: scheduleBlocked ? 0.55 : 1, boxShadow: scheduleBlocked ? "none" : "0 4px 14px rgba(13,148,136,0.35)" }}>
                             <CalendarPlus size={15} />
                             {converting ? "Scheduling…" : "Confirm & Schedule"}
                           </button>

@@ -7,11 +7,12 @@ import { Calendar, CalendarPlus, ChevronDown, ChevronLeft, ChevronRight, Clock }
 /* ── Reusable branded date / date-time picker.
    Supports teal (admin, default) and maroon (public UI) via accentColor/accentLight.
    `naked` strips the trigger button's own border so it can live inside a parent field box. */
-export function DateTimePicker({ value, onChange, mode = "datetime", placeholder, maxDate, accentColor, accentLight, naked }: {
+export function DateTimePicker({ value, onChange, mode = "datetime", placeholder, minDate, maxDate, accentColor, accentLight, naked }: {
   value: string;
   onChange: (v: string) => void;
   mode?: "date" | "datetime";
   placeholder?: string;
+  minDate?: string;
   maxDate?: string;
   accentColor?: string;
   accentLight?: string;
@@ -115,15 +116,45 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
 
   const firstDow = new Date(view.year, view.month, 1).getDay();
   const dim      = new Date(view.year, view.month + 1, 0).getDate();
+  const p2n = (n: number) => String(n).padStart(2, "0");
   const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-  const maxKey   = maxDate ? new Date(maxDate + "T23:59:59") : null;
+  const dayStr   = (d: number) => `${view.year}-${p2n(view.month + 1)}-${p2n(d)}`;
 
   const isSel      = (d: number) => !!parsed && parsed.y === view.year && parsed.m === view.month && parsed.d === d;
   const isToday    = (d: number) => `${view.year}-${view.month}-${d}` === todayKey;
-  const isDisabled = (d: number) => maxKey ? new Date(view.year, view.month, d) > maxKey : false;
+  const isDisabled = (d: number) => {
+    const ds = dayStr(d);
+    if (minDate && ds < minDate) return true;
+    if (maxDate && ds > maxDate) return true;
+    return false;
+  };
+
+  /* Year-month bounds (YYYY-MM) for disabling month/year dropdown options */
+  const minYM = minDate ? minDate.slice(0, 7) : null;   // e.g. "2026-06"
+  const maxYM = maxDate ? maxDate.slice(0, 7) : null;
+  const monthDisabled = (mo: number) => {
+    const ym = `${view.year}-${p2n(mo + 1)}`;
+    if (minYM && ym < minYM) return true;
+    if (maxYM && ym > maxYM) return true;
+    return false;
+  };
+  const yearDisabled = (y: number) => {
+    if (minDate && y < Number(minDate.slice(0, 4))) return true;
+    if (maxDate && y > Number(maxDate.slice(0, 4))) return true;
+    return false;
+  };
 
   const prevMonth = () => setView(v => v.month === 0 ? { year: v.year - 1, month: 11 } : { year: v.year, month: v.month - 1 });
   const nextMonth = () => setView(v => v.month === 11 ? { year: v.year + 1, month: 0 } : { year: v.year, month: v.month + 1 });
+
+  const prevDisabled = minDate
+    ? (view.year < Number(minDate.slice(0, 4)) ||
+       (view.year === Number(minDate.slice(0, 4)) && view.month <= Number(minDate.slice(5, 7)) - 1))
+    : false;
+  const nextDisabled = maxDate
+    ? (view.year > Number(maxDate.slice(0, 4)) ||
+       (view.year === Number(maxDate.slice(0, 4)) && view.month >= Number(maxDate.slice(5, 7)) - 1))
+    : false;
 
   const label = () => {
     if (!parsed) return placeholder || (mode === "date" ? "Select date" : "Select date & time");
@@ -178,7 +209,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
 
           {/* ── Coloured header ── */}
           <div style={{ background: headerGradient, padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
-            <button type="button" onClick={prevMonth} style={navBtn}><ChevronLeft size={15} color="#fff" /></button>
+            <button type="button" onClick={prevDisabled ? undefined : prevMonth} disabled={prevDisabled} style={{ ...navBtn, opacity: prevDisabled ? 0.35 : 1, cursor: prevDisabled ? "not-allowed" : "pointer" }}><ChevronLeft size={15} color="#fff" /></button>
 
             <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1, justifyContent: "center" }}>
 
@@ -191,13 +222,16 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                 </button>
                 {showMonthDrop && (
                   <div ref={monthListRef} style={dropPanel}>
-                    {MON.map((m, i) => (
-                      <div key={i} style={dropItem(i === view.month)}
-                        onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
-                        onMouseEnter={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
-                        onMouseLeave={e => { if (i !== view.month) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                      >{m}</div>
-                    ))}
+                    {MON.map((m, i) => {
+                      const dis = monthDisabled(i);
+                      return (
+                        <div key={i} style={{ ...dropItem(i === view.month), ...(dis ? { color: "#d1d5db", cursor: "not-allowed" } : {}) }}
+                          onMouseDown={e => { e.preventDefault(); if (dis) return; setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
+                          onMouseEnter={e => { if (!dis && i !== view.month) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
+                          onMouseLeave={e => { if (!dis && i !== view.month) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                        >{m}</div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -211,20 +245,23 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                 </button>
                 {showYearDrop && (
                   <div ref={yearListRef} style={{ ...dropPanel, minWidth: 76 }}>
-                    {yearList.map(y => (
-                      <div key={y} style={dropItem(y === view.year)}
-                        onMouseDown={e => { e.preventDefault(); setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
-                        onMouseEnter={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
-                        onMouseLeave={e => { if (y !== view.year) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                      >{y}</div>
-                    ))}
+                    {yearList.map(y => {
+                      const dis = yearDisabled(y);
+                      return (
+                        <div key={y} style={{ ...dropItem(y === view.year), ...(dis ? { color: "#d1d5db", cursor: "not-allowed" } : {}) }}
+                          onMouseDown={e => { e.preventDefault(); if (dis) return; setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
+                          onMouseEnter={e => { if (!dis && y !== view.year) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
+                          onMouseLeave={e => { if (!dis && y !== view.year) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                        >{y}</div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
             </div>
 
-            <button type="button" onClick={nextMonth} style={navBtn}><ChevronRight size={15} color="#fff" /></button>
+            <button type="button" onClick={nextDisabled ? undefined : nextMonth} disabled={nextDisabled} style={{ ...navBtn, opacity: nextDisabled ? 0.35 : 1, cursor: nextDisabled ? "not-allowed" : "pointer" }}><ChevronRight size={15} color="#fff" /></button>
           </div>
 
           <div style={{ padding: "8px 10px" }}>
