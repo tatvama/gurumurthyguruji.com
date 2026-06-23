@@ -3212,24 +3212,44 @@ function WhatsAppTemplateViewer() {
 
   return (
     <div>
-      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>WhatsApp Message Templates</p>
-      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", gap: 0, flexWrap: "wrap", borderBottom: "1px solid #EDE8DD", padding: "12px 16px 0" }}>
-          {TEMPLATE_NAMES.map(t => (
-            <button key={t} onClick={() => loadPreview(t)}
-              style={{ padding: "7px 14px", marginRight: 4, marginBottom: 8, borderRadius: "8px 8px 0 0", border: `1.5px solid ${selected === t ? "#0d9488" : "#e5e7eb"}`, borderBottom: selected === t ? "2px solid #fff" : "1.5px solid #e5e7eb", background: selected === t ? "#fff" : "#f9fafb", color: selected === t ? "#0d9488" : "#6b7280", fontSize: 11.5, fontWeight: selected === t ? 700 : 500, cursor: "pointer" }}>
-              {labelMap[t] || t}
-            </button>
-          ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <span style={{ width: 3, height: 16, borderRadius: 2, background: "#16a34a", display: "inline-block" }} />
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#16a34a" }}>WhatsApp Message Templates</p>
+      </div>
+      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf4 0%,#f8fafc 100%)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Message Templates</p>
+          </div>
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: "#16a34a", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.18)", borderRadius: 20, padding: "2px 10px" }}>{TEMPLATE_NAMES.length} templates</span>
         </div>
-        <div style={{ padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "14px 16px 10px", borderBottom: "1px solid #f3f4f6" }}>
+          {TEMPLATE_NAMES.map(t => {
+            const active = selected === t;
+            return (
+              <button key={t} onClick={() => loadPreview(t)}
+                className={`trk-pill${active ? " trk-pill--active" : ""}`}
+                style={{ border: active ? "1.5px solid #16a34a" : "1.5px solid #e5e7eb", background: active ? "#16a34a" : "#fff", color: active ? "#fff" : "#6b7280", fontWeight: active ? 700 : 500 }}>
+                {labelMap[t] || t}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ padding: "18px 20px" }}>
           {loading ? (
-            <p style={{ color: "#6b7280", fontSize: 13, textAlign: "center", padding: 16 }}>Loading preview…</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 80, gap: 8, color: "#6b7280", fontSize: 13 }}>
+              <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Loading preview…
+            </div>
           ) : (
             <>
-              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, color: "#1f2937", lineHeight: 1.7, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", margin: 0 }}>{preview}</pre>
-              <button onClick={copyToClipboard} style={{ marginTop: 10, padding: "7px 18px", borderRadius: 8, border: "1px solid #0d9488", background: copied ? "#0d9488" : "#fff", color: copied ? "#fff" : "#0d9488", fontSize: 12.5, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
-                {copied ? "✓ Copied!" : "Copy Template"}
+              <div style={{ background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#16a34a", marginBottom: 8 }}>Preview · {labelMap[selected] || selected}</p>
+                <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'Inter','Segoe UI',sans-serif", fontSize: 13, color: "#1f2937", lineHeight: 1.75, margin: 0 }}>{preview}</pre>
+              </div>
+              <button onClick={copyToClipboard}
+                style={{ padding: "8px 20px", borderRadius: 9, border: `1.5px solid ${copied ? "#16a34a" : "#e5e7eb"}`, background: copied ? "#16a34a" : "#fff", color: copied ? "#fff" : "#374151", fontSize: 12.5, fontWeight: 700, cursor: "pointer", transition: "all 0.18s", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                {copied ? "✓ Copied!" : "📋 Copy Template"}
               </button>
             </>
           )}
@@ -3271,35 +3291,48 @@ function NotificationSettings() {
     finally { setSaving(false); }
   }
 
-  const Row = ({ label, k }: { label: string; k: string }) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid #e5e7eb" }}>
-      <p style={{ fontSize: 13, color: "#1f2937", fontWeight: 500 }}>{label}</p>
+  const Row = ({ label, k, desc }: { label: string; k: string; desc?: string }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 20px", borderBottom: "1px solid #f3f4f6", gap: 12 }}>
+      <div>
+        <p style={{ fontSize: 13, color: "#1f2937", fontWeight: 600 }}>{label}</p>
+        {desc && <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{desc}</p>}
+      </div>
       <button onClick={() => toggle(k)}
-        style={{ width: 44, height: 24, borderRadius: 12, border: "none", background: (settings as any)[k] ? "#0d9488" : "#d1d5db", cursor: "pointer", position: "relative", transition: "background 0.15s" }}>
-        <span style={{ position: "absolute", top: 3, left: (settings as any)[k] ? 22 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+        style={{ width: 46, height: 26, borderRadius: 13, border: "none", background: (settings as any)[k] ? "#0d9488" : "#e5e7eb", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+        <span style={{ position: "absolute", top: 4, left: (settings as any)[k] ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.18)" }} />
       </button>
     </div>
   );
 
   return (
     <div>
-      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>Notification Settings</p>
-      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-        <div style={{ padding: "10px 16px 4px", background: "#F8F2EA", borderBottom: "1px solid #EDE8DD" }}>
-          <p style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Channels</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <span style={{ width: 3, height: 16, borderRadius: 2, background: "#f59e0b", display: "inline-block" }} />
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#b45309" }}>Notification Settings</p>
+      </div>
+      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#fffbeb 0%,#f8fafc 100%)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Notification Preferences</p>
+          </div>
         </div>
-        <Row label="WhatsApp Notifications" k="whatsapp" />
-        <Row label="SMS Notifications" k="sms" />
-        <Row label="Email Notifications" k="email" />
-        <div style={{ padding: "10px 16px 4px", background: "#F8F2EA", borderBottom: "1px solid #EDE8DD", marginTop: 4 }}>
-          <p style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Appointment Reminders</p>
+        <div style={{ padding: "8px 20px 5px", background: "#fafafa", borderBottom: "1px solid #f3f4f6" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.12em" }}>Channels</p>
         </div>
-        <Row label="24 hours before" k="remind24h" />
-        <Row label="2 hours before" k="remind2h" />
-        <Row label="15 minutes before" k="remind15min" />
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb" }}>
-          <button onClick={save} disabled={saving} style={{ padding: "8px 22px", borderRadius: 9, border: "none", background: saved ? "#059669" : "#0d9488", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
-            {saving ? "Saving…" : saved ? "✓ Saved" : "Save Settings"}
+        <Row label="WhatsApp Notifications" k="whatsapp" desc="Send via WhatsApp Business API" />
+        <Row label="SMS Notifications" k="sms" desc="Send via SMS gateway" />
+        <Row label="Email Notifications" k="email" desc="Send via registered email" />
+        <div style={{ padding: "8px 20px 5px", background: "#fafafa", borderBottom: "1px solid #f3f4f6" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.12em" }}>Appointment Reminders</p>
+        </div>
+        <Row label="24 hours before" k="remind24h" desc="Day-before reminder" />
+        <Row label="2 hours before" k="remind2h" desc="Same-day reminder" />
+        <Row label="15 minutes before" k="remind15min" desc="Immediate reminder" />
+        <div style={{ padding: "14px 20px", borderTop: "1px solid #e5e7eb" }}>
+          <button onClick={save} disabled={saving}
+            style={{ padding: "9px 24px", borderRadius: 10, border: "none", background: saved ? "#059669" : "#0d9488", color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 7, transition: "background 0.2s" }}>
+            {saving ? <><RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</> : saved ? "✓ Saved!" : "Save Settings"}
           </button>
         </div>
       </div>
@@ -3390,32 +3423,36 @@ function AshramLocationsSection() {
   return (
     <>
       <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <span style={{ width: 3, height: 16, borderRadius: 2, background: "#0d9488", display: "inline-block" }} />
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488" }}>Ashram Locations</p>
-          <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500 }}>{ashrams.length} ashrams</span>
         </div>
 
         {/* List */}
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Ashram & Seva Centres</p>
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px", whiteSpace: "nowrap", flexShrink: 0 }}>{ashrams.length} locations</span>
+          </div>
           {ashrams.map((a, i) => {
             const tc = typeColor(a.type);
             return (
               <div key={i} onClick={() => openModal(i)}
-                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderBottom: i < ashrams.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", transition: "background 0.13s" }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
-                {/* Icon */}
-                <div style={{ width: 42, height: 42, borderRadius: 11, background: "#f0fdfa", border: "1.5px solid #5eead4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0 }}>🛕</div>
-                {/* Text */}
+                className="trk-mob-row"
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", borderBottom: i < ashrams.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: `4px solid ${tc.text}`, background: i % 2 === 0 ? "#fff" : `${tc.text}05` }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: tc.bg, border: `1.5px solid ${tc.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🛕</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</p>
-                  <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0" }}>{a.city} · {a.state}</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", margin: "0 0 3px", lineHeight: 1.4 }}>{a.name}</p>
+                  <p style={{ fontSize: 11.5, color: "#6b7280", margin: "0 0 6px" }}>{a.city} · {a.state}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, whiteSpace: "nowrap" }}>{a.type}</span>
+                    <span style={{ fontSize: 11, color: "#9ca3af" }}>{a.timing}</span>
+                  </div>
                 </div>
-                {/* Type badge */}
-                <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, whiteSpace: "nowrap", flexShrink: 0, display: "none" }} className="ashram-type-badge">{a.type}</span>
-                <span style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: tc.bg, color: tc.text, border: `1px solid ${tc.border}`, whiteSpace: "nowrap", flexShrink: 0 }}>{a.type}</span>
-                {/* Chevron */}
-                <ChevronDown size={15} color="#9ca3af" style={{ transform: "rotate(-90deg)", flexShrink: 0 }} />
+                <ChevronRight size={15} color={tc.text} style={{ flexShrink: 0, opacity: 0.5 }} />
               </div>
             );
           })}
@@ -3566,7 +3603,7 @@ function SettingsTab({
   }
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f9fafb", minHeight: 0, overflowY: "auto" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f9fafb", minHeight: 0, overflowY: "auto", fontFamily: "'Inter','Segoe UI',system-ui,sans-serif" }}>
       <div className="adm-hero-card">
         <div className="adm-hero-row">
           <div className="adm-hero-left">
@@ -3589,17 +3626,21 @@ function SettingsTab({
         </div>
       </div>
 
-      <div style={{ padding: "clamp(14px,4vw,24px) clamp(12px,4vw,28px) 32px", display: "flex", flexDirection: "column", gap: 24 }}>
-        {/* System Counts */}
+      <div style={{ padding: "clamp(14px,4vw,24px) clamp(12px,4vw,28px) 32px", display: "flex", flexDirection: "column", gap: 28 }}>
+
+        {/* System Overview */}
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>System Overview</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{ width: 3, height: 16, borderRadius: 2, background: "#0d9488", display: "inline-block" }} />
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488" }}>System Overview</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
             {systemCounts.map(s => (
-              <div key={s.label} style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", padding: "18px 16px", display: "flex", alignItems: "center", gap: 13, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${s.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{s.icon}</div>
+              <div key={s.label} className="trk-stat-card" style={{ borderLeft: `4px solid ${s.color}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${s.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{s.icon}</div>
                 <div>
-                  <p style={{ fontSize: 24, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</p>
-                  <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{s.label}</p>
+                  <p style={{ fontSize: 26, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</p>
+                  <p style={{ fontSize: 11, color: "#6b7280", marginTop: 3, fontWeight: 600 }}>{s.label}</p>
                 </div>
               </div>
             ))}
@@ -3608,28 +3649,37 @@ function SettingsTab({
 
         {/* Role Matrix */}
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14 }}>RBAC Role Matrix</p>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="role-matrix-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,180px) minmax(0,1fr)", background: "#F8F2EA", padding: "10px 16px", borderBottom: "1px solid #EDE8DD" }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Role</span>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em" }}>Permissions</span>
-            </div>
-            {ROLES_TABLE.map((r, i) => (
-              <div key={r.value} className="role-matrix-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,180px) minmax(0,1fr)", gap: 2, padding: "12px 16px", borderBottom: i < ROLES_TABLE.length - 1 ? "1px solid #e5e7eb" : "none" }}>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: 12.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.label}</p>
-                  <code style={{ fontSize: 10, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.value}</code>
-                </div>
-                <p style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.5, minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{r.desc}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{ width: 3, height: 16, borderRadius: 2, background: "#7c3aed", display: "inline-block" }} />
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7c3aed" }}>RBAC Role Matrix</p>
+          </div>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f5f3ff 0%,#f8fafc 100%)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed", display: "inline-block" }} />
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Role Permissions</p>
               </div>
-            ))}
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: "#7c3aed", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: 20, padding: "2px 10px" }}>{ROLES_TABLE.length} roles</span>
+            </div>
+            {ROLES_TABLE.map((r, i) => {
+              const roleClr = r.value === "superadmin" ? "#0d9488" : r.value === "guruji" ? "#b45309" : "#7c3aed";
+              return (
+                <div key={r.value} className="trk-mob-row role-matrix-row" style={{ borderBottom: i < ROLES_TABLE.length - 1 ? "1px solid #e5e7eb" : "none", borderLeft: `4px solid ${roleClr}`, background: i % 2 === 0 ? "#fff" : `${roleClr}05`, cursor: "default" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, borderRadius: 20, padding: "4px 11px", background: `${roleClr}12`, color: roleClr, border: `1px solid ${roleClr}30` }}>{r.label}</span>
+                    <p style={{ fontSize: 10, color: "#9ca3af", fontFamily: "monospace", marginTop: 5 }}>{r.value}</p>
+                  </div>
+                  <p style={{ fontSize: 12.5, color: "#6b7280", lineHeight: 1.55, minWidth: 0 }}>{r.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* WhatsApp Template Viewer — PRD §10 */}
+        {/* WhatsApp Template Viewer */}
         <WhatsAppTemplateViewer />
 
-        {/* Notification Settings — PRD §10 */}
+        {/* Notification Settings */}
         <NotificationSettings />
 
         {/* Ashram Locations */}
@@ -3638,7 +3688,10 @@ function SettingsTab({
         {/* Audit Log */}
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0d9488", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>Audit Log · Last {auditLimit} entries</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 3, height: 16, borderRadius: 2, background: "#0891b2", display: "inline-block" }} />
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#0891b2" }}>Audit Log</p>
+            </div>
             <FancySelect
               value={String(auditLimit)}
               onChange={v => setAuditLimit(Number(v))}
@@ -3646,7 +3699,14 @@ function SettingsTab({
               containerStyle={{ marginBottom: 0, width: "100%", maxWidth: 140 }}
             />
           </div>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0f9ff 0%,#f8fafc 100%)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0891b2", display: "inline-block" }} />
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Audit Trail</p>
+              </div>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0891b2", background: "rgba(8,145,178,0.08)", border: "1px solid rgba(8,145,178,0.18)", borderRadius: 20, padding: "2px 10px" }}>Last {auditLimit} entries</span>
+            </div>
             {auditLoading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 100, gap: 10, color: "#6b7280" }}>
                 <RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} /> Loading audit log…
@@ -3654,33 +3714,34 @@ function SettingsTab({
             ) : auditLogs.length === 0 ? (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#0d9488", fontSize: 13 }}>No audit entries yet.</div>
             ) : (
-              <div className="audit-log-wrap">
-                <table className="audit-log-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <div className="audit-log-wrap" style={{ overflowX: "auto" }}>
+                <table className="audit-log-table" style={{ width: "100%", minWidth: 620, borderCollapse: "collapse", fontSize: 12 }}>
                   <thead>
-                    <tr style={{ background: "#F8F2EA", borderBottom: "1px solid #EDE8DD" }}>
-                      {["Timestamp","Action","Entity Type","Entity ID","By"].map(h => (
-                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>{h}</th>
+                    <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                      {["Timestamp","Action","Entity","ID","By"].map(h => (
+                        <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 10.5, fontWeight: 700, color: "#0891b2", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {auditLogs.map((log, i) => (
-                      <tr key={log.id} className="audit-log-row" style={{ borderBottom: i < auditLogs.length - 1 ? "1px solid #e5e7eb" : "none" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                        <td data-label="Timestamp" style={{ padding: "9px 14px", color: "#6b7280", whiteSpace: "nowrap", fontFamily: "monospace", fontSize: 11 }}>
-                          {log.createdAt ? new Date(log.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
-                        </td>
-                        <td data-label="Action" style={{ padding: "9px 14px" }}>
-                          <span style={{ padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: "#fff", background: actionColor(log.action || "") }}>
-                            {log.action || "—"}
-                          </span>
-                        </td>
-                        <td data-label="Entity Type" style={{ padding: "9px 14px", color: "#1f2937", fontFamily: "monospace", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.entityType || "—"}</td>
-                        <td data-label="Entity ID" style={{ padding: "9px 14px", color: "#6b7280", fontFamily: "monospace", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.entityId || "—"}</td>
-                        <td data-label="By" style={{ padding: "9px 14px", color: "#6b7280", fontSize: 11, wordBreak: "break-word", overflowWrap: "anywhere" }}>{log.userName || "system"}</td>
-                      </tr>
-                    ))}
+                    {auditLogs.map((log, i) => {
+                      const aClr = actionColor(log.action || "");
+                      return (
+                        <tr key={log.id} className="trk-table-row" style={{ borderBottom: i < auditLogs.length - 1 ? "1px solid #f3f4f6" : "none", background: i % 2 === 0 ? "#fff" : `${aClr}06` }}>
+                          <td style={{ padding: "10px 14px", color: "#6b7280", whiteSpace: "nowrap", fontFamily: "monospace", fontSize: 11, borderLeft: `3px solid ${aClr}` }}>
+                            {log.createdAt ? new Date(log.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </td>
+                          <td style={{ padding: "10px 14px", whiteSpace: "nowrap" }}>
+                            <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: "#fff", background: aClr, display: "inline-block", whiteSpace: "nowrap" }}>
+                              {log.action || "—"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "10px 14px", color: "#1f2937", fontFamily: "monospace", fontSize: 11, whiteSpace: "nowrap" }}>{log.entityType || "—"}</td>
+                          <td style={{ padding: "10px 14px", color: "#9ca3af", fontFamily: "monospace", fontSize: 10.5, whiteSpace: "nowrap", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis" }}>{log.entityId || "—"}</td>
+                          <td style={{ padding: "10px 14px", color: "#6b7280", fontSize: 11, whiteSpace: "nowrap" }}>{log.userName || "system"}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -6296,15 +6357,20 @@ export default function AdminPage() {
         {/* ── Admin Users Table ── */}
         {tab === "admins" && (
           <div className="adm-content">
-            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 18 }}>
-              Manage who can log in to the admin console.
-            </p>
             <>
-              {/* Desktop full table (> 1100px) */}
-              <div className="bkg-desktop-table adm-table-wrap">
+              {/* Desktop full table */}
+              <div className="bkg-desktop-table adm-table-wrap" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                {/* Header strip */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Admin Users</p>
+                  </div>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{admins.length} admin{admins.length !== 1 ? "s" : ""}</span>
+                </div>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#f9fafb", borderBottom: "1.5px solid #e5e7eb" }}>
+                    <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
                       {["ADMIN","ROLE","SECTIONS","LAST LOGIN","STATUS",""].map(h => (
                         <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
                       ))}
@@ -6320,12 +6386,11 @@ export default function AdminPage() {
                       const roleBdr   = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)"  : "rgba(124,58,237,0.3)";
                       const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "STAFF";
                       return (
-                        <tr key={a.id} style={{ background: i % 2 === 0 ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", transition: "background 0.1s" }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
-                          onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "#fff" : "#f9fafb")}>
-                          <td style={{ padding: "13px 16px" }}>
+                        <tr key={a.id} className="trk-table-row"
+                          style={{ background: i % 2 === 0 ? "#fff" : `${roleClr}08`, borderBottom: "1px solid #e5e7eb" }}>
+                          <td style={{ padding: "13px 16px", borderLeft: "4px solid #7c3aed" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 8px ${roleClr}40` }}>
                                 {a.name[0].toUpperCase()}
                               </div>
                               <div style={{ minWidth: 0 }}>
@@ -6353,7 +6418,7 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: "13px 16px" }}>
                             <button onClick={() => setAdminPanel({ open: true, user: a })}
-                              style={{ background: "#f9fafb", border: "1px solid rgba(13,148,136,0.2)", borderRadius: 7, padding: "5px 10px", cursor: "pointer", color: "#0d9488", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
+                              style={{ background: `${roleClr}0f`, border: `1px solid ${roleClr}40`, borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: roleClr, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, transition: "all 0.15s" }}>
                               <Pencil size={12} /> Edit
                             </button>
                           </td>
@@ -6364,31 +6429,34 @@ export default function AdminPage() {
                 </table>
               </div>
 
-              {/* Mobile card list (≤ 1100px) */}
-              <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+              {/* Mobile card list */}
+              <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", marginTop: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Admin Users</p>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 9px" }}>{admins.length} admins</span>
+                </div>
                 {admins.length === 0 ? (
                   <div style={{ padding: "52px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</div>
                 ) : admins.map((a, i) => {
                   const color = avatarColor(a.name);
-                  const roleBg    = a.role === "superadmin" ? "#f0fdfa"              : a.role === "guruji" ? "#fffbeb"              : "#ede9fe";
-                  const roleClr   = a.role === "superadmin" ? "#0d9488"              : a.role === "guruji" ? "#b45309"              : "#7c3aed";
-                  const roleBdr   = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)"  : "rgba(124,58,237,0.3)";
-                  const roleLabel = a.role === "superadmin" ? "SUPERADMIN"           : a.role === "guruji" ? "GURUJI"              : "ADMIN";
+                  const roleBg  = a.role === "superadmin" ? "#f0fdfa" : a.role === "guruji" ? "#fffbeb" : "#ede9fe";
+                  const roleClr = a.role === "superadmin" ? "#0d9488" : a.role === "guruji" ? "#b45309" : "#7c3aed";
+                  const roleBdr = a.role === "superadmin" ? "rgba(13,148,136,0.3)" : a.role === "guruji" ? "rgba(180,83,9,0.3)" : "rgba(124,58,237,0.3)";
+                  const roleLabel = a.role === "superadmin" ? "SUPERADMIN" : a.role === "guruji" ? "GURUJI" : "STAFF";
                   return (
                     <div key={a.id} onClick={() => setAdminPanel({ open: true, user: a })}
-                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < admins.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
-                      <div style={{ width: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
-                          {a.name[0].toUpperCase()}
-                        </div>
+                      className="trk-mob-row"
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < admins.length - 1 ? "1px solid #f3f4f6" : "none", background: i % 2 === 0 ? "#fff" : "#7c3aed06", borderLeft: "4px solid #7c3aed" }}>
+                      <div style={{ width: 38, height: 38, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 8px ${roleClr}35` }}>
+                        {a.name[0].toUpperCase()}
                       </div>
-                      <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{a.name}</p>
-                        <div className="adm-user-meta" style={{ marginTop: 3 }}>
-                          <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace" }}>{a.mobile}</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937" }}>{a.name}</p>
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 3 }}>
+                          <span style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{a.mobile}</span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, borderRadius: 20, padding: "2px 8px", background: roleBg, color: roleClr, border: `1px solid ${roleBdr}` }}>
                             <ShieldCheck size={10} /> {roleLabel}
                           </span>
@@ -6398,7 +6466,7 @@ export default function AdminPage() {
                           </span>
                         </div>
                       </div>
-                      <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                      <ChevronRight size={15} color="#7c3aed" style={{ flexShrink: 0, opacity: 0.5 }} />
                     </div>
                   );
                 })}
@@ -6756,6 +6824,8 @@ export default function AdminPage() {
           transition: color 0.18s;
         }
         .trk-search-wrap:focus-within .trk-search-icon { color: #0d9488; }
+        .role-matrix-row { display: grid; grid-template-columns: minmax(0,180px) minmax(0,1fr); gap: 12px; padding: 14px 20px; align-items: center; }
+        @media (max-width: 480px) { .role-matrix-row { grid-template-columns: 1fr; gap: 6px; } }
 
         /* ── Layout shell ───────────────────────────── */
         .adm-root {
