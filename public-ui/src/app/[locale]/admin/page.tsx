@@ -6412,8 +6412,17 @@ export default function AdminPage() {
               </div>
             ) : (
               <>
-              <div className="bkg-desktop-table adm-table-wrap">
+              <div className="bkg-desktop-table adm-table-wrap" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
                 {tab === "bookings" ? (
+                  <>
+                    {/* Header strip */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Appointment Requests</p>
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{slice.length} record{slice.length !== 1 ? "s" : ""}</span>
+                    </div>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -6429,23 +6438,38 @@ export default function AdminPage() {
                         const bk = row as AppointmentBooking;
                         const idx = (safePage - 1) * PAGE_SIZE + i + 1;
                         const isEven = i % 2 === 0;
+                        const ROW_ACCENTS = ["#3B82F6","#0d9488","#7C3AED","#F97316","#059669"];
+                        const accent = ROW_ACCENTS[i % ROW_ACCENTS.length];
                         return (
                           <tr key={row.id} onClick={() => setDetail(row)}
-                            style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
-                            onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                            <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "#0d9488" }}>{idx}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#374151", fontFamily: "monospace", whiteSpace: "nowrap" }}>{bk.mobile}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.profession || "—"}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.location || "—"}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#6b7280", whiteSpace: "nowrap" }}>{bk.nearestAshram?.split(",")[0] || "—"}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
+                            className="trk-table-row"
+                            style={{ background: isEven ? "#fff" : `${accent}08`, borderBottom: "1px solid #e5e7eb" }}>
+                            <td style={{ padding: "13px 16px", borderLeft: `4px solid ${accent}` }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: `${accent}18`, fontSize: 12, fontWeight: 800, color: accent }}>{idx}</span>
+                            </td>
+                            <td style={{ padding: "13px 16px", minWidth: 0 }}>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</p>
+                            </td>
+                            <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#374151", fontFamily: "monospace", whiteSpace: "nowrap" }}>{bk.mobile}</td>
+                            <td style={{ padding: "13px 16px" }}>
+                              {bk.profession
+                                ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#f3f4f6", borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: "#374151" }}>{bk.profession}</span>
+                                : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
+                            </td>
+                            <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.location || "—"}</td>
+                            <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                              {bk.nearestAshram
+                                ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(13,148,136,0.08)", borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: "#0d9488" }}>🏛 {bk.nearestAshram.split(",")[0]}</span>
+                                : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
+                            </td>
+                            <td style={{ padding: "13px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                  </>
+
                 ) : (
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
