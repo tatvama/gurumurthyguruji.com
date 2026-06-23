@@ -535,11 +535,31 @@ export default function GurujiDarshanPage() {
                       </>
                     ) : (
                       <>
-                        <p style={{ fontSize: 13.5, color: "#374151", marginBottom: 10 }}>This is a general appointment (no Trikala Jnana case attached).</p>
-                        <Field label="Type"     value={sel.appointmentType} />
-                        <Field label="Mode"     value={sel.mode ? (MODE_LABEL[sel.mode] || sel.mode) : "—"} />
-                        <Field label="Scheduled" value={fmtDateTime(sel.startTime)} />
-                        <Field label="Purpose"  value={sel.purpose} big />
+                        {/* General visit banner */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)", borderRadius: 14, border: "1px solid #d1fae5", marginBottom: 20 }}>
+                          <span style={{ fontSize: 28, flexShrink: 0 }}>🙏</span>
+                          <div>
+                            <p style={{ fontSize: 14, fontWeight: 800, color: "#0f766e", lineHeight: 1 }}>General Darshan Visit</p>
+                            <p style={{ fontSize: 12, color: "#6b7280", marginTop: 5, lineHeight: 1.4 }}>No Trikala Jnana case is attached to this appointment.</p>
+                          </div>
+                        </div>
+
+                        {/* Info cards — Type · Mode · Scheduled */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 155px), 1fr))", gap: 12, marginBottom: 14 }}>
+                          <InfoCard icon={<FileText size={11} />}    label="Type"      value={sel.appointmentType} />
+                          <InfoCard icon={<Video size={11} />}       label="Mode"      value={sel.mode ? (MODE_LABEL[sel.mode] || sel.mode) : "—"} />
+                          <InfoCard icon={<Clock size={11} />}       label="Scheduled" value={fmtDateTime(sel.startTime)} />
+                        </div>
+
+                        {/* Purpose — full-width styled card */}
+                        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderLeft: "4px solid #0d9488", borderRadius: 12, padding: "16px 18px" }}>
+                          <p style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#0d9488", marginBottom: 10 }}>
+                            <MessageSquare size={11} /> Purpose
+                          </p>
+                          <p style={{ fontSize: 14, fontWeight: 500, color: "#374151", lineHeight: 1.75, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                            {sel.purpose || "—"}
+                          </p>
+                        </div>
                       </>
                     )}
                   </div>
