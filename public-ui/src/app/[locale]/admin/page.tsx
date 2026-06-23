@@ -4963,25 +4963,34 @@ export default function AdminPage() {
       <aside className={`adm-sidebar${sidebarOpen ? " adm-sidebar--open" : ""}`}>
 
         {/* Logo */}
-        <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #e5e7eb" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(13,148,136,0.10)", border: "1.5px solid rgba(13,148,136,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <span style={{ fontFamily: "serif", fontSize: 18, color: "#0d9488" }}>ॐ</span>
+        <div style={{ padding: "16px 16px 14px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(160deg,#f0fdf9 0%,#ffffff 100%)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 3px 10px rgba(13,148,136,0.28)" }}>
+              <span style={{ fontFamily: "serif", fontSize: 18, color: "#fff" }}>ॐ</span>
             </div>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2 }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.2 }}>
                 <span style={{ color: "#111827" }}>Gurumurthy </span><span style={{ color: "#0d9488" }}>Guruji</span>
               </p>
-              <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 1 }}>Admin Console</p>
+              <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 2 }}>Admin Console</p>
             </div>
           </div>
-          <div style={{ marginTop: 14, borderRadius: 6, padding: "5px 10px", display: "inline-block",
-            background: loggedRole === "superadmin" ? "rgba(13,148,136,0.10)" : loggedRole === "guruji" ? "rgba(180,83,9,0.10)" : "rgba(124,58,237,0.08)",
-            border: `1px solid ${loggedRole === "superadmin" ? "rgba(13,148,136,0.3)" : loggedRole === "guruji" ? "rgba(180,83,9,0.3)" : "rgba(124,58,237,0.25)"}` }}>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
-              color: loggedRole === "superadmin" ? "#0d9488" : loggedRole === "guruji" ? "#b45309" : "#7c3aed" }}>
-              {loggedRole === "superadmin" ? "Super Admin" : loggedRole === "guruji" ? "Guruji" : "Admin"}
-            </span>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              borderRadius: 20, padding: "4px 10px 4px 8px",
+              background: loggedRole === "superadmin" ? "rgba(13,148,136,0.08)" : loggedRole === "guruji" ? "rgba(180,83,9,0.08)" : "rgba(124,58,237,0.07)",
+              border: `1px solid ${loggedRole === "superadmin" ? "rgba(13,148,136,0.28)" : loggedRole === "guruji" ? "rgba(180,83,9,0.28)" : "rgba(124,58,237,0.22)"}`,
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                background: loggedRole === "superadmin" ? "#0d9488" : loggedRole === "guruji" ? "#b45309" : "#7c3aed",
+              }} />
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase",
+                color: loggedRole === "superadmin" ? "#0d9488" : loggedRole === "guruji" ? "#b45309" : "#7c3aed" }}>
+                {loggedRole === "superadmin" ? "Super Admin" : loggedRole === "guruji" ? "Guruji" : "Admin"}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -4993,9 +5002,10 @@ export default function AdminPage() {
             { key: "today" as const, label: "Today", icon: "🏛️", urgent: (bookings.length + contacts.length) > 0 },
           ]).map(({ key, label, icon, urgent }) => (
             <button key={key} onClick={() => tabChange(key)}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 8, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-              <span style={{ fontSize: 16 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12.5, fontWeight: tab === key ? 800 : 600, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 8, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
+              <span style={{ flex: 1, fontSize: 12.5, fontWeight: tab === key ? 800 : 600, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
               {urgent && tab !== key && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#dc2626", flexShrink: 0 }} />}
             </button>
           ))}
@@ -5013,9 +5023,10 @@ export default function AdminPage() {
             { key: "contacts"    as const, label: "Contact Messages",     icon: "📬", section: "contacts" },
           ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
             </button>
           ))}
 
@@ -5025,9 +5036,10 @@ export default function AdminPage() {
             return (
               <button
                 onPointerDown={() => router.push(`/${locale}/admin/guruji`)}
-                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginTop: 4, marginBottom: 3, background: gurujiActive ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: gurujiActive ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-                <span style={{ fontSize: 14 }}>🕉️</span>
-                <span style={{ flex: 1, fontSize: 12, fontWeight: gurujiActive ? 700 : 500, textAlign: "left", color: gurujiActive ? "#0d9488" : "#6b7280" }}>Guruji Darshan</span>
+                className={`adm-nav-btn${gurujiActive ? " adm-nav-btn-active" : ""}`}
+                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginTop: 4, marginBottom: 3, borderLeft: gurujiActive ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>🕉️</span>
+                <span style={{ flex: 1, fontSize: 12, fontWeight: gurujiActive ? 700 : 500, textAlign: "left", color: gurujiActive ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Guruji Darshan</span>
                 <ArrowRight size={13} color={gurujiActive ? "#0d9488" : "#9ca3af"} />
               </button>
             );
@@ -5043,9 +5055,10 @@ export default function AdminPage() {
             { key: "devotees" as const, label: "Devotee Contacts", icon: "🙏", section: "devotees" },
           ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{icon}</span>
-              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+              className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
             </button>
           ))}
 
@@ -5062,9 +5075,10 @@ export default function AdminPage() {
                 { key: "settings" as const, label: "Settings", icon: "⚙️", section: "settings" },
               ]).filter(({ section }) => section === "admins" ? isSuperAdmin : canAccess(section)).map(({ key, label, icon }) => (
                 <button key={key} onClick={() => tabChange(key)}
-                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, background: tab === key ? "rgba(13,148,136,0.08)" : "transparent", borderLeft: tab === key ? "2.5px solid #0d9488" : "2.5px solid transparent", transition: "all 0.15s" }}>
-                  <span style={{ fontSize: 14 }}>{icon}</span>
-                  <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280" }}>{label}</span>
+                  className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
                 </button>
               ))}
             </>
@@ -5167,12 +5181,12 @@ export default function AdminPage() {
               </div>
 
               {/* Welcome banner */}
-              <div style={{ margin: "20px clamp(12px,4vw,28px) 0", borderRadius: 16, background: "linear-gradient(120deg,#f0fdf9 0%,#fefce8 60%,#fff7ed 100%)", border: "1px solid #d1fae5", padding: "16px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", boxShadow: "0 2px 12px rgba(13,148,136,0.07)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, boxShadow: "0 4px 10px rgba(13,148,136,0.25)" }}>🙏</div>
+              <div style={{ margin: "12px clamp(12px,4vw,28px) 0", borderRadius: 14, background: "linear-gradient(120deg,#f0fdf9 0%,#fefce8 60%,#fff7ed 100%)", border: "1px solid #d1fae5", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", boxShadow: "0 2px 8px rgba(13,148,136,0.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, boxShadow: "0 3px 8px rgba(13,148,136,0.25)" }}>🙏</div>
                   <div>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: "#111827", letterSpacing: "-0.01em" }}>Welcome back, Guruji Seva! <span style={{ fontWeight: 400 }}>🌸</span></p>
-                    <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>Platform overview &nbsp;·&nbsp; {today}</p>
+                    <p style={{ fontSize: 13.5, fontWeight: 800, color: "#111827", letterSpacing: "-0.01em" }}>Welcome back, Guruji Seva! <span style={{ fontWeight: 400 }}>🌸</span></p>
+                    <p style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>Platform overview &nbsp;·&nbsp; {today}</p>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -6595,16 +6609,18 @@ export default function AdminPage() {
 
         /* ── Sidebar ────────────────────────────────── */
         .adm-sidebar {
-          width: 210px;
-          min-width: 210px;
+          width: 220px;
+          min-width: 220px;
           display: flex;
           flex-direction: column;
-          background: #ffffff;
+          background: linear-gradient(180deg,#f8fffd 0%,#ffffff 55%);
           border-right: 1px solid #e5e7eb;
           flex-shrink: 0;
           transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
           z-index: 400;
         }
+        .adm-nav-btn:hover { background: rgba(13,148,136,0.05) !important; }
+        .adm-nav-btn-active { background: linear-gradient(90deg,rgba(13,148,136,0.13) 0%,rgba(13,148,136,0.04) 100%) !important; }
 
         /* ── Main ───────────────────────────────────── */
         .adm-main {
@@ -6737,8 +6753,8 @@ export default function AdminPage() {
         .adm-hero-h1 {
           font-size: 15px; font-weight: 800;
           color: #111827; line-height: 1.2; margin: 0;
-          letter-spacing: -0.02em;
-          font-family: 'Georgia', 'Times New Roman', serif;
+          letter-spacing: -0.01em;
+          font-family: 'Inter', 'Segoe UI', sans-serif;
         }
         .adm-hero-desc {
           font-size: 11px;
@@ -7011,7 +7027,7 @@ export default function AdminPage() {
            TABLET  (≤ 1024px)
         ══════════════════════════════════════════════ */
         @media (max-width: 1024px) {
-          .adm-sidebar { width: 180px; min-width: 180px; }
+          .adm-sidebar { width: 200px; min-width: 200px; }
           .adm-header  { padding: 0 18px; }
           .adm-hero-card { padding: 18px 20px; }
           .adm-hero-h1 { font-size: 18px; }
