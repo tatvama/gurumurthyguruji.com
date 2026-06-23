@@ -943,8 +943,8 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
       <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}
         style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 211, width: 460, maxWidth: "100vw", background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
         <style>{`
-          .apf-body    { padding: 20px 22px; }
-          .apf-footer  { padding: 14px 22px; }
+          .apf-body    { padding: 20px 28px 20px 22px; }
+          .apf-footer  { padding: 14px 28px 14px 22px; }
           .apf-header  { padding: 16px 22px; }
           .apf-grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
           .apf-grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -1001,22 +1001,20 @@ function AppointmentPanel({ appt, onClose, onSaved }: { appt: Appointment | null
                   <div style={ro}>{booking.nearestAshram || "—"}</div>
                 </div>
               </div>
+              <div style={{ marginBottom: 13 }}>
+                <label style={lbl}>Location</label>
+                <div style={ro}>{booking.location || [booking.city, booking.district, booking.state].filter(Boolean).join(", ") || "—"}</div>
+              </div>
               <div className="apf-grid-2" style={{ marginBottom: 13 }}>
-                <div>
-                  <label style={lbl}>Location</label>
-                  <div style={ro}>{booking.location || [booking.city, booking.district, booking.state].filter(Boolean).join(", ") || "—"}</div>
-                </div>
                 <div>
                   <label style={lbl}>How Known</label>
                   <div style={ro}>{booking.howKnown || "—"}</div>
                 </div>
-              </div>
-              {booking.email && (
-                <div style={{ marginBottom: 13 }}>
+                <div>
                   <label style={lbl}>Email</label>
-                  <div style={ro}>{booking.email}</div>
+                  <div style={ro}>{booking.email || "—"}</div>
                 </div>
-              )}
+              </div>
             </>
           )}
 
@@ -3759,12 +3757,18 @@ function ApptCalendar({ appointments, onSelect, onDateSelect }: { appointments: 
   const [month, setMonth] = useState(now.getMonth());
   const [picked, setPicked] = useState<number | null>(null);
 
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [yearOpen,  setYearOpen]  = useState(false);
+
   function pickDay(d: number | null) { setPicked(d); onDateSelect?.(year, month, d); }
-  function prev() { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); setPicked(null); onDateSelect?.(year, month, null); }
-  function next() { if (month === 11) { setYear(y => y + 1); setMonth(0);  } else setMonth(m => m + 1); setPicked(null); onDateSelect?.(year, month, null); }
+  function prev() { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); setPicked(null); }
+  function next() { if (month === 11) { setYear(y => y + 1); setMonth(0);  } else setMonth(m => m + 1); setPicked(null); }
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayD = now.getFullYear() === year && now.getMonth() === month ? now.getDate() : -1;
+  const curYear = now.getFullYear();
+  const YEARS = Array.from({ length: 10 }, (_, i) => curYear - 3 + i);
 
   function apptsByDay(d: number): Appointment[] {
     return appointments.filter(a => {
@@ -3774,31 +3778,79 @@ function ApptCalendar({ appointments, onSelect, onDateSelect }: { appointments: 
     });
   }
 
-  const dayAppts = picked ? apptsByDay(picked) : [];
-  const todayD = now.getFullYear() === year && now.getMonth() === month ? now.getDate() : -1;
+  const DDItem = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
+    <div onClick={onClick}
+      style={{ padding: "9px 18px", cursor: "pointer", fontSize: 13, fontWeight: active ? 700 : 400, color: active ? "#fff" : "#1f2937", background: active ? "#0d9488" : "transparent", transition: "background 0.12s" }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f0fdf9"; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}>
+      {label}
+    </div>
+  );
 
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-      {/* Month nav */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px clamp(12px,4vw,24px)", borderBottom: "1px solid #e5e7eb" }}>
-        <button onClick={prev} style={{ background: "none", border: "1.5px solid #e5e7eb", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151" }}>
-          <ChevronLeft size={16} />
+    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", boxShadow: "0 2px 12px rgba(0,0,0,0.08)", overflow: "visible" }}>
+      {/* Teal header nav */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "linear-gradient(135deg,#0d9488,#0f766e)", borderRadius: "15px 15px 0 0" }}>
+        <button onClick={prev} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}>
+          <ChevronLeft size={17} />
         </button>
-        <p style={{ fontSize: 15, fontWeight: 800, color: "#1f2937" }}>{MONTH_NAMES[month]} {year}</p>
-        <button onClick={next} style={{ background: "none", border: "1.5px solid #e5e7eb", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151" }}>
-          <ChevronRight size={16} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Month custom dropdown */}
+          <div style={{ position: "relative" }}>
+            {monthOpen && <div onClick={() => setMonthOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />}
+            <button onClick={() => { setMonthOpen(v => !v); setYearOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.18)", border: "1.5px solid rgba(255,255,255,0.35)", borderRadius: 20, padding: "5px 12px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              {MONTH_NAMES[month]} <ChevronDown size={12} />
+            </button>
+            {monthOpen && (
+              <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 999, background: "#fff", borderRadius: 12, boxShadow: "0 8px 28px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", overflow: "hidden", minWidth: 150 }}>
+                <div style={{ maxHeight: 7 * 38, overflowY: "auto" }}>
+                  {MONTH_NAMES.map((m, i) => (
+                    <DDItem key={i} label={m} active={i === month} onClick={() => { setMonth(i); setPicked(null); setMonthOpen(false); }} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Year custom dropdown */}
+          <div style={{ position: "relative" }}>
+            {yearOpen && <div onClick={() => setYearOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />}
+            <button onClick={() => { setYearOpen(v => !v); setMonthOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.18)", border: "1.5px solid rgba(255,255,255,0.35)", borderRadius: 20, padding: "5px 12px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              {year} <ChevronDown size={12} />
+            </button>
+            {yearOpen && (
+              <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 999, background: "#fff", borderRadius: 12, boxShadow: "0 8px 28px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", overflow: "hidden", minWidth: 110 }}>
+                <div style={{ maxHeight: 7 * 38, overflowY: "auto" }}>
+                  {YEARS.map(y => (
+                    <DDItem key={y} label={String(y)} active={y === year} onClick={() => { setYear(y); setPicked(null); setYearOpen(false); }} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button onClick={next} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}>
+          <ChevronRight size={17} />
         </button>
       </div>
 
       {/* Day headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "10px 16px 4px" }}>
-        {DAY_NAMES.map(d => (
-          <div key={d} style={{ textAlign: "center", fontSize: 10.5, fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 0" }}>{d}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "10px 12px 6px", background: "#f8fafc", borderBottom: "1px solid #f3f4f6" }}>
+        {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
+          <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: "#9ca3af" }}>{d}</div>
         ))}
       </div>
 
       {/* Date cells */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "0 16px 16px", gap: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "8px 10px 12px", gap: 2 }}>
         {Array.from({ length: firstDay }, (_, i) => <div key={`e${i}`} />)}
         {Array.from({ length: daysInMonth }, (_, i) => {
           const d = i + 1;
@@ -3807,24 +3859,28 @@ function ApptCalendar({ appointments, onSelect, onDateSelect }: { appointments: 
           const isPicked = d === picked;
           return (
             <button key={d} onClick={() => pickDay(isPicked ? null : d)}
-              style={{
-                padding: "6px 4px", borderRadius: 9, border: isPicked ? "2px solid #0d9488" : isToday ? "2px solid #0d9488" : "2px solid transparent",
-                background: isPicked ? "#0d9488" : isToday ? "#f3f4f6" : "transparent",
+              style={{ padding: "3px 2px", border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minHeight: 46 }}>
+              <span style={{
+                width: 32, height: 32, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: isPicked ? "#0d9488" : "transparent",
+                border: isToday && !isPicked ? "2px solid #0d9488" : "2px solid transparent",
                 color: isPicked ? "#fff" : isToday ? "#0d9488" : "#1f2937",
-                cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minHeight: 52, position: "relative",
-              }}>
-              <span style={{ fontSize: 13, fontWeight: isPicked || isToday ? 800 : 500 }}>{d}</span>
-              <div style={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center" }}>
-                {appts.slice(0, 3).map((a, idx) => (
-                  <span key={idx} style={{ width: 6, height: 6, borderRadius: "50%", background: isPicked ? "rgba(255,255,255,0.8)" : "#0d9488", flexShrink: 0 }} />
-                ))}
-                {appts.length > 3 && <span style={{ fontSize: 8, fontWeight: 700, color: isPicked ? "#fff" : "#6b7280" }}>+{appts.length - 3}</span>}
-              </div>
+                fontSize: 13, fontWeight: isPicked || isToday ? 700 : 400,
+                transition: "all 0.15s",
+              }}>{d}</span>
+              {appts.length > 0 && (
+                <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                  {appts.slice(0, 3).map((_, idx) => (
+                    <span key={idx} style={{ width: 4, height: 4, borderRadius: "50%", background: isPicked ? "#5eead4" : "#0d9488" }} />
+                  ))}
+                  {appts.length > 3 && <span style={{ fontSize: 8, fontWeight: 700, color: "#6b7280" }}>+{appts.length - 3}</span>}
+                </div>
+              )}
             </button>
           );
         })}
       </div>
-
     </div>
   );
 }
