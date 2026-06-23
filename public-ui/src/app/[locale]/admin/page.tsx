@@ -5303,8 +5303,8 @@ export default function AdminPage() {
               <style>{`
                 .appt-view-btn       { transition: background 0.15s, color 0.15s; }
                 .appt-view-btn:hover { background: rgba(0,0,0,0.06) !important; color: #374151 !important; }
-                .appt-filter-pill    { transition: background 0.15s, border-color 0.15s, color 0.15s; }
-                .appt-filter-pill:hover { border-color: #0d9488 !important; color: #0d9488 !important; }
+                .appt-filter-pill    { transition: all 0.18s ease; }
+                .appt-filter-pill:not(.appt-pill-active):hover { border-color: #0d9488 !important; color: #0d9488 !important; background: rgba(13,148,136,0.06) !important; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(13,148,136,0.12); }
                 .appt-btn-checkin    { transition: background 0.15s, border-color 0.15s; }
                 .appt-btn-checkin:hover:not(:disabled) { background: rgba(13,148,136,0.18) !important; border-color: #0d9488 !important; }
                 .appt-btn-reschedule { transition: background 0.15s, border-color 0.15s; }
@@ -5373,18 +5373,31 @@ export default function AdminPage() {
                 )}
 
                 {/* status filter */}
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
-                  {STATUS_PILLS.map(st => {
-                    const active = apptFilter === st;
-                    return (
-                      <button key={st} onClick={() => setApptFilter(st)}
-                        className="appt-filter-pill"
-                        style={{ padding: "4px 12px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 11.5, fontWeight: active ? 700 : 500, cursor: "pointer", textTransform: "capitalize" }}>
-                        {st}
-                      </button>
-                    );
-                  })}
-                </div>
+                {(() => {
+                  const APPT_DOT: Record<string, string> = {
+                    all: "#0d9488",
+                    Requested: "#F97316", Scheduled: "#3B82F6", Confirmed: "#059669",
+                    "Reminder Sent": "#0891B2", Arrived: "#7C3AED", "In Darshan": "#D97706",
+                    Completed: "#16A34A", Rescheduled: "#D97706", Cancelled: "#DC2626",
+                    "No-show": "#9CA3AF", Closed: "#6B7280",
+                  };
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+                      {STATUS_PILLS.map(st => {
+                        const active = apptFilter === st;
+                        const dot = APPT_DOT[st] ?? "#9CA3AF";
+                        return (
+                          <button key={st} onClick={() => setApptFilter(st)}
+                            className={`appt-filter-pill${active ? " appt-pill-active" : ""}`}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 11.5, fontWeight: active ? 700 : 500, cursor: "pointer", textTransform: "capitalize" }}>
+                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? "#fff" : dot, flexShrink: 0 }} />
+                            {st}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {(() => {
                   const apptListEl = (filterFn?: (a: Appointment) => boolean) => {
@@ -5828,12 +5841,10 @@ export default function AdminPage() {
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DCFCE7"/><path d="M7.5 12.5l3 3 5.5-6" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   ), label: "Published", value: published, color: "#16A34A" },
                 ].map(card => (
-                  <div key={card.label} style={{ background: "#fff", borderRadius: 14, padding: "18px 20px", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                  <div key={card.label} className="trk-stat-card" style={{ borderLeft: `4px solid ${card.color}` }}>
                     <div style={{ flexShrink: 0 }}>{card.icon}</div>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 26, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{card.value}</p>
-                      <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 4, fontWeight: 500, wordBreak: "break-word", overflowWrap: "anywhere" }}>{card.label}</p>
-                    </div>
+                    <p style={{ fontSize: 24, fontWeight: 900, color: "#111827", lineHeight: 1, flexShrink: 0 }}>{card.value}</p>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#6b7280", whiteSpace: "nowrap" }}>{card.label}</p>
                   </div>
                 ))}
               </div>
@@ -5844,26 +5855,30 @@ export default function AdminPage() {
                   const active = trikalaFilter === pill.key;
                   return (
                     <button key={pill.key} onClick={() => setTrikalaFilter(pill.key)}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                      className={`trk-pill${active ? " trk-pill--active" : ""}`}
+                      style={{ border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontWeight: active ? 700 : 500 }}>
                       {pill.dot && <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? "#fff" : pill.dot, flexShrink: 0 }} />}
                       {pill.label}
                     </button>
                   );
                 })}
                 {/* Search */}
-                <div className="section-search-form" style={{ flexShrink: 0 }}>
-                  <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#0d9488", pointerEvents: "none" }} />
+                <div className="trk-search-wrap">
+                  <Search size={13} className="trk-search-icon" />
                   <input type="text" placeholder="Search name, case ID, mobile…" value={trikalaSearch} onChange={e => setTrikalaSearch(e.target.value)}
-                    className="section-search-input" />
+                    className="trk-search-input" />
                 </div>
               </div>
 
               {/* Table card */}
               <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
                 {/* Table header row */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{activeLabel}</p>
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg, #f0fdf9 0%, #f8fafc 100%)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{activeLabel}</p>
+                  </div>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</span>
                 </div>
 
                 {trikalaLoading ? (
@@ -5898,10 +5913,9 @@ export default function AdminPage() {
                             const isEven = i % 2 === 0;
                             return (
                               <tr key={r.id} onClick={() => openTrikalaDetail(r)}
-                                style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                                onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                                onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap" }}>
+                                className="trk-table-row"
+                                style={{ background: isEven ? "#fff" : `${sts.dot}0d`, borderBottom: "1px solid #e5e7eb" }}>
+                                <td style={{ padding: "13px 16px", whiteSpace: "nowrap", borderLeft: `4px solid ${sts.dot}` }}>
                                   <span style={{ display: "inline-block", background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#92710a", letterSpacing: "0.02em" }}>{r.caseReference}</span>
                                 </td>
                                 <td style={{ padding: "13px 16px", minWidth: 0 }}>
@@ -5944,9 +5958,8 @@ export default function AdminPage() {
                         const svc = SVC_COLORS[r.serviceType] ?? { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" };
                         return (
                           <div key={r.id} onClick={() => openTrikalaDetail(r)}
-                            style={{ display: "flex", alignItems: "center", gap: "clamp(8px,2vw,14px)", padding: "clamp(10px,2vw,13px) clamp(12px,3vw,20px)", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                            className="trk-mob-row"
+                            style={{ display: "flex", alignItems: "center", gap: "clamp(8px,2vw,14px)", padding: "clamp(10px,2vw,13px) clamp(12px,3vw,20px)", borderBottom: i < filtered.length - 1 ? "1px solid #e5e7eb" : "none", background: "#fff", borderLeft: `4px solid ${sts.dot}` }}>
                             <div style={{ flexShrink: 0 }}>
                               <span style={{ display: "inline-block", background: "#FFFBEF", border: "1.5px solid #D4A946", borderRadius: 20, padding: "clamp(2px,0.5vw,4px) clamp(7px,1.5vw,11px)", fontSize: "clamp(9px,1.8vw,11px)", fontWeight: 700, color: "#92710a", letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
                                 {r.caseReference}
@@ -6596,6 +6609,90 @@ export default function AdminPage() {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f5f0ea; }
         ::-webkit-scrollbar-thumb { background: rgba(13,148,136,0.25); border-radius: 3px; }
+
+        /* ── Trikala stat cards ─────────────────────── */
+        .trk-stat-card {
+          background: #fff;
+          border-radius: 10px;
+          padding: 16px 20px;
+          border: 1px solid #ebebeb;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+          cursor: pointer;
+          transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease;
+        }
+        .trk-stat-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.10);
+        }
+
+        /* ── Trikala table rows ─────────────────────── */
+        .trk-table-row {
+          cursor: pointer;
+          transition: background 0.18s ease;
+        }
+        .trk-table-row:hover td { background: #f8fffe !important; }
+        .trk-mob-row {
+          cursor: pointer;
+          transition: background 0.18s ease, transform 0.18s ease;
+        }
+        .trk-mob-row:hover { background: #f8fffe !important; transform: translateX(2px); }
+
+        /* ── Trikala filter pills ───────────────────── */
+        .trk-pill {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 5px 14px; border-radius: 20px; cursor: pointer;
+          font-size: 12.5px; transition: all 0.18s ease;
+        }
+        .trk-pill:not(.trk-pill--active):hover {
+          border-color: #0d9488 !important;
+          color: #0d9488 !important;
+          background: rgba(13,148,136,0.06) !important;
+          transform: translateY(-1px);
+          box-shadow: 0 3px 8px rgba(13,148,136,0.12);
+        }
+        .trk-pill--active {
+          background: #0d9488 !important;
+          border-color: #0d9488 !important;
+          color: #fff !important;
+          font-weight: 700;
+        }
+
+        /* ── Trikala search input ───────────────────── */
+        .trk-search-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          flex: 1;
+          min-width: 180px;
+          max-width: 280px;
+        }
+        .trk-search-input {
+          width: 100%;
+          padding: 7px 12px 7px 32px;
+          border-radius: 20px;
+          border: 1.5px solid #e5e7eb;
+          background: #f9fafb;
+          font-size: 12.5px;
+          color: #374151;
+          outline: none;
+          transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        }
+        .trk-search-input:focus {
+          border-color: #0d9488;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.10);
+        }
+        .trk-search-icon {
+          position: absolute;
+          left: 10px;
+          color: #9ca3af;
+          pointer-events: none;
+          transition: color 0.18s;
+        }
+        .trk-search-wrap:focus-within .trk-search-icon { color: #0d9488; }
 
         /* ── Layout shell ───────────────────────────── */
         .adm-root {
