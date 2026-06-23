@@ -6037,15 +6037,21 @@ export default function AdminPage() {
                 {/* relationship pills + search */}
                 <div className="section-filter-row">
                   <div className="section-pills-wrap">
-                  {REL_PILLS.map(pill => {
-                    const active = devoteeRel === pill.key;
-                    return (
-                      <button key={pill.key} onClick={() => setDevoteeRel(pill.key)}
-                        style={{ padding: "5px 14px", borderRadius: 20, border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                        {pill.label}
-                      </button>
-                    );
-                  })}
+                  {(() => {
+                    const REL_DOTS: Record<string, string> = { all: "#0d9488", new: "#9CA3AF", regular: "#6b21a8", donor: "#15803d", volunteer: "#1d4ed8", vip: "#0d9488", family: "#9d174d" };
+                    return REL_PILLS.map(pill => {
+                      const active = devoteeRel === pill.key;
+                      const dot = REL_DOTS[pill.key] ?? "#9CA3AF";
+                      return (
+                        <button key={pill.key} onClick={() => setDevoteeRel(pill.key)}
+                          className={`trk-pill${active ? " trk-pill--active" : ""}`}
+                          style={{ border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb", background: active ? "#0d9488" : "#fff", color: active ? "#fff" : "#6b7280", fontWeight: active ? 700 : 500, whiteSpace: "nowrap" }}>
+                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: active ? "#fff" : dot, flexShrink: 0 }} />
+                          {pill.label}
+                        </button>
+                      );
+                    });
+                  })()}
                   </div>
                   <form onSubmit={e => { e.preventDefault(); fetchDevotees(); }} className="section-search-form">
                     <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#0d9488", pointerEvents: "none" }} />
@@ -6055,10 +6061,13 @@ export default function AdminPage() {
                 </div>
 
                 {/* Table */}
-                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Devotee Directory</p>
-                    <p style={{ fontSize: 12, color: "#6b7280" }}>{devotees.length} record{devotees.length !== 1 ? "s" : ""}</p>
+                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Devotee Directory</p>
+                    </div>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{devotees.length} record{devotees.length !== 1 ? "s" : ""}</span>
                   </div>
                   {devoteesLoading ? (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, color: "#6b7280", fontSize: 14, gap: 10 }}>
@@ -6088,10 +6097,9 @@ export default function AdminPage() {
                               const relColor = relBadge(d.relationship);
                               return (
                                 <tr key={d.id} onClick={() => openDevotee(d)}
-                                  style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                                  onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                                  <td style={{ padding: "13px 16px" }}>
+                                  className="trk-table-row"
+                                  style={{ background: isEven ? "#fff" : `${relColor.fg}08`, borderBottom: "1px solid #e5e7eb" }}>
+                                  <td style={{ padding: "13px 16px", borderLeft: `4px solid ${relColor.fg}` }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                                       {d.photo ? (
                                         <img src={d.photo} alt={d.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #e5e7eb" }} />
@@ -6111,6 +6119,7 @@ export default function AdminPage() {
                                   <td style={{ padding: "13px 16px", fontSize: 12.5, color: d.profession ? "#6b7280" : "#d1d5db", textAlign: "center" }}>{d.profession || "—"}</td>
                                   <td style={{ padding: "13px 16px", textAlign: "center" }}>
                                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: relColor.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
+                                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: relColor.fg, flexShrink: 0 }} />
                                       {d.relationship || "new"}
                                     </span>
                                   </td>
@@ -6132,27 +6141,28 @@ export default function AdminPage() {
                           const relColor = relBadge(d.relationship);
                           return (
                             <div key={d.id} onClick={() => openDevotee(d)}
-                              style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < devotees.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
-                              onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                              onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
-                              <div style={{ width: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              className="trk-mob-row"
+                              style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < devotees.length - 1 ? "1px solid #f3f4f6" : "none", background: i % 2 === 0 ? "#fff" : `${relColor.fg}06`, borderLeft: `4px solid ${relColor.fg}` }}>
+                              <div style={{ flexShrink: 0 }}>
                                 {d.photo ? (
-                                  <img src={d.photo} alt={d.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #e5e7eb" }} />
+                                  <img src={d.photo} alt={d.name} style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", border: `2px solid ${relColor.fg}40` }} />
                                 ) : (
-                                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>
+                                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", boxShadow: `0 2px 8px ${relColor.fg}30` }}>
                                     {(d.name || "?")[0].toUpperCase()}
                                   </div>
                                 )}
                               </div>
-                              <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{d.name}</p>
+                                <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", wordBreak: "break-word" }}>{d.name}</p>
                                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 3 }}>
-                                  {d.phone && <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace" }}>{d.phone}</p>}
-                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: relColor.bg, borderRadius: 20, padding: "2px 8px", fontSize: 10.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>{d.relationship || "new"}</span>
+                                  {d.phone && <span style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{d.phone}</span>}
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: relColor.bg, borderRadius: 20, padding: "2px 8px", fontSize: 10.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
+                                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: relColor.fg }} />
+                                    {d.relationship || "new"}
+                                  </span>
                                 </div>
                               </div>
-                              <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
+                              <ChevronRight size={15} color={relColor.fg} style={{ flexShrink: 0, opacity: 0.5 }} />
                             </div>
                           );
                         })}
