@@ -73,6 +73,14 @@ export default function WritingPadPro({
   const [eraserSizeW, setEraserSizeW] = useState(ERASER_SIZES[1].w);
   const [save, setSave] = useState<"idle" | "saving" | "saved">("idle");
   const [loaded, setLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   /* ── canvas helpers ───────────────────────────────────────────── */
   const ctx = () => canvasRef.current?.getContext("2d") || null;
@@ -362,7 +370,7 @@ export default function WritingPadPro({
   /* ── styles ───────────────────────────────────────────────────── */
   const toolBtn = (active: boolean): React.CSSProperties => ({
     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-    width: 38, height: 38, borderRadius: 9, cursor: "pointer",
+    width: 32, height: 32, borderRadius: 8, cursor: "pointer",
     border: active ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb",
     background: active ? "#0d9488" : "#fff",
     color: active ? "#fff" : "#374151",
@@ -371,94 +379,119 @@ export default function WritingPadPro({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Toolbar */}
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: "#0f766e", marginRight: 4 }}>{title}</span>
-
-        {/* tools */}
-        <div style={{ display: "flex", gap: 6 }}>
-          <button title="Pen"         onClick={() => setTool("pen")}         style={toolBtn(tool === "pen")}><Pen size={16} /></button>
-          <button title="Highlighter" onClick={() => setTool("highlighter")} style={toolBtn(tool === "highlighter")}><Highlighter size={16} /></button>
-          <button title="Eraser"      onClick={() => setTool("eraser")}      style={toolBtn(tool === "eraser")}><Eraser size={16} /></button>
-        </div>
-
-        <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
-
-        {/* colors */}
-        <div style={{ display: "flex", gap: 5 }}>
-          {COLORS.map(cl => (
-            <button key={cl} title={cl} onClick={() => { setColor(cl); if (tool === "eraser") setTool("pen"); }}
-              style={{ width: 24, height: 24, borderRadius: "50%", background: cl, cursor: "pointer",
-                border: color === cl && tool !== "eraser" ? "3px solid #0d9488" : "2px solid #fff",
-                boxShadow: "0 0 0 1px #e5e7eb" }} />
-          ))}
-        </div>
-
-        <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
-
-        {/* sizes — pen/highlighter */}
-        {tool !== "eraser" && (
-          <div style={{ display: "flex", gap: 5 }}>
-            {SIZES.map(s => (
+      {isMobile ? (
+        /* ── Mobile: 3 fixed rows ── */
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12 }}>
+          {/* Row 1: title + save indicator */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#0f766e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: save === "saved" ? "#15803d" : "#6b7280", flexShrink: 0, marginLeft: 8 }}>
+              {save === "saving" ? <><Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
+                : save === "saved" ? <><Check size={12} /> Saved</> : null}
+            </span>
+          </div>
+          {/* Row 2: pen / highlighter / eraser + all colors */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button title="Pen"         onClick={() => setTool("pen")}         style={toolBtn(tool === "pen")}><Pen size={14} /></button>
+            <button title="Highlighter" onClick={() => setTool("highlighter")} style={toolBtn(tool === "highlighter")}><Highlighter size={14} /></button>
+            <button title="Eraser"      onClick={() => setTool("eraser")}      style={toolBtn(tool === "eraser")}><Eraser size={14} /></button>
+            <span style={{ width: 1, height: 22, background: "#e5e7eb" }} />
+            {COLORS.map(cl => (
+              <button key={cl} title={cl} onClick={() => { setColor(cl); if (tool === "eraser") setTool("pen"); }}
+                style={{ width: 22, height: 22, borderRadius: "50%", background: cl, cursor: "pointer", flexShrink: 0,
+                  border: color === cl && tool !== "eraser" ? "2.5px solid #0d9488" : "2px solid #fff",
+                  boxShadow: "0 0 0 1px #e5e7eb" }} />
+            ))}
+          </div>
+          {/* Row 3: size buttons + undo / clear / download */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            {tool !== "eraser" && SIZES.map(s => (
               <button key={s.key} onClick={() => setSizeW(s.w)} title={s.label}
-                style={{ padding: "0 10px", height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
+                style={{ padding: "0 9px", height: 27, borderRadius: 7, cursor: "pointer", fontSize: 11, fontWeight: 700,
                   border: sizeW === s.w ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb",
                   background: sizeW === s.w ? "rgba(13,148,136,0.08)" : "#fff",
                   color: sizeW === s.w ? "#0d9488" : "#6b7280" }}>{s.label}</button>
             ))}
+            {tool === "eraser" && <>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af" }}>Size:</span>
+              {ERASER_SIZES.map(s => (
+                <button key={s.key} onClick={() => setEraserSizeW(s.w)} title={`Eraser ${s.label}`}
+                  style={{ width: 28, height: 27, borderRadius: 7, cursor: "pointer", fontSize: 11, fontWeight: 700,
+                    border: eraserSizeW === s.w ? "1.5px solid #ef4444" : "1.5px solid #e5e7eb",
+                    background: eraserSizeW === s.w ? "rgba(239,68,68,0.08)" : "#fff",
+                    color: eraserSizeW === s.w ? "#ef4444" : "#6b7280",
+                    display: "flex", alignItems: "center", justifyContent: "center" }}>{s.label}</button>
+              ))}
+            </>}
+            <span style={{ width: 1, height: 20, background: "#e5e7eb", margin: "0 2px" }} />
+            <button onClick={undo}         title="Undo"             style={toolBtn(false)}><Undo2 size={13} /></button>
+            <button onClick={clearPage}    title="Clear this page"  style={{ ...toolBtn(false), color: "#dc2626", borderColor: "#fecaca" }}><Trash2 size={13} /></button>
+            <button onClick={downloadPage} title="Download page PNG" style={toolBtn(false)}><Download size={13} /></button>
           </div>
-        )}
-
-        {/* eraser sizes */}
-        {tool === "eraser" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginRight: 2 }}>Size:</span>
-            {ERASER_SIZES.map(s => (
-              <button key={s.key} onClick={() => setEraserSizeW(s.w)} title={`Eraser ${s.label}`}
-                style={{ width: 32, height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
-                  border: eraserSizeW === s.w ? "1.5px solid #ef4444" : "1.5px solid #e5e7eb",
-                  background: eraserSizeW === s.w ? "rgba(239,68,68,0.08)" : "#fff",
-                  color: eraserSizeW === s.w ? "#ef4444" : "#6b7280",
-                  display: "flex", alignItems: "center", justifyContent: "center" }}>{s.label}</button>
+        </div>
+      ) : (
+        /* ── Desktop: original single-row layout ── */
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#0f766e", marginRight: 4 }}>{title}</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button title="Pen"         onClick={() => setTool("pen")}         style={toolBtn(tool === "pen")}><Pen size={16} /></button>
+            <button title="Highlighter" onClick={() => setTool("highlighter")} style={toolBtn(tool === "highlighter")}><Highlighter size={16} /></button>
+            <button title="Eraser"      onClick={() => setTool("eraser")}      style={toolBtn(tool === "eraser")}><Eraser size={16} /></button>
+          </div>
+          <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
+          <div style={{ display: "flex", gap: 5 }}>
+            {COLORS.map(cl => (
+              <button key={cl} title={cl} onClick={() => { setColor(cl); if (tool === "eraser") setTool("pen"); }}
+                style={{ width: 24, height: 24, borderRadius: "50%", background: cl, cursor: "pointer",
+                  border: color === cl && tool !== "eraser" ? "3px solid #0d9488" : "2px solid #fff",
+                  boxShadow: "0 0 0 1px #e5e7eb" }} />
             ))}
           </div>
-        )}
-
-        <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
-
-        <button onClick={undo}        title="Undo"            style={toolBtn(false)}><Undo2 size={16} /></button>
-        <button onClick={clearPage}   title="Clear this page" style={{ ...toolBtn(false), color: "#dc2626", borderColor: "#fecaca" }}><Trash2 size={16} /></button>
-        <button onClick={downloadPage} title="Download page PNG" style={toolBtn(false)}><Download size={16} /></button>
-
-        <div style={{ flex: 1 }} />
-
-        {/* save state */}
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: save === "saved" ? "#15803d" : "#6b7280" }}>
-          {save === "saving" ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
-            : save === "saved" ? <><Check size={13} /> Saved</> : null}
-        </span>
-      </div>
-
-      {/* Page navigator */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-        <button onClick={() => gotoPage(cur - 1)} disabled={cur === 0}
-          style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: cur === 0 ? "#cbd5e1" : "#374151", fontSize: 12.5, fontWeight: 600, cursor: cur === 0 ? "default" : "pointer" }}>
-          <ChevronLeft size={15} /> Prev
-        </button>
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: "#374151" }}>Page {cur + 1} / {pageCount}</span>
-        <button onClick={() => gotoPage(cur + 1)} disabled={cur >= pageCount - 1}
-          style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: cur >= pageCount - 1 ? "#cbd5e1" : "#374151", fontSize: 12.5, fontWeight: 600, cursor: cur >= pageCount - 1 ? "default" : "pointer" }}>
-          Next <ChevronRight size={15} />
-        </button>
-        <span style={{ width: 1, height: 22, background: "#e5e7eb" }} />
-        <button onClick={addPage} disabled={pageCount >= MAX_PAGES}
-          style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: pageCount >= MAX_PAGES ? "default" : "pointer", opacity: pageCount >= MAX_PAGES ? 0.5 : 1 }}>
-          <Plus size={15} /> Add Page
-        </button>
-        <button onClick={deletePage} title="Delete this page"
-          style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
-          <Trash2 size={14} /> Delete
-        </button>
-      </div>
+          <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
+          {tool !== "eraser" && (
+            <div style={{ display: "flex", gap: 5 }}>
+              {SIZES.map(s => (
+                <button key={s.key} onClick={() => setSizeW(s.w)} title={s.label}
+                  style={{ padding: "0 10px", height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
+                    border: sizeW === s.w ? "1.5px solid #0d9488" : "1.5px solid #e5e7eb",
+                    background: sizeW === s.w ? "rgba(13,148,136,0.08)" : "#fff",
+                    color: sizeW === s.w ? "#0d9488" : "#6b7280" }}>{s.label}</button>
+              ))}
+            </div>
+          )}
+          {tool === "eraser" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginRight: 2 }}>Size:</span>
+              {ERASER_SIZES.map(s => (
+                <button key={s.key} onClick={() => setEraserSizeW(s.w)} title={`Eraser ${s.label}`}
+                  style={{ width: 32, height: 30, borderRadius: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700,
+                    border: eraserSizeW === s.w ? "1.5px solid #ef4444" : "1.5px solid #e5e7eb",
+                    background: eraserSizeW === s.w ? "rgba(239,68,68,0.08)" : "#fff",
+                    color: eraserSizeW === s.w ? "#ef4444" : "#6b7280",
+                    display: "flex", alignItems: "center", justifyContent: "center" }}>{s.label}</button>
+              ))}
+            </div>
+          )}
+          <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
+          <button onClick={undo}         title="Undo"            style={toolBtn(false)}><Undo2 size={16} /></button>
+          <button onClick={clearPage}    title="Clear this page" style={{ ...toolBtn(false), color: "#dc2626", borderColor: "#fecaca" }}><Trash2 size={16} /></button>
+          <button onClick={downloadPage} title="Download page PNG" style={toolBtn(false)}><Download size={16} /></button>
+          <div style={{ flex: 1 }} />
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, color: save === "saved" ? "#15803d" : "#6b7280" }}>
+            {save === "saving" ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
+              : save === "saved" ? <><Check size={13} /> Saved</> : null}
+          </span>
+          <span style={{ width: 1, height: 26, background: "#e5e7eb" }} />
+          <button onClick={addPage} disabled={pageCount >= MAX_PAGES}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: pageCount >= MAX_PAGES ? "default" : "pointer", opacity: pageCount >= MAX_PAGES ? 0.5 : 1 }}>
+            <Plus size={14} /> Add Page
+          </button>
+          <button onClick={deletePage} title="Delete this page"
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+            <Trash2 size={13} /> Delete Page
+          </button>
+        </div>
+      )}
 
       {/* The A4 page */}
       <div style={{ display: "flex", justifyContent: "center", background: "#eef2f7", borderRadius: 12, padding: 16, overflow: "auto" }}>
@@ -493,6 +526,36 @@ export default function WritingPadPro({
           />
         </div>
       </div>
+
+      {/* Page navigator — below the canvas */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        {/* Row 1: Prev / Page counter / Next */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button onClick={() => gotoPage(cur - 1)} disabled={cur === 0}
+            style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: cur === 0 ? "#cbd5e1" : "#374151", fontSize: 13, fontWeight: 600, cursor: cur === 0 ? "default" : "pointer" }}>
+            <ChevronLeft size={15} /> Prev
+          </button>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#374151", minWidth: 80, textAlign: "center" }}>Page {cur + 1} / {pageCount}</span>
+          <button onClick={() => gotoPage(cur + 1)} disabled={cur >= pageCount - 1}
+            style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", color: cur >= pageCount - 1 ? "#cbd5e1" : "#374151", fontSize: 13, fontWeight: 600, cursor: cur >= pageCount - 1 ? "default" : "pointer" }}>
+            Next <ChevronRight size={15} />
+          </button>
+        </div>
+        {/* Row 2: Add Page / Delete — mobile only */}
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <button onClick={addPage} disabled={pageCount >= MAX_PAGES}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 18px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 13, fontWeight: 700, cursor: pageCount >= MAX_PAGES ? "default" : "pointer", opacity: pageCount >= MAX_PAGES ? 0.5 : 1 }}>
+              <Plus size={15} /> Add Page
+            </button>
+            <button onClick={deletePage} title="Delete this page"
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 18px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <Trash2 size={14} /> Delete Page
+            </button>
+          </div>
+        )}
+      </div>
+
       <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "center" }}>
         Write with a stylus for pressure-sensitive strokes. Once a pen is used, palm touches are ignored automatically. Pages autosave.
       </p>

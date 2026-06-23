@@ -124,6 +124,13 @@ export default function GurujiDarshanPage() {
   const [starting, setStarting]     = useState(false);
   const [actionErr, setActionErr]   = useState("");
 
+  const [isWide, setIsWide] = useState(typeof window !== "undefined" ? window.innerWidth > 1400 : false);
+  useEffect(() => {
+    const check = () => setIsWide(window.innerWidth > 1400);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const [bookOpen, setBookOpen]   = useState(false);
   const [bookWhen, setBookWhen]   = useState("");
   const [bookMode, setBookMode]   = useState("in-person");
@@ -408,7 +415,7 @@ export default function GurujiDarshanPage() {
                 <div className="gd-booknext-form" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 12, padding: "14px 24px", background: "#f0fdfa", borderBottom: "1px solid #cbeae3" }}>
                   <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                     <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#0f766e", marginBottom: 5 }}>Date &amp; Time</label>
-                    <DateTimePicker value={bookWhen} onChange={setBookWhen} />
+                    <DateTimePicker value={bookWhen} onChange={setBookWhen} minDate={new Date().toISOString().slice(0, 10)} />
                   </div>
                   <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                     <FancySelect
@@ -427,7 +434,12 @@ export default function GurujiDarshanPage() {
                     style={{ height: 38, padding: "0 18px", borderRadius: 9, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: !bookWhen || booking ? "default" : "pointer", opacity: !bookWhen || booking ? 0.5 : 1 }}>
                     {booking ? "Booking…" : "Book"}
                   </button>
-                  <button onClick={() => setBookOpen(false)} style={{ height: 38, width: 38, borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", color: "#6b7280" }}><X size={15} /></button>
+                  <button onClick={() => setBookOpen(false)}
+                    onMouseEnter={e => { const s = e.currentTarget.querySelector("span") as HTMLElement; if (s) s.style.transform = "scale(1.5)"; }}
+                    onMouseLeave={e => { const s = e.currentTarget.querySelector("span") as HTMLElement; if (s) s.style.transform = "scale(1)"; }}
+                    style={{ height: 38, width: 38, borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ display: "inline-flex", transition: "transform 0.18s ease" }}><X size={15} /></span>
+                  </button>
                 </div>
               )}
               {bookedMsg && <div style={{ padding: "8px 24px", background: "#ecfdf5", color: "#15803d", fontSize: 12.5, fontWeight: 600 }}>{bookedMsg}</div>}
@@ -457,7 +469,7 @@ export default function GurujiDarshanPage() {
                   const email    = dev?.email    || mock?.email;
                   const address  = [dev?.city, dev?.district, dev?.state, dev?.pincode].filter(Boolean).join(", ") || mock?.address;
                   return (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, maxWidth: 760 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: isWide ? "repeat(4,minmax(0,1fr))" : "repeat(auto-fit,minmax(220px,1fr))", gap: 14, maxWidth: isWide ? "none" : 760 }}>
                       <InfoCard icon={<Phone size={15} />}         label="Phone"    value={phone} />
                       <InfoCard icon={<MessageSquare size={15} />} label="WhatsApp" value={whatsapp} />
                       <InfoCard icon={<Mail size={15} />}          label="Email"    value={email} />

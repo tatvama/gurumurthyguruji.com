@@ -205,10 +205,10 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
       </button>
 
       {open && typeof document !== "undefined" && createPortal(
-        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: `1.5px solid ${ACCENT}40`, boxShadow: `0 12px 40px ${ACCENT}33`, overflow: "hidden" }}>
+        <div ref={popRef} style={{ position: "fixed", left: coords.left, top: coords.top, width: coords.width, transform: coords.flip ? "translateY(-100%)" : "none", zIndex: 9999, background: "#fff", borderRadius: 14, border: `1.5px solid ${ACCENT}40`, boxShadow: `0 12px 40px ${ACCENT}33` }}>
 
           {/* ── Coloured header ── */}
-          <div style={{ background: headerGradient, padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+          <div style={{ background: headerGradient, padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, borderRadius: "12px 12px 0 0", overflow: "visible" }}>
             <button type="button" onClick={prevDisabled ? undefined : prevMonth} disabled={prevDisabled} style={{ ...navBtn, opacity: prevDisabled ? 0.35 : 1, cursor: prevDisabled ? "not-allowed" : "pointer" }}><ChevronLeft size={15} color="#fff" /></button>
 
             <div style={{ display: "flex", gap: 5, alignItems: "center", flex: 1, justifyContent: "center" }}>
@@ -226,7 +226,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                       const dis = monthDisabled(i);
                       return (
                         <div key={i} style={{ ...dropItem(i === view.month), ...(dis ? { color: "#d1d5db", cursor: "not-allowed" } : {}) }}
-                          onMouseDown={e => { e.preventDefault(); if (dis) return; setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
+                          onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (dis) return; setView(v => ({ ...v, month: i })); setShowMonthDrop(false); }}
                           onMouseEnter={e => { if (!dis && i !== view.month) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
                           onMouseLeave={e => { if (!dis && i !== view.month) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                         >{m}</div>
@@ -249,7 +249,7 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
                       const dis = yearDisabled(y);
                       return (
                         <div key={y} style={{ ...dropItem(y === view.year), ...(dis ? { color: "#d1d5db", cursor: "not-allowed" } : {}) }}
-                          onMouseDown={e => { e.preventDefault(); if (dis) return; setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
+                          onMouseDown={e => { e.preventDefault(); e.stopPropagation(); if (dis) return; setView(v => ({ ...v, year: y })); setShowYearDrop(false); }}
                           onMouseEnter={e => { if (!dis && y !== view.year) (e.currentTarget as HTMLElement).style.background = LIGHT; }}
                           onMouseLeave={e => { if (!dis && y !== view.year) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                         >{y}</div>
@@ -291,20 +291,20 @@ export function DateTimePicker({ value, onChange, mode = "datetime", placeholder
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <Clock size={12} color={ACCENT} />
-                  <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280" }}>Time (HH:MM)</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: "#6b7280" }}>Time</span>
                 </div>
-                <input
-                  type="time"
-                  value={parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : ""}
-                  onChange={e => {
-                    const [h, m] = e.target.value.split(":").map(Number);
-                    if (!isNaN(h) && !isNaN(m))
-                      emit(view.year, view.month, parsed?.d ?? now.getDate(), h, m);
-                  }}
-                  style={{ width: "100%", height: 36, padding: "0 10px", borderRadius: 8, border: `1.5px solid #e5e7eb`, background: "#f8fafc", fontSize: 14, fontWeight: 600, color: "#1f2937", outline: "none", boxSizing: "border-box", cursor: "text" }}
-                  onFocus={e => { e.target.style.borderColor = ACCENT; e.target.style.background = LIGHT; }}
-                  onBlur={e =>  { e.target.style.borderColor = "#e5e7eb"; e.target.style.background = "#f8fafc"; }}
-                />
+                <div style={{ display: "inline-flex" }}>
+                  <TimePicker
+                    value={parsed ? `${p2(parsed.hh)}:${p2(parsed.mm)}` : ""}
+                    onChange={v => {
+                      const [h, m] = v.split(":").map(Number);
+                      if (!isNaN(h) && !isNaN(m))
+                        emit(view.year, view.month, parsed?.d ?? now.getDate(), h, m);
+                    }}
+                    accentColor={ACCENT}
+                    accentLight={LIGHT}
+                  />
+                </div>
               </div>
             )}
 
