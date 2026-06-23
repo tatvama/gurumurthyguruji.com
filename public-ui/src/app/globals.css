@@ -1616,87 +1616,76 @@ a:focus-visible, button:focus-visible {
 @media (max-width: 640px)  { .today-grid { grid-template-columns: 1fr; } }
 
 .today-stat-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border-subtle);
-  border-radius: var(--admin-radius-lg);
-  padding: 8px 12px;
-  box-shadow: var(--admin-shadow-sm);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid var(--card-accent, #0d9488);
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
   cursor: pointer;
-  transition: transform 0.3s var(--admin-ease), box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.today-stat-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--card-accent, var(--admin-gold));
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  gap: 14px;
 }
 
 .today-stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--admin-shadow-md);
-  border-color: var(--admin-border);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
 }
-.today-stat-card:hover::before { opacity: 1; }
 
-.today-stat-card.accent-gold   { --card-accent: var(--admin-gold); }
-.today-stat-card.accent-green  { --card-accent: var(--admin-green); }
-.today-stat-card.accent-orange { --card-accent: var(--admin-orange); }
-.today-stat-card.accent-red    { --card-accent: var(--admin-red); }
-.today-stat-card.accent-blue   { --card-accent: var(--admin-blue); }
-.today-stat-card.accent-purple { --card-accent: var(--admin-purple); }
+.today-stat-card.accent-gold   { --card-accent: #d97706; }
+.today-stat-card.accent-green  { --card-accent: #059669; }
+.today-stat-card.accent-orange { --card-accent: #ea580c; }
+.today-stat-card.accent-red    { --card-accent: #dc2626; }
+.today-stat-card.accent-blue   { --card-accent: #2563eb; }
+.today-stat-card.accent-purple { --card-accent: #7c3aed; }
 
 .today-stat-icon {
-  width: 32px; height: 32px;
-  border-radius: 2px;
+  width: 38px; height: 38px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 18px;
 }
 
-.today-stat-icon.gold   { background: rgba(216,183,106,0.14); color: var(--admin-gold); }
-.today-stat-icon.green  { background: var(--admin-green-bg);  color: var(--admin-green); }
-.today-stat-icon.orange { background: var(--admin-orange-bg); color: var(--admin-orange); }
-.today-stat-icon.red    { background: var(--admin-red-bg);    color: var(--admin-red); }
-.today-stat-icon.blue   { background: var(--admin-blue-bg);   color: var(--admin-blue); }
-.today-stat-icon.purple { background: var(--admin-purple-bg); color: var(--admin-purple); }
+.today-stat-icon.gold   { background: rgba(217,119,6,0.12); }
+.today-stat-icon.green  { background: rgba(5,150,105,0.12); }
+.today-stat-icon.orange { background: rgba(234,88,12,0.12); }
+.today-stat-icon.red    { background: rgba(220,38,38,0.12); }
+.today-stat-icon.blue   { background: rgba(37,99,235,0.12); }
+.today-stat-icon.purple { background: rgba(124,58,237,0.12); }
 
 .today-stat-value {
   font-family: var(--admin-font);
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.6rem;
+  font-weight: 900;
   line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--admin-text-primary);
-  margin-bottom: 2px;
+  letter-spacing: -0.04em;
+  color: #111827;
+  margin-bottom: 3px;
 }
 
 .today-stat-label {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--admin-text-muted);
+  color: #374151;
 }
 
 .today-stat-sub {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 400;
-  color: var(--admin-text-dim);
-  margin-top: 3px;
+  color: #9ca3af;
+  margin-top: 4px;
 }
 
 /* Urgent flag */
-.today-stat-card.is-urgent { border-color: rgba(220,38,38,0.20); background: rgba(220,38,38,0.025); }
-.today-stat-card.is-urgent .today-stat-value { color: var(--admin-red); }
+.today-stat-card.is-urgent { border-left-color: #dc2626; background: rgba(220,38,38,0.03); }
+.today-stat-card.is-urgent .today-stat-value { color: #dc2626; }
 
 /* ── ADMIN DATA TABLE ───────────────────────────────────────────────────── */
 

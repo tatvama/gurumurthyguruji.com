@@ -335,6 +335,9 @@ function DevoteeProfilePanel({
 
   if (!history || !d) return null;
 
+  const avatarColors = ["#0d9488","#7c3aed","#b45309","#0369a1","#be185d","#047857"];
+  const avatarBg = avatarColors[(d.name?.charCodeAt(0) ?? 0) % avatarColors.length];
+
   return (
     <AnimatePresence>
       {history && d && (
@@ -344,87 +347,93 @@ function DevoteeProfilePanel({
             style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(2px)" }} />
           <motion.div key="dev-panel" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
-            style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 460, maxWidth: "100%",
+            style={{ position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201, width: 480, maxWidth: "100vw",
               background: "#f8fafc", boxShadow: "-8px 0 40px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column",
               fontFamily: "'Inter','Segoe UI',sans-serif" }}>
-            {/* Header */}
-            <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)", color: "#1f2937", flexShrink: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ display: "flex", gap: 13, alignItems: "center", minWidth: 0 }}>
-                  {d.photo ? (
-                    <img src={d.photo} alt={d.name} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(0,0,0,0.12)" }} />
-                  ) : (
-                    <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800 }}>
-                      {(d.name || "?")[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div style={{ minWidth: 0 }}>
-                    {editMode ? (
-                      <input value={localD?.name ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, name: e.target.value }))}
-                        style={{ fontSize: 18, fontWeight: 800, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 7, padding: "3px 8px", color: "#1f2937", outline: "none", width: "100%", boxSizing: "border-box" }} />
-                    ) : (
-                      <h2 style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{d.name}</h2>
-                    )}
-                    <p style={{ fontSize: 11.5, color: "#6b7280", fontFamily: "monospace", marginTop: 2 }}>{d.devoteeRef || "—"}</p>
+            {/* ── Header ── */}
+            <div style={{ background: "#0d9488", padding: "16px 20px 14px", flexShrink: 0 }}>
+
+              {/* Avatar + Info + Buttons — all in one row */}
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                {/* Avatar */}
+                {d.photo ? (
+                  <img src={d.photo} alt={d.name} style={{ width: 46, height: 46, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.5)", flexShrink: 0, marginTop: 2 }} />
+                ) : (
+                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, fontWeight: 800, color: "#fff", flexShrink: 0, marginTop: 2 }}>
+                    {(d.name || "?")[0].toUpperCase()}
                   </div>
+                )}
+
+                {/* Name + DEV ID */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editMode ? (
+                    <input value={localD?.name ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, name: e.target.value }))}
+                      style={{ width: "100%", fontSize: 15, fontWeight: 700, background: "#fff", border: "none", borderRadius: 8, padding: "7px 12px", color: "#1f2937", outline: "none", boxSizing: "border-box" }} />
+                  ) : (
+                    <h2 style={{ fontSize: 17, fontWeight: 800, color: "#fff", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</h2>
+                  )}
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: "monospace", marginTop: 4, letterSpacing: "0.03em" }}>{d.devoteeRef || "—"}</p>
                 </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+
+                {/* Action buttons — same row as input */}
+                <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center", marginTop: 2 }}>
                   {editMode ? (
                     <>
                       <button onClick={saveEdit} disabled={saving}
-                        style={{ background: saving ? "rgba(255,255,255,0.1)" : "rgba(13,148,136,0.2)", border: "1px solid rgba(13,148,136,0.3)", borderRadius: 8, padding: "5px 12px", cursor: saving ? "default" : "pointer", color: "#1f2937", fontSize: 12, fontWeight: 700 }}>
+                        style={{ background: "#fff", border: "none", borderRadius: 8, padding: "clamp(5px,1.5vw,7px) clamp(10px,3vw,16px)", cursor: saving ? "default" : "pointer", color: saving ? "#9ca3af" : "#0d9488", fontSize: "clamp(11px,2.5vw,13px)", fontWeight: 700, whiteSpace: "nowrap" }}>
                         {saving ? "Saving…" : "Save"}
                       </button>
-                      <button onClick={() => { setEditMode(false); setLocalD(origD ?? null); setSaveErr(""); }}
-                        style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "5px 10px", cursor: "pointer", color: "#1f2937", fontSize: 12 }}>
-                        Cancel
+                      <button onClick={onClose} style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}>
+                        <X size={14} />
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => { setEditMode(true); setLocalD(d); }}
-                      style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#1f2937", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
-                      <Pencil size={12} /> Edit
-                    </button>
+                    <>
+                      <button onClick={() => { setEditMode(true); setLocalD(d); }}
+                        style={{ background: "#fff", border: "none", borderRadius: 7, padding: "clamp(4px,1.2vw,5px) clamp(9px,2.8vw,13px)", cursor: "pointer", color: "#0d9488", fontSize: "clamp(11px,2.5vw,12px)", fontWeight: 600, display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}>
+                        <Pencil size={12} /> Edit
+                      </button>
+                      <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: 7, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}>
+                        <X size={14} />
+                      </button>
+                    </>
                   )}
-                  <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#1f2937" }}><X size={16} /></button>
                 </div>
               </div>
+
               {saveErr && <p style={{ fontSize: 11, color: "#fca5a5", marginTop: 6 }}>{saveErr}</p>}
-              <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-                <span style={{ background: rel.bg, color: rel.fg, padding: "3px 11px", borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: "capitalize" }}>{d.relationship || "new"}</span>
-                {d.language && <span style={{ background: "rgba(255,255,255,0.1)", padding: "3px 11px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{d.language}</span>}
-                {d.sensitive && <span style={{ background: "rgba(220,38,38,0.2)", color: "#fecaca", padding: "3px 11px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Sensitive</span>}
+
+              {/* Badges */}
+              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+                <span style={{ background: "rgba(255,255,255,0.95)", color: "#0d9488", padding: "3px 12px", borderRadius: 20, fontSize: 11.5, fontWeight: 700, textTransform: "capitalize" }}>{d.relationship || "new"}</span>
+                {d.language && <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", padding: "3px 12px", borderRadius: 20, fontSize: 11.5, fontWeight: 600 }}>{d.language}</span>}
+                {d.sensitive && <span style={{ background: "rgba(220,38,38,0.5)", color: "#fef2f2", padding: "3px 12px", borderRadius: 20, fontSize: 11.5, fontWeight: 700 }}>Sensitive</span>}
               </div>
             </div>
 
-            {/* Body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "clamp(12px,4vw,20px) clamp(12px,4vw,22px)" }}>
+            {/* ── Body ── */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 24px" }}>
+
               {/* Quick contact — Call / WhatsApp / Email */}
-              <div style={{ display: "flex", gap: 7, marginBottom: 12, flexWrap: "wrap" }}>
-                <a href={`tel:${d.phone || ""}`}
-                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.phone ? 1 : 0.4, pointerEvents: d.phone ? "auto" : "none" }}>
-                  <Phone size={16} />
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>Call</span>
-                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace", overflowWrap: "anywhere" }}>{d.phone || "—"}</span>
-                </a>
-                <a href={`https://wa.me/91${(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10)}`}
-                  target="_blank" rel="noreferrer"
-                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: (d.whatsapp || d.phone) ? 1 : 0.4, pointerEvents: (d.whatsapp || d.phone) ? "auto" : "none" }}>
-                  <MessageCircle size={16} />
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>WhatsApp</span>
-                  <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace", overflowWrap: "anywhere" }}>{(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10) || "—"}</span>
-                </a>
-                <a href={`mailto:${d.email || ""}`}
-                  style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "10px 6px", borderRadius: 12, background: "#fff", border: "1.5px solid #e5e7eb", color: "#0d9488", textDecoration: "none", opacity: d.email ? 1 : 0.4, pointerEvents: d.email ? "auto" : "none" }}>
-                  <Mail size={16} />
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>Email</span>
-                  <span style={{ fontSize: 9, color: "#6b7280", overflowWrap: "anywhere", wordBreak: "break-word", whiteSpace: "normal", maxWidth: "100%", padding: "0 4px", textAlign: "center" }}>{d.email || "—"}</span>
-                </a>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                {[
+                  { href: `tel:${d.phone || ""}`, icon: <Phone size={18} />, label: "Call", sub: d.phone, active: !!d.phone },
+                  { href: `https://wa.me/91${(d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10)}`, icon: <MessageCircle size={18} />, label: "WhatsApp", sub: (d.whatsapp || d.phone || "").replace(/\D/g, "").slice(-10), active: !!(d.whatsapp || d.phone), external: true },
+                  { href: `mailto:${d.email || ""}`, icon: <Mail size={18} />, label: "Email", sub: d.email, active: !!d.email },
+                ].map(({ href, icon, label, sub, active, external }) => (
+                  <a key={label} href={href} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, padding: "12px 8px", borderRadius: 12, background: "#fff", border: `1.5px solid ${active ? "#a7f3d0" : "#e5e7eb"}`, color: active ? "#0d9488" : "#9ca3af", textDecoration: "none", opacity: active ? 1 : 0.55, pointerEvents: active ? "auto" : "none" }}>
+                    {icon}
+                    <span style={{ fontSize: 11.5, fontWeight: 700 }}>{label}</span>
+                    <span style={{ fontSize: 9.5, color: "#6b7280", fontFamily: "monospace", textAlign: "center", wordBreak: "break-all", lineHeight: 1.3 }}>{sub || "—"}</span>
+                  </a>
+                ))}
               </div>
 
               {/* WhatsApp reminder templates */}
               {(d.whatsapp || d.phone) && (
-                <div style={{ marginBottom: 22 }}>
+                <div style={{ marginBottom: 18, background: "#f0fdf4", borderRadius: 12, border: "1px solid #bbf7d0", padding: "12px 14px" }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: "#166534", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 9 }}>Send via WhatsApp</p>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {[
                       { tpl: "appointment_reminder", label: "Appt Reminder" },
@@ -434,115 +443,139 @@ function DevoteeProfilePanel({
                       { tpl: "welcome",              label: "Welcome" },
                     ].map(({ tpl, label }) => (
                       <button key={tpl} onClick={() => openWaTemplate(tpl)}
-                        style={{ padding: "5px 12px", borderRadius: 20, border: "1px solid #25D366", background: "rgba(37,211,102,0.07)", color: "#166534", fontSize: 11.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
-                        <span style={{ fontSize: 13 }}>📱</span> {label}
+                        style={{ padding: "5px 13px", borderRadius: 20, border: "1.5px solid #25D366", background: "#fff", color: "#166534", fontSize: 11.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ fontSize: 12 }}>📱</span> {label}
                       </button>
                     ))}
                   </div>
                   {waOpen && (
-                    <div style={{ marginTop: 10, padding: "12px 14px", background: "#f0fdf4", borderRadius: 10, border: "1px solid #bbf7d0" }}>
-                      <p style={{ fontSize: 10.5, fontWeight: 700, color: "#166534", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em" }}>WhatsApp Message · {waTemplate.replace(/_/g, " ")}</p>
-                      <p style={{ fontSize: 12.5, color: "#14532d", lineHeight: 1.55, marginBottom: 10, whiteSpace: "pre-wrap" }}>{waMsg}</p>
+                    <div style={{ marginTop: 12, padding: "12px 14px", background: "#dcfce7", borderRadius: 10, border: "1px solid #86efac" }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: "#166534", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em" }}>{waTemplate.replace(/_/g, " ")}</p>
+                      <p style={{ fontSize: 12.5, color: "#14532d", lineHeight: 1.6, marginBottom: 10, whiteSpace: "pre-wrap" }}>{waMsg}</p>
                       <div style={{ display: "flex", gap: 8 }}>
                         <a href={waUrl} target="_blank" rel="noreferrer"
-                          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", borderRadius: 10, background: "#25D366", color: "#fff", fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}>
+                          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px", borderRadius: 9, background: "#25D366", color: "#fff", fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}>
                           Open in WhatsApp
                         </a>
-                        <button onClick={() => setWaOpen(false)} style={{ padding: "9px 14px", borderRadius: 10, border: "1px solid #bbf7d0", background: "#fff", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>×</button>
+                        <button onClick={() => setWaOpen(false)} style={{ padding: "9px 14px", borderRadius: 9, border: "1px solid #86efac", background: "#fff", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>×</button>
                       </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Details grid */}
+              {/* Profile section */}
               <Section title="Profile">
-                <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: editMode ? "4px 16px 8px" : "4px 16px" }}>
-                  <Fld label="Phone" val={d.phone} field="phone" />
-                  <Fld label="WhatsApp" val={d.whatsapp} field="whatsapp" />
-                  <Fld label="Email" val={d.email} field="email" />
-                  <Fld label="City" val={d.city} field="city" />
-                  <Fld label="District" val={d.district} field="district" />
-                  <Fld label="State" val={d.state} field="state" />
-                  <Fld label="Pincode" val={d.pincode} field="pincode" />
+                <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
                   {editMode ? (
-                    <div style={{ padding: "9px 0", borderBottom: "1px solid #e5e7eb", display: "flex", flexDirection: "column", gap: 3 }}>
-                      <label style={{ fontSize: 10, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>Profession</label>
-                      <input value={(localD as any)?.profession ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, profession: e.target.value }))}
-                        style={{ padding: "6px 10px", borderRadius: 7, border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: 12.5, color: "#1f2937", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                    <div style={{ padding: "14px 16px" }}>
+                      {([
+                        [["phone","Phone"],["whatsapp","WhatsApp"]],
+                        [["city","City"],["district","District"]],
+                        [["state","State"],["pincode","Pincode"]],
+                        [["email","Email"],null],
+                        [["profession","Profession"],null],
+                        [["language","Language"],["relationship","Relationship"]],
+                        [["sevaInterest","Seva Interest"],null],
+                        [["associatedTemple","Temple"],null],
+                        [["tags","Tags"],["familyLinks","Family Links"]],
+                      ] as ([string,string] | null)[][]).map((pair, pi) => (
+                        <div key={pi} style={{ display: "grid", gridTemplateColumns: pair[1] ? "1fr 1fr" : "1fr", gap: 10, marginBottom: 10 }}>
+                          {pair.filter(Boolean).map(([field, label]: any) => (
+                            <div key={field} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                              <label style={{ fontSize: 10, color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</label>
+                              <input value={(localD as any)?.[field] ?? ""} onChange={e => setLocalD((prev: any) => ({ ...prev, [field]: e.target.value }))}
+                                style={{ padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#f9fafb", fontSize: 12.5, color: "#1f2937", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: "1px solid #e5e7eb" }}>
-                      <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0 }}>Profession</span>
-                      <span style={{ fontSize: 12.5, color: d.profession ? "#1f2937" : "#9ca3af", fontWeight: 500, textAlign: "right" }}>{d.profession || "—"}</span>
-                    </div>
-                  )}
-                  <Fld label="Language" val={d.language} field="language" />
-                  <Fld label="Relationship" val={d.relationship} field="relationship" />
-                  <Fld label="Seva Interest" val={d.sevaInterest} field="sevaInterest" />
-                  <Fld label="Temple" val={d.associatedTemple} field="associatedTemple" />
-                  <Fld label="Tags" val={d.tags} field="tags" />
-                  <Fld label="Family Links" val={d.familyLinks} field="familyLinks" />
-                  {!editMode && d.firstContactAt && (
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: "1px solid #e5e7eb" }}>
-                      <span style={{ fontSize: 12, color: "#6b7280" }}>First contact</span>
-                      <span style={{ fontSize: 12.5, color: "#1f2937", fontWeight: 500 }}>{fmt(d.firstContactAt)}</span>
-                    </div>
+                    <>
+                      {[
+                        { label: "Phone",        val: d.phone },
+                        { label: "Email",        val: d.email },
+                        { label: "City",         val: d.city },
+                        { label: "State",        val: d.state },
+                        { label: "Profession",   val: d.profession },
+                        { label: "Language",     val: d.language },
+                        { label: "Relationship", val: d.relationship },
+                        { label: "Seva Interest",val: d.sevaInterest },
+                        { label: "Temple",       val: d.associatedTemple },
+                        { label: "Tags",         val: d.tags },
+                        { label: "First contact",val: d.firstContactAt ? fmt(d.firstContactAt) : undefined },
+                      ].filter(r => r.val).map((row, i) => (
+                        <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, padding: "10px 16px", borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                          <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0, minWidth: 90 }}>{row.label}</span>
+                          <span style={{ fontSize: 12.5, color: "#1f2937", fontWeight: 500, textAlign: "right", wordBreak: "break-word" }}>{row.val}</span>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
                 {editMode ? (
-                  <div style={{ marginTop: 8 }}>
-                    <label style={{ fontSize: 10, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4, display: "block" }}>Notes</label>
+                  <div style={{ marginTop: 10 }}>
+                    <label style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5, display: "block" }}>Notes</label>
                     <textarea value={localD?.notes ?? ""} onChange={e => setLocalD((p: any) => ({ ...p, notes: e.target.value }))} rows={3}
-                      style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: 12.5, color: "#1f2937", outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 9, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 12.5, color: "#1f2937", outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
                   </div>
                 ) : d.notes ? (
-                  <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: 10, lineHeight: 1.6, fontStyle: "italic" }}>{d.notes}</p>
+                  <div style={{ marginTop: 10, padding: "10px 14px", background: "#fffbeb", borderRadius: 10, border: "1px solid #fde68a" }}>
+                    <p style={{ fontSize: 12, color: "#78350f", lineHeight: 1.6, fontStyle: "italic" }}>{d.notes}</p>
+                  </div>
                 ) : null}
               </Section>
 
               {loading ? (
-                <div style={{ textAlign: "center", color: "#0d9488", padding: 20, fontSize: 13 }}><RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} /></div>
+                <div style={{ textAlign: "center", color: "#0d9488", padding: 24 }}><RefreshCw size={18} style={{ animation: "spin 1s linear infinite" }} /></div>
               ) : (
                 <>
-                  {/* Trikala cases */}
                   <Section title="Trikala Cases" count={history.cases.length}>
-                    {history.cases.length === 0 ? <p style={{ fontSize: 12.5, color: "#0d9488" }}>No cases yet.</p> :
-                      history.cases.map((c: any) => (
-                        <button key={c.id} onClick={() => onOpenCase(c.case_reference)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "11px 14px", marginBottom: 7, cursor: "pointer", textAlign: "left" }}>
-                          <div><p style={{ fontSize: 12.5, fontWeight: 700, color: "#0d9488", fontFamily: "monospace" }}>{c.case_reference}</p><p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, textTransform: "capitalize" }}>{c.problem_category || c.service_type} · {fmt(c.created_at)}</p></div>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 9px", borderRadius: 20 }}>{c.status}</span>
+                    {history.cases.length === 0
+                      ? <p style={{ fontSize: 12.5, color: "#9ca3af", fontStyle: "italic" }}>No cases yet.</p>
+                      : history.cases.map((c: any) => (
+                        <button key={c.id} onClick={() => onOpenCase(c.case_reference)}
+                          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "11px 14px", marginBottom: 8, cursor: "pointer", textAlign: "left" }}>
+                          <div>
+                            <p style={{ fontSize: 12.5, fontWeight: 700, color: "#0d9488", fontFamily: "monospace", letterSpacing: "0.03em" }}>{c.case_reference}</p>
+                            <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 3, textTransform: "capitalize" }}>{c.problem_category || c.service_type} · {fmt(c.created_at)}</p>
+                          </div>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 10px", borderRadius: 20, whiteSpace: "nowrap", flexShrink: 0, marginLeft: 8 }}>{c.status}</span>
                         </button>
                       ))}
                   </Section>
 
-                  {/* Appointments */}
                   <Section title="Appointments" count={history.appointments.length}>
-                    {history.appointments.length === 0 ? <p style={{ fontSize: 12.5, color: "#0d9488" }}>No appointments.</p> :
-                      history.appointments.map((a: any) => (
-                        <div key={a.id} style={{ display: "flex", justifyContent: "space-between", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "11px 14px", marginBottom: 7 }}>
-                          <div><p style={{ fontSize: 12.5, fontWeight: 600, color: "#1f2937" }}>{a.appointment_type}</p><p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>{a.start_time ? fmt(a.start_time) : "Slot TBD"}</p></div>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 9px", borderRadius: 20, height: "fit-content" }}>{a.status}</span>
+                    {history.appointments.length === 0
+                      ? <p style={{ fontSize: 12.5, color: "#9ca3af", fontStyle: "italic" }}>No appointments.</p>
+                      : history.appointments.map((a: any) => (
+                        <div key={a.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "11px 14px", marginBottom: 8 }}>
+                          <div>
+                            <p style={{ fontSize: 12.5, fontWeight: 600, color: "#1f2937" }}>{a.appointment_type}</p>
+                            <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 3 }}>{a.start_time ? fmt(a.start_time) : "Slot TBD"}</p>
+                          </div>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 10px", borderRadius: 20, whiteSpace: "nowrap", flexShrink: 0, marginLeft: 8 }}>{a.status}</span>
                         </div>
                       ))}
                   </Section>
 
-
-                  {/* Timeline */}
                   <Section title="Timeline" count={history.timeline.length}>
-                    {history.timeline.length === 0 ? <p style={{ fontSize: 12.5, color: "#0d9488" }}>No timeline events.</p> : (
-                      <div style={{ position: "relative", paddingLeft: 22 }}>
-                        <div style={{ position: "absolute", left: 7, top: 4, bottom: 4, width: 2, background: "rgba(13,148,136,0.2)" }} />
-                        {history.timeline.map((ev) => (
-                          <div key={ev.id} style={{ position: "relative", marginBottom: 16 }}>
-                            <div style={{ position: "absolute", left: -22, top: 1, width: 16, height: 16, borderRadius: "50%", background: "#fff", border: "2px solid #0d9488", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8 }}>{ev.icon || "•"}</div>
-                            <p style={{ fontSize: 12.5, fontWeight: 600, color: "#1f2937" }}>{ev.title}</p>
-                            {ev.description && <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, lineHeight: 1.5 }}>{ev.description}</p>}
-                            <p style={{ fontSize: 10.5, color: "#0d9488", marginTop: 3 }}>{fmt(ev.createdAt)} · {fmtTime(ev.createdAt)}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {history.timeline.length === 0
+                      ? <p style={{ fontSize: 12.5, color: "#9ca3af", fontStyle: "italic" }}>No timeline events.</p>
+                      : (
+                        <div style={{ position: "relative", paddingLeft: 24 }}>
+                          <div style={{ position: "absolute", left: 8, top: 6, bottom: 6, width: 2, background: "#d1fae5", borderRadius: 2 }} />
+                          {history.timeline.map((ev) => (
+                            <div key={ev.id} style={{ position: "relative", marginBottom: 18 }}>
+                              <div style={{ position: "absolute", left: -24, top: 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", border: "2px solid #0d9488", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8 }}>{ev.icon || "•"}</div>
+                              <p style={{ fontSize: 12.5, fontWeight: 600, color: "#111827" }}>{ev.title}</p>
+                              {ev.description && <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, lineHeight: 1.55 }}>{ev.description}</p>}
+                              <p style={{ fontSize: 10.5, color: "#0d9488", marginTop: 4 }}>{fmt(ev.createdAt)} · {fmtTime(ev.createdAt)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                   </Section>
                 </>
               )}
@@ -5110,7 +5143,7 @@ export default function AdminPage() {
                   <div className="adm-hero-left">
                     <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
                     <div className="adm-hero-icon-wrap">
-                      <span style={{ fontFamily: "serif", fontSize: 22, color: "#1f2937" }}>ॐ</span>
+                      <span style={{ fontFamily: "serif", fontSize: 18, color: "#fff" }}>ॐ</span>
                     </div>
                     <div className="adm-hero-text">
                       <p className="adm-hero-eyebrow">Guruji Seva Management System</p>
@@ -5129,6 +5162,31 @@ export default function AdminPage() {
                         <span className="adm-hero-btn-txt">Refresh</span>
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Welcome banner */}
+              <div style={{ margin: "20px clamp(12px,4vw,28px) 0", borderRadius: 16, background: "linear-gradient(120deg,#f0fdf9 0%,#fefce8 60%,#fff7ed 100%)", border: "1px solid #d1fae5", padding: "16px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", boxShadow: "0 2px 12px rgba(13,148,136,0.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg,#0d9488,#14b8a6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, boxShadow: "0 4px 10px rgba(13,148,136,0.25)" }}>🙏</div>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 800, color: "#111827", letterSpacing: "-0.01em" }}>Welcome back, Guruji Seva! <span style={{ fontWeight: 400 }}>🌸</span></p>
+                    <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2 }}>Platform overview &nbsp;·&nbsp; {today}</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {v.devotees > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #d1fae5", borderRadius: 20, padding: "6px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block", flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#065f46" }}>{v.devotees} devotees registered</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #fde68a", borderRadius: 20, padding: "6px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                    <span style={{ fontSize: 13 }}>📅</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#92400e" }}>
+                      {v.appts > 0 ? `${v.appts} appointment${v.appts > 1 ? "s" : ""} today` : "No appointments today"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -5153,44 +5211,61 @@ export default function AdminPage() {
 
                 {/* Quick links */}
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14, marginTop: 8 }}>Quick Actions</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 10 }}>
-                  {[
-                    { label: "Open Trikala Cases", desc: "Review consultation requests", tab: "trikala" as const, icon: "⭕" },
-                    { label: "Appointments Bookings",  desc: "View appointment requests",   tab: "bookings" as const, icon: "📋" },
-                    { label: "Contact Messages",   desc: "Review submitted messages",   tab: "contacts" as const, icon: "📬" },
-                    { label: "Devotee Contacts",   desc: "Search devotee records",      tab: "devotees" as const, icon: "🙏" },
-                    // { label: "Reports & PDFs",     desc: "Generate and export reports", tab: "reports"  as const, icon: "📄" },
-                  ].map(q => (
-                    <button key={q.label} onClick={() => tabChange(q.tab)}
-                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid #EDE8DD", background: "#fff", cursor: "pointer", textAlign: "left", transition: "all 0.18s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", boxSizing: "border-box", minWidth: 0 }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = "#0d9488"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(13,148,136,0.1)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = "#EDE8DD"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}>
-                      <span style={{ fontSize: 22, flexShrink: 0 }}>{q.icon}</span>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", marginBottom: 2, wordBreak: "break-word" }}>{q.label}</p>
-                        <p style={{ fontSize: 11, color: "#6b7280", wordBreak: "break-word" }}>{q.desc}</p>
-                      </div>
-                    </button>
-                  ))}
+                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", padding: "18px 20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: 14 }}>
+                    {[
+                      { label: "Open Trikala Cases",    desc: "Review consultation requests", tab: "trikala"  as const, icon: "⭕", bg: "#fff7ed", fg: "#c2410c" },
+                      { label: "Appointments Bookings", desc: "View appointment requests",    tab: "bookings" as const, icon: "📋", bg: "#eff6ff", fg: "#1d4ed8" },
+                      { label: "Contact Messages",      desc: "Review submitted messages",    tab: "contacts" as const, icon: "📬", bg: "#f0fdf4", fg: "#15803d" },
+                      { label: "Devotee Contacts",      desc: "Search devotee records",       tab: "devotees" as const, icon: "🙏", bg: "#fdf4ff", fg: "#7e22ce" },
+                    ].map(q => (
+                      <button key={q.label} onClick={() => tabChange(q.tab)}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px 14px", borderRadius: 12, border: "none", background: q.bg, cursor: "pointer", textAlign: "center", transition: "transform 0.15s, opacity 0.15s", boxSizing: "border-box" }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = "0.78"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                        <span style={{ fontSize: 26 }}>{q.icon}</span>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: q.fg, lineHeight: 1.3 }}>{q.label}</p>
+                        <p style={{ fontSize: 10.5, color: q.fg, opacity: 0.65, lineHeight: 1.3 }}>{q.desc}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Upcoming (placeholder) */}
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488", marginBottom: 14, marginTop: 28 }}>Recent Activity</p>
-                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #EDE8DD", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                  {bookings.slice(0, 5).map((b, i) => (
-                    <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", borderBottom: i < 4 ? "1px solid #e5e7eb" : "none" }}>
-                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,#0d9488,#14b8a6)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                        {(b.fullName || "?")[0].toUpperCase()}
+                {/* Recent Activity */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 28, marginBottom: 14 }}>
+                  <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0d9488" }}>Recent Activity</p>
+                  {bookings.length > 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>{bookings.length} total</span>}
+                </div>
+                <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                  {/* Header strip */}
+                  <div style={{ padding: "10px 20px", background: "linear-gradient(90deg,#f0fdf9,#f8fafc)", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>Latest appointment requests</span>
+                  </div>
+                  {bookings.slice(0, 5).map((b, i) => {
+                    const avatarColors = ["#0d9488","#7c3aed","#b45309","#0369a1","#be185d"];
+                    const avatarBg = avatarColors[i % avatarColors.length];
+                    const isToday = b.createdAt && new Date(b.createdAt).toDateString() === new Date().toDateString();
+                    return (
+                      <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: i < 4 ? "1px solid #f3f4f6" : "none", transition: "background 0.15s" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                        <div style={{ width: 38, height: 38, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 8px ${avatarBg}55` }}>
+                          {(b.fullName || "?")[0].toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.fullName}</p>
+                            {isToday && <span style={{ fontSize: 9.5, fontWeight: 700, background: "#dcfce7", color: "#15803d", padding: "1px 7px", borderRadius: 8, whiteSpace: "nowrap" }}>Today</span>}
+                          </div>
+                          <p style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>📋 Appointment Request &nbsp;·&nbsp; {b.nearestAshram || b.location || "—"}</p>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", whiteSpace: "nowrap", flexShrink: 0 }}>
+                          {b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
+                        </span>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", overflowWrap: "anywhere" }}>{b.fullName}</p>
-                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 1 }}>📋 Appointment Requests · {b.nearestAshram || b.location || "—"}</p>
-                      </div>
-                      <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap", flexShrink: 0 }}>
-                        {b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {bookings.length === 0 && (
                     <div style={{ padding: "48px 24px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>
                       No recent activity. All is peaceful. 🙏
@@ -5970,11 +6045,11 @@ export default function AdminPage() {
                     <>
                       {/* Desktop full table (> 1100px) */}
                       <div className="bkg-desktop-table" style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Inter','Segoe UI',sans-serif" }}>
                           <thead>
                             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
                               {["DEVOTEE","REF","PHONE","PROFESSION","RELATIONSHIP","LOCATION"].map(h => (
-                                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
+                                <th key={h} style={{ padding: "10px 16px", textAlign: h === "DEVOTEE" ? "left" : "center", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
                               ))}
                               <th style={{ padding: "10px 16px", background: "#f9fafb" }}></th>
                             </tr>
@@ -6004,16 +6079,16 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 12, color: "#0d9488", whiteSpace: "nowrap" }}>{d.devoteeRef || "—"}</td>
-                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap" }}>{d.phone || "—"}</td>
-                                  <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{d.profession || "—"}</td>
-                                  <td style={{ padding: "13px 16px" }}>
+                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 12, color: "#0d9488", whiteSpace: "nowrap", textAlign: "center" }}>{d.devoteeRef || "—"}</td>
+                                  <td style={{ padding: "13px 16px", fontFamily: "monospace", fontSize: 13, color: "#3b2010", whiteSpace: "nowrap", textAlign: "center" }}>{d.phone || "—"}</td>
+                                  <td style={{ padding: "13px 16px", fontSize: 12.5, color: d.profession ? "#6b7280" : "#d1d5db", textAlign: "center" }}>{d.profession || "—"}</td>
+                                  <td style={{ padding: "13px 16px", textAlign: "center" }}>
                                     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: relColor.bg, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: relColor.fg, textTransform: "capitalize" }}>
                                       {d.relationship || "new"}
                                     </span>
                                   </td>
-                                  <td style={{ padding: "13px 16px", fontSize: 12.5, color: "#6b7280" }}>{[d.city, d.state].filter(Boolean).join(", ") || "—"}</td>
-                                  <td style={{ padding: "13px 16px", textAlign: "right" }}>
+                                  <td style={{ padding: "13px 16px", fontSize: 12.5, textAlign: "center", color: [d.city, d.state].filter(Boolean).length ? "#6b7280" : "#d1d5db" }}>{[d.city, d.state].filter(Boolean).join(", ") || "—"}</td>
+                                  <td style={{ padding: "13px 16px", textAlign: "center" }}>
                                     <Eye size={15} color="#0d9488" />
                                   </td>
                                 </tr>
@@ -6613,10 +6688,13 @@ export default function AdminPage() {
 
         /* ── Hero card (bookings / contacts) ───────── */
         .adm-hero-card {
-          background: #ffffff;
+          background: linear-gradient(to right, #f0fdf9 0%, #ffffff 40%);
           border-bottom: 1px solid #e5e7eb;
-          padding: 22px 28px 20px;
+          padding: 4px 28px 4px;
           flex-shrink: 0;
+          position: sticky;
+          top: 0;
+          z-index: 20;
         }
         .adm-hero-row {
           display: flex;
@@ -6643,27 +6721,29 @@ export default function AdminPage() {
           align-items: center;
         }
         .adm-hero-icon-wrap {
-          width: 50px; height: 50px;
-          border-radius: 50%;
-          background: rgba(13,148,136,0.08);
-          border: 1.5px solid rgba(13,148,136,0.2);
+          width: 36px; height: 36px;
+          border-radius: 10px;
+          background: linear-gradient(135deg,#0d9488,#14b8a6);
+          box-shadow: 0 3px 10px rgba(13,148,136,0.28);
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
         .adm-hero-text { min-width: 0; }
         .adm-hero-eyebrow {
-          font-size: 9.5px; font-weight: 700;
+          font-size: 9px; font-weight: 700;
           letter-spacing: 0.2em; text-transform: uppercase;
-          color: #9ca3af; margin-bottom: 3px;
+          color: #0d9488; margin-bottom: 2px;
         }
         .adm-hero-h1 {
-          font-size: 20px; font-weight: 900;
+          font-size: 15px; font-weight: 800;
           color: #111827; line-height: 1.2; margin: 0;
+          letter-spacing: -0.02em;
+          font-family: 'Georgia', 'Times New Roman', serif;
         }
         .adm-hero-desc {
-          font-size: 11.5px;
+          font-size: 11px;
           color: #6b7280;
-          margin-top: 3px;
+          margin-top: 2px;
         }
         /* Right side */
         .adm-hero-right {
@@ -6979,27 +7059,21 @@ export default function AdminPage() {
           .adm-header-title { font-size: 15px; }
           .adm-header-sub   { display: none; }
 
-          /* Hero card — mobile stack */
-          .adm-hero-card  { padding: 14px 16px 16px; }
+          /* Hero card — mobile */
+          .adm-hero-card  { padding: 6px 14px 6px; }
           .adm-hero-ham   { display: flex !important; }
-          .adm-hero-row   { flex-direction: column; align-items: flex-start; gap: 12px; }
-          .adm-hero-icon-wrap { width: 40px; height: 40px; }
-          .adm-hero-h1    { font-size: 16px; }
+          .adm-hero-row   { flex-direction: row; align-items: center; gap: 10px; }
+          .adm-hero-icon-wrap { width: 34px; height: 34px; }
+          .adm-hero-h1    { font-size: 15px; }
           .adm-hero-desc  { display: none; }
-          /* Bottom action row: count left, buttons right */
-          .adm-hero-right {
-            width: 100%;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0;
-          }
+          .adm-hero-right { flex-shrink: 0; }
           .adm-hero-sep        { display: none; }
           .adm-hero-count-num  { font-size: 22px; }
           .adm-hero-count-lbl  { white-space: nowrap; }
-          .adm-hero-actions    { gap: 7px; flex-wrap: wrap; }
-          .adm-hero-btn-out    { padding: 7px 11px; font-size: 11px; }
-          .adm-hero-btn-gold   { padding: 7px 11px; font-size: 11px; }
-          .adm-hero-live       { padding: 5px 9px; font-size: 10.5px; }
+          .adm-hero-actions    { gap: 6px; }
+          .adm-hero-btn-out    { padding: 5px 9px; font-size: 11px; }
+          .adm-hero-btn-gold   { padding: 5px 9px; font-size: 11px; }
+          .adm-hero-live       { padding: 4px 9px; font-size: 10.5px; }
           .adm-btn-gold   { padding: 7px 10px; }
           .adm-btn-outline{ padding: 7px 10px; }
 
@@ -7036,6 +7110,14 @@ export default function AdminPage() {
           .adm-hero-btn-gold { padding: 7px 10px; min-width: 34px; justify-content: center; }
           .adm-hero-actions  { gap: 5px; }
           .adm-hero-right    { gap: 8px; }
+        }
+
+        /* ── VERY SMALL (≤ 369px) ─────────────────────── */
+        @media (max-width: 369px) {
+          .adm-hero-row   { align-items: flex-start; }
+          .adm-hero-left  { flex-wrap: wrap; gap: 4px; }
+          .adm-hero-text  { order: 3; width: 100%; padding-left: 40px; }
+          .adm-hero-right { align-self: flex-start; margin-top: 3px; flex-shrink: 0; }
         }
       `}</style>
 
