@@ -6444,8 +6444,8 @@ export default function AdminPage() {
                           <tr key={row.id} onClick={() => setDetail(row)}
                             className="trk-table-row"
                             style={{ background: isEven ? "#fff" : `${accent}08`, borderBottom: "1px solid #e5e7eb" }}>
-                            <td style={{ padding: "13px 16px", borderLeft: `4px solid ${accent}` }}>
-                              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: `${accent}18`, fontSize: 12, fontWeight: 800, color: accent }}>{idx}</span>
+                            <td style={{ padding: "13px 16px" }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af" }}>{idx}</span>
                             </td>
                             <td style={{ padding: "13px 16px", minWidth: 0 }}>
                               <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</p>
@@ -6471,6 +6471,15 @@ export default function AdminPage() {
                   </>
 
                 ) : (
+                  <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                    {/* Header strip */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Contact Messages</p>
+                      </div>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{slice.length} record{slice.length !== 1 ? "s" : ""}</span>
+                    </div>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -6486,74 +6495,94 @@ export default function AdminPage() {
                         const cm = row as ContactMessage;
                         const idx = (safePage - 1) * PAGE_SIZE + i + 1;
                         const isEven = i % 2 === 0;
+                        const ROW_ACCENTS = ["#3B82F6","#0d9488","#7C3AED","#F97316","#059669","#0891B2","#DC2626","#D97706"];
+                        const accent = ROW_ACCENTS[i % ROW_ACCENTS.length];
                         return (
                           <tr key={row.id} onClick={() => setDetail(row)}
-                            style={{ background: isEven ? "#fff" : "#f9fafb", borderBottom: "1px solid #e5e7eb", cursor: "pointer", transition: "background 0.1s" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
-                            onMouseLeave={e => (e.currentTarget.style.background = isEven ? "#fff" : "#f9fafb")}>
-                            <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 700, color: "#0d9488" }}>{idx}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.name}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.email}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12.5, color: "#374151", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.subject}</td>
-                            <td style={{ padding: "12px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
+                            className="trk-table-row"
+                            style={{ background: isEven ? "#fff" : `${accent}08`, borderBottom: "1px solid #e5e7eb" }}>
+                            <td style={{ padding: "13px 16px" }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af" }}>{idx}</span>
+                            </td>
+                            <td style={{ padding: "13px 16px", fontSize: 13, fontWeight: 600, color: "#111827", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.name}</td>
+                            <td style={{ padding: "13px 16px", fontSize: 12, color: "#6b7280", fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.email}</td>
+                            <td style={{ padding: "13px 16px" }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `${accent}10`, borderRadius: 20, padding: "3px 10px", fontSize: 11.5, fontWeight: 600, color: accent }}>{cm.subject}</span>
+                            </td>
+                            <td style={{ padding: "13px 16px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{fmt(row.createdAt)}</td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
 
               {/* ── Mobile card list (≤ 600px) ── */}
-              <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
-                {tab === "bookings" ? (
-                  slice.length === 0 ? (
-                    <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
-                  ) : slice.map((row, i) => {
-                    const bk = row as AppointmentBooking;
-                    const idx = (safePage - 1) * PAGE_SIZE + i + 1;
-                    return (
-                      <div key={row.id} onClick={() => setDetail(row)}
-                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < slice.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
-                        <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
-                          <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{idx}</p>
+              {(() => {
+                const MOB_ACCENTS = ["#3B82F6","#0d9488","#7C3AED","#F97316","#059669","#0891B2","#DC2626","#D97706"];
+                return (
+                <div className="bkg-mobile-list" style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                  {/* Card header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{tab === "bookings" ? "Appointment Requests" : "Contact Messages"}</p>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 9px" }}>{slice.length} records</span>
+                  </div>
+                  {tab === "bookings" ? (
+                    slice.length === 0 ? (
+                      <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
+                    ) : slice.map((row, i) => {
+                      const bk = row as AppointmentBooking;
+                      const idx = (safePage - 1) * PAGE_SIZE + i + 1;
+                      const accent = MOB_ACCENTS[i % MOB_ACCENTS.length];
+                      return (
+                        <div key={row.id} onClick={() => setDetail(row)}
+                          className="trk-mob-row"
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < slice.length - 1 ? "1px solid #f3f4f6" : "none", background: i % 2 === 0 ? "#fff" : `${accent}06` }}>
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: accent, flexShrink: 0 }}>
+                            {(bk.fullName || "?")[0].toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", wordBreak: "break-word" }}>{bk.fullName}</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{bk.mobile}</span>
+                              {bk.nearestAshram && <span style={{ fontSize: 10.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", borderRadius: 20, padding: "1px 7px" }}>🏛 {bk.nearestAshram.split(",")[0]}</span>}
+                            </div>
+                          </div>
+                          <ChevronRight size={15} color={accent} style={{ flexShrink: 0, opacity: 0.5 }} />
                         </div>
-                        <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.fullName}</p>
-                          <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, wordBreak: "break-word", overflowWrap: "anywhere" }}>{bk.mobile}{bk.nearestAshram ? ` · ${bk.nearestAshram.split(",")[0]}` : ""}</p>
+                      );
+                    })
+                  ) : (
+                    slice.length === 0 ? (
+                      <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
+                    ) : slice.map((row, i) => {
+                      const cm = row as ContactMessage;
+                      const idx = (safePage - 1) * PAGE_SIZE + i + 1;
+                      const accent = MOB_ACCENTS[i % MOB_ACCENTS.length];
+                      return (
+                        <div key={row.id} onClick={() => setDetail(row)}
+                          className="trk-mob-row"
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < slice.length - 1 ? "1px solid #f3f4f6" : "none", background: i % 2 === 0 ? "#fff" : `${accent}06` }}>
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${accent}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: accent, flexShrink: 0 }}>
+                            {(cm.name || "?")[0].toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2937", wordBreak: "break-word" }}>{cm.name}</p>
+                            <p style={{ fontSize: 11, color: "#6b7280", fontFamily: "monospace", marginTop: 3 }}>{cm.email}</p>
+                          </div>
+                          <ChevronRight size={15} color={accent} style={{ flexShrink: 0, opacity: 0.5 }} />
                         </div>
-                        <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
-                      </div>
-                    );
-                  })
-                ) : (
-                  slice.length === 0 ? (
-                    <div style={{ padding: "52px 20px", textAlign: "center", color: "#0d9488", fontSize: 14 }}>No records found</div>
-                  ) : slice.map((row, i) => {
-                    const cm = row as ContactMessage;
-                    const idx = (safePage - 1) * PAGE_SIZE + i + 1;
-                    return (
-                      <div key={row.id} onClick={() => setDetail(row)}
-                        style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px clamp(12px,4vw,20px)", borderBottom: i < slice.length - 1 ? "1px solid #e5e7eb" : "none", cursor: "pointer", background: "#fff", transition: "background 0.1s" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
-                        <div style={{ width: 48, textAlign: "center", flexShrink: 0 }}>
-                          <p style={{ fontSize: 17, fontWeight: 800, color: "#0d9488", lineHeight: 1 }}>{idx}</p>
-                        </div>
-                        <div style={{ width: 1, height: 34, background: "#e5e7eb", flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.name}</p>
-                          <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, fontFamily: "monospace", wordBreak: "break-word", overflowWrap: "anywhere" }}>{cm.email}</p>
-                        </div>
-                        <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0 }} />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                      );
+                    })
+                  )}
+                </div>
+                );
+              })()}
               </>
             )}
           </div>
