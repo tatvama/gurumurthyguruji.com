@@ -125,6 +125,7 @@ const SECTION_GROUPS = [
     { id: "devotees", label: "Devotee Contacts" },
   ]},
   { group: "CONFIGURATION", items: [
+    { id: "admins",   label: "Admin Users" },
     { id: "settings", label: "Settings" },
   ]},
 ];
@@ -2281,7 +2282,7 @@ function AdminPanel({
   const isEdit = !!admin;
   const [name,     setName]     = useState(admin?.name   || "");
   const [mobile,   setMobile]   = useState(admin?.mobile || "");
-  const [role,     setRole]     = useState<string>(admin?.role === "superadmin" ? "superadmin" : "admin");
+  const [role,     setRole]     = useState<string>(admin?.role === "superadmin" ? "superadmin" : admin?.role === "guruji" ? "guruji" : "admin");
   const [status,   setStatus]   = useState(admin?.status || "active");
   const [sections, setSections] = useState<string[]>(
     admin?.allowedSections ?? [...ALL_SECTION_IDS]
@@ -2306,7 +2307,7 @@ function AdminPanel({
     try {
       let saved: AdminUser;
       if (isEdit && admin) {
-        const allowedSections = role === "superadmin" ? null : sections;
+        const allowedSections = (role === "superadmin" || role === "guruji") ? null : sections;
         saved = await updateAdminUser(admin.id, { name: name.trim(), role, status, allowedSections });
       } else {
         saved = await createAdminUser({ name: name.trim(), mobile, role });
@@ -2320,8 +2321,9 @@ function AdminPanel({
   }
 
   const roleOpts = [
-    { v: "superadmin", label: "Super Admin", desc: "Full access to all sections", icon: "🛡️" },
-    { v: "admin",      label: "Staff",        desc: "Section-based access control", icon: "👤" },
+    { v: "superadmin", label: "Super Admin", desc: "Full access to all sections",    icon: "🛡️" },
+    { v: "guruji",     label: "Guruji",       desc: "Full access to all sections",    icon: "🕉️" },
+    { v: "admin",      label: "Staff",        desc: "Section-based access control",  icon: "👤" },
   ];
 
   const inp: React.CSSProperties = {
@@ -2401,7 +2403,7 @@ function AdminPanel({
           <div style={card}>
             <div>
               <label style={sectionLabel}>Role</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 {roleOpts.map(({ v, label, desc, icon }) => {
                   const sel = role === v;
                   return (
@@ -2485,6 +2487,16 @@ function AdminPanel({
               <span style={{ fontSize: 18 }}>🛡️</span>
               <p style={{ fontSize: 12, color: TEAL, fontWeight: 600, lineHeight: 1.5 }}>
                 Super admins have full access to all sections automatically — no section restrictions apply.
+              </p>
+            </div>
+          )}
+
+          {/* Guruji access note */}
+          {role === "guruji" && (
+            <div style={{ background: "#fffbeb", borderRadius: 10, border: "1px solid rgba(180,83,9,0.22)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>🕉️</span>
+              <p style={{ fontSize: 12, color: "#b45309", fontWeight: 600, lineHeight: 1.5 }}>
+                Guruji has full access to all sections automatically, including the private Guruji Darshan console.
               </p>
             </div>
           )}
@@ -4798,8 +4810,12 @@ export default function AdminPage() {
     setError("");
     try {
       const storedRole = typeof window !== "undefined" ? sessionStorage.getItem("admin_role") : null;
-      /* Only superadmin can fetch the admin-users list; other roles get an empty array */
-      const adminFetch = storedRole === "superadmin" ? getAdminUsers() : Promise.resolve([] as AdminUser[]);
+      const storedSecs = typeof window !== "undefined" ? sessionStorage.getItem("admin_sections") : null;
+      let parsedSecs: string[] | null = null;
+      try { parsedSecs = storedSecs && storedSecs !== "null" ? JSON.parse(storedSecs) : null; } catch { /* ignore */ }
+      const canFetchAdmins = storedRole === "superadmin" || storedRole === "guruji" ||
+        (storedRole === "admin" && (parsedSecs === null || parsedSecs.includes("admins")));
+      const adminFetch = canFetchAdmins ? getAdminUsers() : Promise.resolve([] as AdminUser[]);
       const [b, c, a] = await Promise.all([getAppointmentBookings(), getContacts(), adminFetch]);
       setBookings(b);
       setContacts(c);
@@ -4989,9 +5005,9 @@ export default function AdminPage() {
     return secs.includes(section);
   };
 
-  /* redirect non-superadmin away from the Admins tab (cannot call router in render) */
+  /* redirect away from Admins tab if user doesn't have access */
   useEffect(() => {
-    if (tab === "admins" && !isSuperAdmin) setTab("today");
+    if (tab === "admins" && !canAccess("admins")) setTab("today");
   }, [tab, isSuperAdmin]);
 
   if (!authed) return (
@@ -5152,7 +5168,7 @@ export default function AdminPage() {
             const gurujiActive = pathname?.includes("/admin/guruji") ?? false;
             return (
               <button
-                onPointerDown={() => router.push(`/${locale}/admin/guruji`)}
+                onClick={() => router.push(`/${locale}/admin/guruji`)}
                 className={`adm-nav-btn${gurujiActive ? " adm-nav-btn-active" : ""}`}
                 style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginTop: 4, marginBottom: 3, borderLeft: gurujiActive ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
                 <span style={{ fontSize: 14, flexShrink: 0 }}>🕉️</span>
@@ -5188,9 +5204,9 @@ export default function AdminPage() {
                 Configuration
               </p>
               {([
-                ...(isSuperAdmin ? [{ key: "admins" as const, label: "Admin Users", icon: "👥", section: "admins" }] : []),
+                { key: "admins" as const, label: "Admin Users", icon: "👥", section: "admins" },
                 { key: "settings" as const, label: "Settings", icon: "⚙️", section: "settings" },
-              ]).filter(({ section }) => section === "admins" ? isSuperAdmin : canAccess(section)).map(({ key, label, icon }) => (
+              ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
                 <button key={key} onClick={() => tabChange(key)}
                   className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
                   style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
@@ -5813,8 +5829,8 @@ export default function AdminPage() {
           />;
         })()}
 
-        {/* ── Admins tab: superadmin only — redirect handled in useEffect above ── */}
-        {tab === "admins" && isSuperAdmin && (
+        {/* ── Admins tab: anyone with admins section access ── */}
+        {tab === "admins" && canAccess("admins") && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
               {/* Left: hamburger + icon + title */}
@@ -5848,10 +5864,12 @@ export default function AdminPage() {
                     <RefreshCw size={13} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} />
                     <span className="adm-hero-btn-txt">Refresh</span>
                   </button>
-                  <button className="adm-hero-btn-gold" onClick={() => setAdminPanel({ open: true, user: null })}>
-                    <UserPlus size={14} />
-                    <span className="adm-hero-btn-txt">New Admin</span>
-                  </button>
+                  {isSuperAdmin && (
+                    <button className="adm-hero-btn-gold" onClick={() => setAdminPanel({ open: true, user: null })}>
+                      <UserPlus size={14} />
+                      <span className="adm-hero-btn-txt">New Admin</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

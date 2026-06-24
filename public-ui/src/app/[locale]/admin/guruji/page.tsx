@@ -137,11 +137,17 @@ export default function GurujiDarshanPage() {
   const [booking, setBooking]     = useState(false);
   const [bookedMsg, setBookedMsg] = useState("");
 
-  /* ── auth guard — only guruji and superadmin may enter this console ─ */
+  /* ── auth guard — guruji, superadmin, or admin with guruji section access ─ */
   useEffect(() => {
     const n    = typeof window !== "undefined" ? sessionStorage.getItem("admin_name") : null;
     const role = typeof window !== "undefined" ? sessionStorage.getItem("admin_role") : null;
-    if (!n || (role !== "guruji" && role !== "superadmin")) {
+    const secsRaw = typeof window !== "undefined" ? sessionStorage.getItem("admin_sections") : null;
+    const secs: string[] | null = (() => {
+      try { return secsRaw && secsRaw !== "null" ? JSON.parse(secsRaw) : null; } catch { return null; }
+    })();
+    const hasAccess = role === "guruji" || role === "superadmin" ||
+      (role === "admin" && (secs === null || secs.includes("guruji")));
+    if (!n || !hasAccess) {
       setAuthed(false);
       router.replace(`/${locale}/admin`);
       return;

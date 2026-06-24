@@ -15,8 +15,8 @@ const router = Router();
 router.post("/send-otp",   sendOtp);
 router.post("/verify-otp", verifyOtp);
 
-/* Super Admin only — admin user management */
-router.get("/",        requireRole("superadmin"), getAllAdminUsers);
+/* GET — any logged-in admin role can read the list */
+router.get("/",        requireRole("superadmin", "guruji", "admin"), getAllAdminUsers);
 router.post("/",       requireRole("superadmin"), createAdminUser);
 router.patch("/:id",   requireRole("superadmin"), updateAdminUser);
 router.delete("/:id",  requireRole("superadmin"), deleteAdminUser);
