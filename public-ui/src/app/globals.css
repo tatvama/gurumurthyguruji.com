@@ -1985,9 +1985,21 @@ table.admin-table tbody td:last-child  { padding-right: 20px; }
 }
 
 .admin-input:focus,
-.admin-textarea:focus {
-  border-color: var(--admin-gold);
-  box-shadow: 0 0 0 3px rgba(185,147,69,0.12);
+.admin-textarea:focus,
+.admin-select:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  outline: none;
+}
+
+/* Teal focus effect for all inputs in admin panel (overrides inline border styles) */
+.adm-root input:focus,
+.adm-root textarea:focus,
+.adm-root select:focus {
+  border-color: #0d9488 !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+  outline: none !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .admin-input:read-only  { background: #F5F0E8; color: var(--admin-text-muted); cursor: not-allowed; }
 .admin-input.error,

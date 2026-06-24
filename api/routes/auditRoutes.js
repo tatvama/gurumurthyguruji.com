@@ -4,8 +4,8 @@ import { requireRole } from "../middleware/requireAuth.js";
 
 const router = Router();
 
-/* GET /api/audit-logs — Super Admin only (PRD §11, §19) */
-router.get("/", requireRole("superadmin"), async (req, res) => {
+/* GET /api/audit-logs — any admin role (PRD §11, §19) */
+router.get("/", requireRole("superadmin", "guruji", "admin"), async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 100, 300);
     const { rows } = await pool.query(
