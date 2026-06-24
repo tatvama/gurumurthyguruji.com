@@ -129,7 +129,7 @@ const Appointment = {
   async dashboardCounts() {
     const { rows } = await pool.query(`
       SELECT
-        COUNT(*) FILTER (WHERE start_time::date = CURRENT_DATE)                              AS today_count,
+        COUNT(*) FILTER (WHERE start_time::date = CURRENT_DATE AND status NOT IN ('Cancelled','Closed')) AS today_count,
         COUNT(*) FILTER (WHERE status = 'Requested')                                         AS pending_approval,
         COUNT(*) FILTER (WHERE status = 'No-show' AND start_time::date = CURRENT_DATE - 1)   AS noshows_yesterday
       FROM appointments

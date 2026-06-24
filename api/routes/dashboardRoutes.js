@@ -18,7 +18,7 @@ router.get("/today", ALL_ADMIN, async (_req, res) => {
       missingInfo, reportsToPublish, urgentCases, noshowsYesterday,
       totalDevotees, openCases,
     ] = await Promise.all([
-      q(`SELECT COUNT(*)::int n FROM appointments WHERE start_time::date = CURRENT_DATE`),
+      q(`SELECT COUNT(*)::int n FROM appointments WHERE start_time::date = CURRENT_DATE AND status NOT IN ('Cancelled','Closed')`),
       q(`SELECT COUNT(*)::int n FROM trikala_readings WHERE status IN ('Awaiting Guruji Review','Under Review','AI Draft Generated')`),
       q(`SELECT COUNT(*)::int n FROM case_followups WHERE status IN ('Scheduled','Planned','Reminder Sent') AND date_time::date <= CURRENT_DATE`),
       q(`SELECT COUNT(*)::int n FROM trikala_readings WHERE status = 'Submitted'`),

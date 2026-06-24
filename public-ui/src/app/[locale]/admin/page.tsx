@@ -5414,7 +5414,8 @@ export default function AdminPage() {
         {tab === "appointments" && (() => {
           const STATUS_PILLS = ["all", ...APPOINTMENT_STATUSES];
           const isToday = (iso?: string) => iso ? new Date(iso).toDateString() === new Date().toDateString() : false;
-          const upcoming = appointments.filter(a => a.startTime && new Date(a.startTime) >= new Date());
+          const ACTIVE_STATUSES_HIDE = ["Cancelled", "Closed"];
+          const upcoming = appointments.filter(a => a.startTime && new Date(a.startTime) >= new Date() && !ACTIVE_STATUSES_HIDE.includes(a.status));
           return (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f9fafb", minHeight: 0, overflowY: "auto" }}>
               <style>{`
@@ -5470,7 +5471,7 @@ export default function AdminPage() {
                 {/* mini stat row */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 110px), 1fr))", gap: 12, marginBottom: 20 }}>
                   {[
-                    { label: "Today", value: appointments.filter(a => isToday(a.startTime)).length, color: "gold" },
+                    { label: "Today", value: appointments.filter(a => isToday(a.startTime) && !ACTIVE_STATUSES_HIDE.includes(a.status)).length, color: "gold" },
                     { label: "Pending Approval", value: appointments.filter(a => a.status === "Requested").length, color: "orange" },
                     { label: "Upcoming", value: upcoming.length, color: "blue" },
                     { label: "Completed", value: appointments.filter(a => a.status === "Completed").length, color: "green" },
