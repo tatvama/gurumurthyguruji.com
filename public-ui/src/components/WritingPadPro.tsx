@@ -486,8 +486,8 @@ export default function WritingPadPro({
             style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: pageCount >= MAX_PAGES ? "default" : "pointer", opacity: pageCount >= MAX_PAGES ? 0.5 : 1 }}>
             <Plus size={14} /> Add Page
           </button>
-          <button onClick={deletePage} title="Delete this page"
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={deletePage} title="Delete this page" disabled={pageCount <= 1}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${pageCount <= 1 ? "#e5e7eb" : "#fecaca"}`, background: "#fff", color: pageCount <= 1 ? "#d1d5db" : "#dc2626", fontSize: 12.5, fontWeight: 600, cursor: pageCount <= 1 ? "default" : "pointer", opacity: pageCount <= 1 ? 0.5 : 1 }}>
             <Trash2 size={13} /> Delete Page
           </button>
         </div>
@@ -548,8 +548,8 @@ export default function WritingPadPro({
               style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 18px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 13, fontWeight: 700, cursor: pageCount >= MAX_PAGES ? "default" : "pointer", opacity: pageCount >= MAX_PAGES ? 0.5 : 1 }}>
               <Plus size={15} /> Add Page
             </button>
-            <button onClick={deletePage} title="Delete this page"
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 18px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={deletePage} title="Delete this page" disabled={pageCount <= 1}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 18px", borderRadius: 8, border: `1.5px solid ${pageCount <= 1 ? "#e5e7eb" : "#fecaca"}`, background: "#fff", color: pageCount <= 1 ? "#d1d5db" : "#dc2626", fontSize: 13, fontWeight: 600, cursor: pageCount <= 1 ? "default" : "pointer", opacity: pageCount <= 1 ? 0.5 : 1 }}>
               <Trash2 size={14} /> Delete Page
             </button>
           </div>
