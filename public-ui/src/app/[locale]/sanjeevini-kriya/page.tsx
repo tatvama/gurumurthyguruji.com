@@ -37,7 +37,7 @@ export default function SanjeeviniKriyaEssencePage() {
 
         {/* Dark Hero Section */}
         <section
-          className="relative overflow-hidden pt-32 pb-20 md:pb-28"
+          className="relative flex items-center overflow-hidden pt-24 pb-12 sm:pt-28 sm:pb-14 lg:h-[60vh] lg:max-h-[60vh] lg:pt-20 lg:pb-8"
           style={{ background: "linear-gradient(135deg, #0f0803 0%, #1e1005 40%, #2a1508 70%, #1a0d06 100%)" }}
         >
           <div
@@ -56,32 +56,47 @@ export default function SanjeeviniKriyaEssencePage() {
               {/* Left text */}
               <div className="md:col-span-7 text-center md:text-left">
                 <p
-                  className="text-xs md:text-sm font-semibold uppercase tracking-[0.45em] mb-5"
-                  style={{ color: "rgba(216,183,106,0.55)", fontFamily: "var(--font-heading)" }}
+                  className="font-semibold uppercase mb-5 text-center"
+                  style={{
+                    color: "#ffffff",
+                    fontFamily: "var(--font-cinzel-decorative), 'Cinzel Decorative', serif",
+                    fontSize: "22px",
+                    letterSpacing: "0.3em",
+                  }}
                 >
                   A Divine Connection of
                 </p>
                 <h1
-                  className="font-heading font-bold uppercase leading-[1.0] mb-6"
+                  className="uppercase leading-[1.1] mb-6 lg:whitespace-nowrap"
                   style={{
-                    fontSize: "clamp(2.8rem, 6vw, 5rem)",
-                    color: "#FEFCF7",
+                    fontFamily: "var(--font-aboreto), 'Aboreto', sans-serif",
+                    fontSize: "clamp(1.8rem, 4.5vw, 49px)",
+                    color: "#dd9b33",
                     textShadow: "0 0 40px rgba(185,147,69,0.25)",
                     letterSpacing: "0.04em",
+                    fontWeight: 400,
                   }}
                 >
-                  Sanjeevini<br />
-                  <span style={{ color: "#D8B76A" }}>Kriya Yoga</span>
+                  Sanjeevini Kriya Yoga
                 </h1>
                 <p
-                  className="text-sm md:text-base font-light tracking-widest mb-8 italic"
-                  style={{ color: "rgba(254,252,247,0.55)", fontFamily: "var(--font-heading)" }}
+                  className="mb-8 text-center"
+                  style={{
+                    fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif",
+                    fontSize: "19px",
+                    color: "#ffc951",
+                    fontWeight: 400,
+                  }}
                 >
                   By Pujya Sri Gurumurthy Guruji
                 </p>
                 <p
-                  className="font-heading font-bold text-xl md:text-2xl lg:text-3xl"
-                  style={{ color: "#C9822B" }}
+                  className="font-bold text-center"
+                  style={{
+                    color: "#FF8D09",
+                    fontSize: "27px",
+                    fontFamily: "var(--font-noto-serif), 'Noto Serif', sans-serif",
+                  }}
                 >
                   Experience the Divine Transformation
                 </p>
@@ -110,7 +125,7 @@ export default function SanjeeviniKriyaEssencePage() {
                   <circle cx="100" cy="100" r="8" fill="none" stroke="#D4AF37" strokeWidth="0.8" />
                 </svg>
 
-                <div className="relative w-full max-w-sm mx-auto">
+                <div className="relative w-full max-w-sm lg:max-w-[260px] mx-auto">
                   <div className="relative w-full aspect-[640/897]">
                     <Image
                       src="/images/guruji_imgkriya.webp"

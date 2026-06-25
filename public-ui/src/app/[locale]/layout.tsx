@@ -5,7 +5,10 @@ import {
   Cormorant_Garamond,
   Caveat,
   Noto_Sans_Kannada,
+  Noto_Serif,
   Cinzel,
+  Cinzel_Decorative,
+  Aboreto,
   DM_Serif_Display,
   Nunito,
   Montserrat,
@@ -36,6 +39,27 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+const notoSerif = Noto_Serif({
+  variable: "--font-noto-serif",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  preload: false,
+});
+
+const aboreto = Aboreto({
+  variable: "--font-aboreto",
+  subsets: ["latin"],
+  weight: ["400"],
+  preload: false,
+});
+
+const cinzelDecorative = Cinzel_Decorative({
+  variable: "--font-cinzel-decorative",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+  preload: false,
 });
 
 // Kundli hero fonts — preload: false so they only load on the kundli page
@@ -170,7 +194,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} ${montserrat.variable} ${lora.variable} ${adamina.variable} ${baskervville.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${notoSerif.variable} ${cinzel.variable} ${cinzelDecorative.variable} ${aboreto.variable} ${dmSerifDisplay.variable} ${nunito.variable} ${montserrat.variable} ${lora.variable} ${adamina.variable} ${baskervville.variable} h-full scroll-smooth antialiased`}
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col overflow-x-hidden bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
         <NavProgress />
