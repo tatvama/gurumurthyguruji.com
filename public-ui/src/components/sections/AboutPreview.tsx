@@ -19,7 +19,7 @@ export function AboutPreview() {
             <span className="italic text-gradient-gold-rich">{t("about.title.b")}</span>
           </h2>
           <p className="mt-5 text-base leading-relaxed text-deep-brown/80 sm:text-lg">{t("about.body")}</p>
-          <Link href="/about" className="btn-outline-pill mt-7 inline-flex">
+          <Link href="/journey-of-awakening" className="btn-outline-pill mt-7 inline-flex">
             {t("cta.readJourney")}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>

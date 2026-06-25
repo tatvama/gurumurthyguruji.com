@@ -9,6 +9,9 @@ import {
   DM_Serif_Display,
   Nunito,
   Montserrat,
+  Lora,
+  Adamina,
+  Baskervville,
 } from "next/font/google";
 import "../globals.css";
 import { siteConfig } from "@/lib/data";
@@ -55,6 +58,28 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+  preload: false,
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  preload: false,
+});
+
+const adamina = Adamina({
+  variable: "--font-adamina",
+  subsets: ["latin"],
+  weight: ["400"],
+  preload: false,
+});
+
+const baskervville = Baskervville({
+  variable: "--font-baskervville",
+  subsets: ["latin"],
+  weight: ["400"],
   preload: false,
 });
 
@@ -145,7 +170,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} ${montserrat.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${cormorant.variable} ${caveat.variable} ${notoKannada.variable} ${cinzel.variable} ${dmSerifDisplay.variable} ${nunito.variable} ${montserrat.variable} ${lora.variable} ${adamina.variable} ${baskervville.variable} h-full scroll-smooth antialiased`}
     >
       <body suppressHydrationWarning className="flex min-h-full flex-col overflow-x-hidden bg-pearl font-sans text-deep-brown selection:bg-champagne/30">
         <NavProgress />

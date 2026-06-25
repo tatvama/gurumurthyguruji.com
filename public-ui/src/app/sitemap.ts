@@ -3,9 +3,14 @@ import { siteConfig } from "@/lib/data";
 
 const routes = [
   "",
-  "/about",
+  "/journey-of-awakening",
+  "/the-divine-birth",
+  "/mahavatar-babaji-grace",
+  "/the-turning-point",
   "/trikala-jnana",
   "/sanjeevini-kriya",
+  "/sanjeevini-kriya/the-path",
+  "/sanjeevini-kriya/learn-practice",
   "/guru-parampara",
   "/ashrams",
   "/seva",

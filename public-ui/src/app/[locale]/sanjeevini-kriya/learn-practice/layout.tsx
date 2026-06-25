@@ -8,9 +8,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  return buildMetadata("/about", isLocale(locale) ? locale : "en");
+  return buildMetadata("/sanjeevini-kriya/learn-practice", isLocale(locale) ? locale : "en");
 }
 
-export default function AboutLayout({ children }: { children: React.ReactNode }) {
+export default function SanjeeviniKriyaLearnLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

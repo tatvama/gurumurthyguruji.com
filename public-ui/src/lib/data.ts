@@ -1,7 +1,7 @@
 // Primary navigation — kept to an elegant set for the header.
 export const navigation = [
   { name: "Home", href: "/" },
-  { name: "About Guruji", href: "/about" },
+  { name: "About Guruji", href: "/journey-of-awakening" },
   { name: "Trikāla Jñāna", href: "/trikala-jnana" },
   { name: "Sanjeevini Kriya", href: "/sanjeevini-kriya" },
   { name: "Ashrams", href: "/ashrams" },

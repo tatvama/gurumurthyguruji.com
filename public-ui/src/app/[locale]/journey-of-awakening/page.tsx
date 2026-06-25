@@ -10,10 +10,10 @@ import type { UiKey } from "@/lib/dictionary";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
-const sections: { num: string; titleKey: UiKey; paras: UiKey[] }[] = [
-  { num: "I.",   titleKey: "aboutpage.s1.title", paras: ["aboutpage.s1.p1", "aboutpage.s1.p2"] },
-  { num: "II.",  titleKey: "aboutpage.s2.title", paras: ["aboutpage.s2.p1", "aboutpage.s2.p2"] },
-  { num: "III.", titleKey: "aboutpage.s3.title", paras: ["aboutpage.s3.p1", "aboutpage.s3.p2"] },
+const sections: { num: string; titleKey: UiKey; paras: UiKey[]; id?: string }[] = [
+  { num: "I.",   titleKey: "aboutpage.s1.title", paras: ["aboutpage.s1.p1", "aboutpage.s1.p2"], id: "divine-birth" },
+  { num: "II.",  titleKey: "aboutpage.s2.title", paras: ["aboutpage.s2.p1", "aboutpage.s2.p2"], id: "turning-point" },
+  { num: "III.", titleKey: "aboutpage.s3.title", paras: ["aboutpage.s3.p1", "aboutpage.s3.p2"], id: "babaji-grace" },
   { num: "IV.",  titleKey: "aboutpage.s4.title", paras: ["aboutpage.s4.p1", "aboutpage.s4.p2"] },
 ];
 
@@ -68,7 +68,7 @@ export default function AboutPage() {
 
             {/* Sections I–IV */}
             {sections.slice(0, 1).map((s) => (
-              <SectionBlock key={s.num} num={s.num} title={t(s.titleKey)} paras={s.paras.map((p) => t(p))} />
+              <SectionBlock key={s.num} id={s.id} num={s.num} title={t(s.titleKey)} paras={s.paras.map((p) => t(p))} />
             ))}
 
             {/* Pull quote */}
@@ -83,7 +83,7 @@ export default function AboutPage() {
             </motion.blockquote>
 
             {sections.slice(1).map((s) => (
-              <SectionBlock key={s.num} num={s.num} title={t(s.titleKey)} paras={s.paras.map((p) => t(p))} />
+              <SectionBlock key={s.num} id={s.id} num={s.num} title={t(s.titleKey)} paras={s.paras.map((p) => t(p))} />
             ))}
 
             {/* Section V — Antaryami (the signature gift) */}
@@ -133,9 +133,11 @@ export default function AboutPage() {
   );
 }
 
-function SectionBlock({ num, title, paras }: { num: string; title: string; paras: string[] }) {
+function SectionBlock({ num, title, paras, id }: { num: string; title: string; paras: string[]; id?: string }) {
   return (
     <motion.section
+      id={id}
+      style={{ scrollMarginTop: "120px" }}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}

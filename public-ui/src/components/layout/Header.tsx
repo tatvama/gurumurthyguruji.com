@@ -10,7 +10,9 @@ import type { UiKey } from "@/lib/dictionary";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import {
   Menu, X, ChevronDown,
-  Wind, BookOpen, Users, MapPin, HeartHandshake,
+  BookOpen, Users, MapPin, HeartHandshake,
+  Sparkles, Route, GraduationCap,
+  Sunrise, Star, Flame, Footprints,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,12 +27,19 @@ type NavChild = {
 type NavItemDef = { key: UiKey; href?: string; children?: NavChild[] };
 
 const navItems: NavItemDef[] = [
-  { key: "nav.about",   href: "/about" },
+  {
+    key: "nav.about",
+    children: [
+      { key: "nav.about.journey",  descKey: "nav.about.journey.desc",  href: "/journey-of-awakening",    Icon: Sunrise },
+      { key: "nav.about.birth",    descKey: "nav.about.birth.desc",    href: "/the-divine-birth",        Icon: Star },
+      { key: "nav.about.babaji",   descKey: "nav.about.babaji.desc",   href: "/mahavatar-babaji-grace",  Icon: Flame },
+      { key: "nav.about.turning",  descKey: "nav.about.turning.desc",  href: "/the-turning-point",       Icon: Footprints },
+    ],
+  },
   { key: "nav.trikala", href: "/trikala-jnana" },
   {
     key: "nav.path",
     children: [
-      { key: "nav.sanjeevini", descKey: "nav.sanjeevini.desc", href: "/sanjeevini-kriya", Icon: Wind },
       { key: "nav.guruvani",   descKey: "nav.guruvani.desc",   href: "/guruvani",         Icon: BookOpen },
       { key: "nav.parampara",  descKey: "nav.parampara.desc",  href: "/guru-parampara",   Icon: Users },
     ],
@@ -40,6 +49,14 @@ const navItems: NavItemDef[] = [
     children: [
       { key: "nav.ashrams", descKey: "nav.ashrams.desc", href: "/ashrams", Icon: MapPin },
       { key: "nav.seva",    descKey: "nav.seva.desc",    href: "/seva",    Icon: HeartHandshake },
+    ],
+  },
+  {
+    key: "nav.sanjeevini",
+    children: [
+      { key: "nav.sky.essence", descKey: "nav.sky.essence.desc", href: "/sanjeevini-kriya",                Icon: Sparkles },
+      { key: "nav.sky.path",    descKey: "nav.sky.path.desc",    href: "/sanjeevini-kriya/the-path",       Icon: Route },
+      { key: "nav.sky.learn",   descKey: "nav.sky.learn.desc",   href: "/sanjeevini-kriya/learn-practice", Icon: GraduationCap },
     ],
   },
   { key: "nav.contact", href: "/contact" },
@@ -347,7 +364,7 @@ export function Header() {
         */}
         {/* Mobile: flex justify-between (logo ← → hamburger)
             Desktop ≥1240px: grid [1fr auto 1fr] (logo | nav | buttons) */}
-        <div className="mx-auto flex max-w-7xl items-center justify-between min-[1240px]:grid min-[1240px]:grid-cols-[1fr_auto_1fr]">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between min-[1240px]:grid min-[1240px]:grid-cols-[1fr_auto_1fr]">
 
           {/* ── Col 1 · Logo ─────────────────────────────────────────────── */}
           <Link href="/" className="group flex items-center gap-2.5 justify-self-start">
