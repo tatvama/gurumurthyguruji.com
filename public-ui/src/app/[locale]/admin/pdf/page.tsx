@@ -421,7 +421,7 @@ function PdfHeader({
   return (
     <div className="pdf-header">
       <div>
-        <h1>Gurumurthy Guruji — Admin Console</h1>
+        <h1>Gurumurthy Guruji — Staff Console</h1>
         <div className="pdf-header-sub">{title}</div>
       </div>
       <div className="pdf-header-meta">
@@ -690,7 +690,7 @@ function PdfRenderer() {
             )}
 
             <div className="pdf-footer">
-              <span>Gurumurthy Guruji Admin Console — Confidential</span>
+              <span>Gurumurthy Guruji Staff Console — Confidential</span>
               <span>
                 {new Date(payload.generatedAt).toLocaleDateString("en-IN", {
                   dateStyle: "long",

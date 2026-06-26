@@ -262,7 +262,7 @@ export default function TrikalaReadingsAdmin() {
           </div>
           <div>
             <p style={{ fontSize:14, fontWeight:800, color:"#1F2937", lineHeight:1.2 }}>Guruji Astro</p>
-            <p style={{ fontSize:10, fontWeight:600, color:"#9CA3AF", letterSpacing:"0.08em" }}>Admin Panel</p>
+            <p style={{ fontSize:10, fontWeight:600, color:"#9CA3AF", letterSpacing:"0.08em" }}>Staff Panel</p>
           </div>
         </Link>
 
@@ -301,7 +301,7 @@ export default function TrikalaReadingsAdmin() {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <span style={{ fontSize:13, fontWeight:600, color:"#374151" }}>admin</span>
+          <span style={{ fontSize:13, fontWeight:600, color:"#374151" }}>staff</span>
         </div>
 
         {/* Back to main admin */}

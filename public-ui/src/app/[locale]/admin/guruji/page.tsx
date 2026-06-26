@@ -291,7 +291,7 @@ export default function GurujiDarshanPage() {
       <div className="gd-topbar" style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 22px", height: 56, background: "linear-gradient(135deg,#0d9488,#0f766e)", color: "#fff", flexShrink: 0 }}>
         <button onClick={() => router.push(`/${locale}/admin`)}
           style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, padding: "7px 12px", borderRadius: 8, cursor: "pointer", flexShrink: 0 }}>
-          <ArrowLeft size={15} /> Admin
+          <ArrowLeft size={15} /> Staff
         </button>
         <span style={{ fontFamily: "serif", fontSize: 22, flexShrink: 0 }}>ॐ</span>
         <div className="gd-topbar-title">
@@ -537,7 +537,7 @@ export default function GurujiDarshanPage() {
                         </div>
                         <Field label="Mantra / Japa" value={linkedCase.mantra_japa} />
                         <Field label="Seva / Daana"  value={linkedCase.seva_daana} />
-                        <p style={{ fontSize: 11.5, color: "#9ca3af", marginTop: 14 }}>Guruji writes the remedy and guidance for this case from the Trikala case detail in the admin console.</p>
+                        <p style={{ fontSize: 11.5, color: "#9ca3af", marginTop: 14 }}>Guruji writes the remedy and guidance for this case from the Trikala case detail in the staff console.</p>
                       </>
                     ) : (
                       <>

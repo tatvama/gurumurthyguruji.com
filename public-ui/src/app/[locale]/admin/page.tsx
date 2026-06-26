@@ -125,7 +125,7 @@ const SECTION_GROUPS = [
     { id: "devotees", label: "Devotee Contacts" },
   ]},
   { group: "CONFIGURATION", items: [
-    { id: "admins",   label: "Admin Users" },
+    { id: "admins",   label: "Staff Users" },
     { id: "settings", label: "Settings" },
   ]},
 ];
@@ -1344,7 +1344,7 @@ function downloadPdfDirect(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(17, 17, 17);
-  doc.text("Gurumurthy Guruji — Admin Console", M, 11);
+  doc.text("Gurumurthy Guruji — Staff Console", M, 11);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
@@ -1446,7 +1446,7 @@ function downloadPdfDirect(
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(90, 90, 90);
-    doc.text("Gurumurthy Guruji Admin Console — Confidential", M, H - 6);
+    doc.text("Gurumurthy Guruji Staff Console — Confidential", M, H - 6);
     doc.text(today, PW - M, H - 6, { align: "right" });
   }
 
@@ -1675,7 +1675,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
           <div style={{ margin: "0 auto 12px", width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.18)", border: "1.5px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontFamily: "serif", fontSize: 26, color: "#ffffff" }}>ॐ</span>
           </div>
-          <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>Admin Console</p>
+          <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>Staff Console</p>
           <p style={{ fontSize: 20, fontWeight: 800, color: "#ffffff" }}>Gurumurthy Guruji</p>
         </div>
 
@@ -1683,7 +1683,7 @@ function LoginScreen({ onLogin }: { onLogin: (name: string, mobile: string) => v
         {step === "phone" && (
           <form onSubmit={handleSendOtp} style={{ padding: "26px 26px 30px" }}>
             <p style={{ fontSize: 17, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Sign in to your account</p>
-            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 22 }}>Enter your registered admin phone number</p>
+            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 22 }}>Enter your registered staff phone number</p>
 
             <div style={{ marginBottom: 18 }}>
               <label style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#374151", marginBottom: 7 }}>Phone Number</label>
@@ -3599,7 +3599,7 @@ function SettingsTab({
     { label: "Trikala Cases",  value: trikalaCount,     icon: "⭕", color: "#0d9488" },
     { label: "Devotees",       value: devoteeCount,     icon: "🙏", color: "#7c3aed" },
     { label: "Appointments",   value: appointmentCount, icon: "📅", color: "#0891b2" },
-    { label: "Admin Users",    value: adminCount,       icon: "🔑", color: "#059669" },
+    { label: "Staff Users",    value: adminCount,       icon: "🔑", color: "#059669" },
     { label: "New Intake (today)",value: todayStats?.newIntake ?? 0, icon: "📋", color: "#d97706" },
   ];
 
@@ -5105,7 +5105,7 @@ export default function AdminPage() {
               <p style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.2 }}>
                 <span style={{ color: "#111827" }}>Gurumurthy </span><span style={{ color: "#0d9488" }}>Guruji</span>
               </p>
-              <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 2 }}>Admin Console</p>
+              <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginTop: 2 }}>Staff Console</p>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -5121,7 +5121,7 @@ export default function AdminPage() {
               }} />
               <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.13em", textTransform: "uppercase",
                 color: loggedRole === "superadmin" ? "#0d9488" : loggedRole === "guruji" ? "#b45309" : "#7c3aed" }}>
-                {loggedRole === "superadmin" ? "Super Admin" : loggedRole === "guruji" ? "Guruji" : "Admin"}
+                {loggedRole === "superadmin" ? "Super Admin" : loggedRole === "guruji" ? "Guruji" : "Staff"}
               </span>
             </div>
           </div>
@@ -5204,7 +5204,7 @@ export default function AdminPage() {
                 Configuration
               </p>
               {([
-                { key: "admins" as const, label: "Admin Users", icon: "👥", section: "admins" },
+                { key: "admins" as const, label: "Staff Users", icon: "👥", section: "admins" },
                 { key: "settings" as const, label: "Settings", icon: "⚙️", section: "settings" },
               ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
                 <button key={key} onClick={() => tabChange(key)}
@@ -5843,8 +5843,8 @@ export default function AdminPage() {
                 </div>
                 <div className="adm-hero-text">
                   <p className="adm-hero-eyebrow">Configuration</p>
-                  <h1 className="adm-hero-h1">Admin Users</h1>
-                  <p className="adm-hero-desc">Manage who can log in to the admin console</p>
+                  <h1 className="adm-hero-h1">Staff Users</h1>
+                  <p className="adm-hero-desc">Manage who can log in to the staff console</p>
                 </div>
               </div>
 
@@ -5852,7 +5852,7 @@ export default function AdminPage() {
               <div className="adm-hero-right">
                 <div className="adm-hero-count">
                   <span className="adm-hero-count-num">{admins.length}</span>
-                  <span className="adm-hero-count-lbl">Admins</span>
+                  <span className="adm-hero-count-lbl">Staff</span>
                 </div>
                 <div className="adm-hero-sep" />
                 <div className="adm-hero-actions">
@@ -5867,7 +5867,7 @@ export default function AdminPage() {
                   {isSuperAdmin && (
                     <button className="adm-hero-btn-gold" onClick={() => setAdminPanel({ open: true, user: null })}>
                       <UserPlus size={14} />
-                      <span className="adm-hero-btn-txt">New Admin</span>
+                      <span className="adm-hero-btn-txt">New Staff</span>
                     </button>
                   )}
                 </div>
@@ -6439,21 +6439,21 @@ export default function AdminPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
-                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Admin Users</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Staff Users</p>
                   </div>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{admins.length} admin{admins.length !== 1 ? "s" : ""}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 10px" }}>{admins.length} staff</span>
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                      {["ADMIN","ROLE","SECTIONS","LAST LOGIN","STATUS",""].map(h => (
+                      {["STAFF","ROLE","SECTIONS","LAST LOGIN","STATUS",""].map(h => (
                         <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", color: "#0d9488", textTransform: "uppercase", whiteSpace: "nowrap", background: "#f9fafb" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {admins.length === 0 ? (
-                      <tr><td colSpan={6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</td></tr>
+                      <tr><td colSpan={6} style={{ padding: "48px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No staff users found</td></tr>
                     ) : admins.map((a, i) => {
                       const color = avatarColor(a.name);
                       const roleBg    = a.role === "superadmin" ? "#f0fdfa"              : a.role === "guruji" ? "#fffbeb"              : "#ede9fe";
@@ -6509,12 +6509,12 @@ export default function AdminPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #e5e7eb", background: "linear-gradient(90deg,#f0fdf9 0%,#f8fafc 100%)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0d9488", display: "inline-block" }} />
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Admin Users</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Staff Users</p>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 9px" }}>{admins.length} admins</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#0d9488", background: "rgba(13,148,136,0.08)", border: "1px solid rgba(13,148,136,0.18)", borderRadius: 20, padding: "2px 9px" }}>{admins.length} staff</span>
                 </div>
                 {admins.length === 0 ? (
-                  <div style={{ padding: "52px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No admin users found</div>
+                  <div style={{ padding: "52px 20px", textAlign: "center", color: "#a08060", fontSize: 14 }}>No staff users found</div>
                 ) : admins.map((a, i) => {
                   const color = avatarColor(a.name);
                   const roleBg  = a.role === "superadmin" ? "#f0fdfa" : a.role === "guruji" ? "#fffbeb" : "#ede9fe";
