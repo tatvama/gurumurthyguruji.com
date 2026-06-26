@@ -11,11 +11,12 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Link } from "@/components/ui/locale-link";
 
-const sections: { num: string; titleKey: UiKey; paras: UiKey[]; id?: string; readMoreHref?: string }[] = [
-  { num: "I.",   titleKey: "aboutpage.s1.title", paras: ["aboutpage.s1.p1"], id: "divine-birth", readMoreHref: "/the-divine-birth" },
-  { num: "II.",  titleKey: "aboutpage.s2.title", paras: ["aboutpage.s2.p1"], id: "turning-point", readMoreHref: "/guru-parampara" },
-  { num: "III.", titleKey: "aboutpage.s3.title", paras: ["aboutpage.s3.p1"], id: "babaji-grace", readMoreHref: "/mahavatar-babaji-grace" },
-  { num: "IV.",  titleKey: "aboutpage.s4.title", paras: ["aboutpage.s4.p1"], readMoreHref: "/trikala-jnana" },
+const allCards: { num: string; titleKey: UiKey; paraKey: UiKey; id?: string; readMoreHref?: string }[] = [
+  { num: "I.",   titleKey: "aboutpage.s1.title", paraKey: "aboutpage.s1.p1", id: "divine-birth",  readMoreHref: "/the-divine-birth" },
+  { num: "II.",  titleKey: "aboutpage.s3.title", paraKey: "aboutpage.s3.p1", id: "babaji-grace",  readMoreHref: "/mahavatar-babaji-grace" },
+  { num: "III.", titleKey: "aboutpage.s6.title", paraKey: "aboutpage.s6.p1",                      readMoreHref: "/the-turning-point" },
+  { num: "IV.",  titleKey: "aboutpage.s4.title", paraKey: "aboutpage.s4.p1",                      readMoreHref: "/trikala-jnana" },
+  { num: "V.",   titleKey: "aboutpage.s5.title", paraKey: "aboutpage.s5.p1" },
 ];
 
 export default function AboutPage() {
@@ -28,7 +29,7 @@ export default function AboutPage() {
         <div className="absolute top-40 left-0 w-80 h-80 bg-saffron-accent/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-40 right-0 w-96 h-96 bg-antique-gold/10 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
 
           {/* Header with portrait */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center mb-12">
@@ -65,66 +66,33 @@ export default function AboutPage() {
 
           <LotusDivider />
 
-          <div className="space-y-10 mt-12 text-lg leading-loose text-deep-brown/85 font-sans">
+          <div className="mt-12 text-base leading-relaxed text-deep-brown/85 font-sans">
 
-            {/* Sections I–IV */}
-            {sections.slice(0, 1).map((s) => (
-              <SectionBlock key={s.num} id={s.id} num={s.num} title={t(s.titleKey)} paras={s.paras.map((p) => t(p))} readMoreHref={s.readMoreHref} />
-            ))}
+            {/* 2-column card grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {allCards.map((card, i) => (
+                <SectionBlock
+                  key={card.num}
+                  id={card.id}
+                  num={card.num}
+                  title={t(card.titleKey)}
+                  para={t(card.paraKey)}
+                  readMoreHref={card.readMoreHref}
+                  delay={i * 0.1}
+                />
+              ))}
+            </div>
 
-            {/* Pull quote */}
+            {/* Quote below all cards */}
             <motion.blockquote
               initial={{ opacity: 0, scale: 0.98 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="border-l-4 border-maroon-accent pl-8 my-12 font-heading text-2xl md:text-3xl text-deep-brown italic leading-relaxed py-6 bg-gradient-to-r from-saffron-accent/10 to-transparent rounded-r-3xl pr-4"
+              className="border-l-4 border-maroon-accent pl-6 mt-12 font-heading text-lg md:text-xl text-deep-brown italic leading-relaxed py-4 bg-gradient-to-r from-saffron-accent/10 to-transparent rounded-r-3xl pr-4"
             >
               {t("aboutpage.quote")}
             </motion.blockquote>
-
-            {/* Section III — Babaji's Grace (shown as II.) */}
-            <SectionBlock key={sections[2].num} id={sections[2].id} num="II." title={t(sections[2].titleKey)} paras={sections[2].paras.map((p) => t(p))} readMoreHref={sections[2].readMoreHref} />
-
-            {/* Section VI — The Turning Point (card 3 position) */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
-            >
-              <GradientPanel num="III." title={t("aboutpage.s6.title")} />
-              <div className="space-y-4 p-6">
-                <p>{t("aboutpage.s6.p1")}</p>
-                <Link
-                  href="/the-turning-point"
-                  className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent transition-all duration-200 hover:bg-saffron-accent/8 hover:border-saffron-accent"
-                >
-                  {t("aboutpage.readmore")} →
-                </Link>
-              </div>
-            </motion.section>
-
-            {/* Section IV — shown as IV. */}
-            <SectionBlock key={sections[3].num} id={sections[3].id} num="IV." title={t(sections[3].titleKey)} paras={sections[3].paras.map((p) => t(p))} readMoreHref={sections[3].readMoreHref} />
-
-            {/* Section V — Antaryami (the signature gift) */}
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
-            >
-              <GradientPanel num="V." title={t("aboutpage.s5.title")} />
-              <div className="space-y-4 p-6">
-                <p>{t("aboutpage.s5.p1")}</p>
-                <span className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent">
-                  {t("aboutpage.readmore")} →
-                </span>
-              </div>
-            </motion.section>
 
             <LotusDivider />
 
@@ -149,73 +117,59 @@ export default function AboutPage() {
   );
 }
 
-function GradientPanel({ num, title }: { num: string; title: string }) {
+function GradientPanel() {
   return (
-    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[155px] group">
-      {/* Background photo (bottom layer) */}
+    <div className="relative overflow-hidden min-h-[140px]">
       <Image
         src="/images/cartphotoAboutsec.webp"
         alt=""
         aria-hidden
         fill
-        sizes="100vw"
-        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
+        sizes="(max-width: 768px) 100vw, 50vw"
+        className="object-cover object-center"
       />
-      {/* Redness gradient overlay — semi-transparent so the photo shows through */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(115deg, rgba(91,17,24,0.88) 0%, rgba(122,42,34,0.82) 28%, rgba(181,121,58,0.74) 65%, rgba(221,186,94,0.66) 100%)",
-        }}
-      />
-      <span
-        aria-hidden
-        className="absolute z-10 select-none font-heading leading-none"
-        style={{
-          top: "10px",
-          right: "20px",
-          fontSize: "clamp(64px, 8vw, 104px)",
-          color: "rgba(255,255,255,0.12)",
-        }}
-      >
-        ॐ
-      </span>
-      <div
-        className="relative z-10 p-8 font-heading text-2xl font-bold text-white"
-        style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
-      >
-        <span className="text-champagne mr-3">{num}</span> {title}
-      </div>
     </div>
   );
 }
 
-function SectionBlock({ num, title, paras, id, readMoreHref }: { num: string; title: string; paras: string[]; id?: string; readMoreHref?: string }) {
+function SectionBlock({
+  num, title, para, id, readMoreHref, delay = 0,
+}: {
+  num: string; title: string; para: string; id?: string; readMoreHref?: string; delay?: number;
+}) {
   const { t } = useLanguage();
   return (
     <motion.section
       id={id}
       style={{ scrollMarginTop: "120px" }}
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.8 }}
-      className="flex flex-col bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
+      transition={{ duration: 0.65, delay }}
+      className="flex flex-col bg-white/50 backdrop-blur-sm rounded-2xl border border-champagne/20 shadow-sm overflow-hidden"
     >
-      <GradientPanel num={num} title={title} />
-      <div className="space-y-4 p-6">
-        {paras.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-        {readMoreHref && (
+      <GradientPanel />
+      <div className="flex flex-col flex-1 gap-3 p-5">
+        <h3 className="font-heading text-lg font-bold text-deep-brown">
+          <span className="text-champagne mr-2">{num}</span>{title}
+        </h3>
+        <p className="text-sm leading-relaxed text-deep-brown/80 flex-1">{para}</p>
+        {readMoreHref ? (
           <Link
             href={readMoreHref}
-            className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent transition-all duration-200 hover:bg-saffron-accent/8 hover:border-saffron-accent"
+            className="group relative mt-1 self-start overflow-hidden inline-flex items-center gap-2.5 rounded-full px-5 py-2 text-xs font-semibold text-pearl shadow-md transition-all duration-300 hover:shadow-[0_6px_22px_rgba(75,13,19,0.60)] hover:scale-105 active:scale-95"
+            style={{ background: "linear-gradient(135deg,#4b0d13 0%,#65161c 100%)" }}
+          >
+            <span className="relative">{t("aboutpage.readmore")}</span>
+            <span className="relative inline-block transition-all duration-300 group-hover:translate-x-1.5 group-hover:scale-125 text-sm leading-none">→</span>
+          </Link>
+        ) : (
+          <span
+            className="mt-1 self-start inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold text-pearl/60"
+            style={{ background: "linear-gradient(135deg,#4b0d13 0%,#65161c 100%)" }}
           >
             {t("aboutpage.readmore")} →
-          </Link>
+          </span>
         )}
       </div>
     </motion.section>

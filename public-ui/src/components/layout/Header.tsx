@@ -10,7 +10,7 @@ import type { UiKey } from "@/lib/dictionary";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import {
   Menu, X, ChevronDown,
-  BookOpen, Users, MapPin, HeartHandshake,
+  MapPin, HeartHandshake,
   Sparkles, Route, GraduationCap,
   Sunrise, Star, Flame, Footprints,
 } from "lucide-react";
@@ -29,13 +29,7 @@ type NavItemDef = { key: UiKey; href?: string; defaultHref?: string; children?: 
 const navItems: NavItemDef[] = [
   { key: "nav.about", href: "/journey-of-awakening" },
   { key: "nav.trikala", href: "/trikala-jnana" },
-  {
-    key: "nav.path",
-    children: [
-      { key: "nav.guruvani",   descKey: "nav.guruvani.desc",   href: "/guruvani",         Icon: BookOpen },
-      { key: "nav.parampara",  descKey: "nav.parampara.desc",  href: "/guru-parampara",   Icon: Users },
-    ],
-  },
+  { key: "nav.parampara", href: "/guru-parampara" },
   {
     key: "nav.spaces",
     children: [
