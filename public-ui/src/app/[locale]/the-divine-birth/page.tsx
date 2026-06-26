@@ -102,7 +102,7 @@ export default function DivineBirthPage() {
             </div>
 
             {/* ── Title block ─────────────────────────────────────────── */}
-            <div className="md:col-span-8 flex flex-col items-center md:items-start text-center md:text-left" style={{ maxWidth: "600px" }}>
+            <div className="md:col-span-8 flex flex-col items-center md:items-start text-center md:text-left" style={{ maxWidth: "780px" }}>
               {/* "PUJYA SRI" — centered over the block */}
               <h1
                 className="w-full text-center mb-1"

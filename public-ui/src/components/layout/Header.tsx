@@ -24,11 +24,12 @@ type NavChild = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Icon: React.FC<any>;
 };
-type NavItemDef = { key: UiKey; href?: string; children?: NavChild[] };
+type NavItemDef = { key: UiKey; href?: string; defaultHref?: string; children?: NavChild[] };
 
 const navItems: NavItemDef[] = [
   {
     key: "nav.about",
+    defaultHref: "/journey-of-awakening",
     children: [
       { key: "nav.about.journey",  descKey: "nav.about.journey.desc",  href: "/journey-of-awakening",    Icon: Sunrise },
       { key: "nav.about.birth",    descKey: "nav.about.birth.desc",    href: "/the-divine-birth",        Icon: Star },
@@ -247,8 +248,7 @@ export function Header() {
 
                 return (
                   <div key={item.key}>
-                    <button
-                      onClick={() => setMobileExpanded(isExpanded ? null : item.key)}
+                    <div
                       className={cn(
                         "flex w-full items-center justify-between px-5 py-3.5 transition-colors",
                         item.children?.some((c) => pathNoLocale === c.href)
@@ -258,15 +258,27 @@ export function Header() {
                     >
                       <div className="flex items-center gap-4">
                         <span className="w-5 text-[10px] font-bold text-antique-gold/50">{num}</span>
-                        <span className="font-heading text-[15px] font-medium">{t(item.key)}</span>
-                      </div>
-                      <ChevronDown
-                        className={cn(
-                          "h-4 w-4 text-white/30 transition-transform duration-200",
-                          isExpanded && "rotate-180",
+                        {item.defaultHref ? (
+                          <Link
+                            href={item.defaultHref}
+                            onClick={closeDrawer}
+                            className="font-heading text-[15px] font-medium"
+                          >
+                            {t(item.key)}
+                          </Link>
+                        ) : (
+                          <span className="font-heading text-[15px] font-medium">{t(item.key)}</span>
                         )}
-                      />
-                    </button>
+                      </div>
+                      <button onClick={() => setMobileExpanded(isExpanded ? null : item.key)}>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 text-white/30 transition-transform duration-200",
+                            isExpanded && "rotate-180",
+                          )}
+                        />
+                      </button>
+                    </div>
 
                     <AnimatePresence initial={false}>
                       {isExpanded && (
@@ -438,9 +450,7 @@ export function Header() {
                   onMouseEnter={() => openDropdown(item.key)}
                   onMouseLeave={scheduleClose}
                 >
-                  <button
-                    onClick={() => setActiveDropdown(isOpen ? null : item.key)}
-                    aria-expanded={isOpen}
+                  <div
                     className={cn(
                       "group relative flex items-center gap-0.5 rounded-md font-medium whitespace-nowrap transition-colors duration-200",
                       active ? "text-champagne" : "text-pearl/58 hover:text-pearl",
@@ -448,14 +458,26 @@ export function Header() {
                     style={itemStyle}
                   >
                     <span className="absolute inset-0 rounded-md bg-white/0 transition-colors duration-200 group-hover:bg-white/[0.06]" />
-                    <span className="relative">{t(item.key)}</span>
-                    <ChevronDown
-                      className={cn(
-                        "relative h-3 w-3 shrink-0 opacity-40 transition-transform duration-200",
-                        isOpen ? "rotate-180 opacity-70" : "group-hover:opacity-65",
-                      )}
-                    />
-                  </button>
+                    {item.defaultHref ? (
+                      <Link href={item.defaultHref} className="relative">
+                        {t(item.key)}
+                      </Link>
+                    ) : (
+                      <span className="relative">{t(item.key)}</span>
+                    )}
+                    <button
+                      onClick={() => setActiveDropdown(isOpen ? null : item.key)}
+                      aria-expanded={isOpen}
+                      className="relative flex items-center"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 shrink-0 opacity-40 transition-transform duration-200",
+                          isOpen ? "rotate-180 opacity-70" : "group-hover:opacity-65",
+                        )}
+                      />
+                    </button>
+                  </div>
 
                   <AnimatePresence>
                     {isOpen && (
