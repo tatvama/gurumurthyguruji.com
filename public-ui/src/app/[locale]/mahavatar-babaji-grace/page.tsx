@@ -241,30 +241,43 @@ export default function BabajiGracePage() {
           {/* ── MOUNTAIN / DARK PANORAMA ──────────────────────────────── */}
           <section
             className="mb-14 relative overflow-hidden rounded-2xl"
-            style={{
-              background:
-                "linear-gradient(to bottom, rgba(30,40,55,0.88) 0%, rgba(20,28,42,0.92) 100%)",
-              padding: "60px 40px",
-            }}
+            style={{ padding: "90px 20px" }}
           >
-            {/* Mountain silhouette suggestion via gradient */}
+            {/* Blurred background image */}
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                backgroundImage: "url('/images/basavana-betta-mountains.webp')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(4px)",
+                transform: "scale(1.05)",
+              }}
+            />
+            {/* Dark overlay */}
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
               style={{
-                background:
-                  "radial-gradient(ellipse at 50% 110%, rgba(90,110,140,0.35) 0%, transparent 65%)",
+                background: "rgba(20,28,42,0.45)",
               }}
             />
             <p
-              className="relative z-10 text-center"
+              className="relative z-10"
               style={{
-                fontFamily: lora,
-                fontSize: "clamp(14px, 1.6vw, 17px)",
-                lineHeight: "2",
-                color: "rgba(255,255,255,0.82)",
-                maxWidth: "760px",
+                textAlign: "center",
+                fontFamily: '"Times New Roman", Sans-serif',
+                fontSize: "clamp(0.9rem, 1.25vw, 1.1rem)",
+                fontWeight: 500,
+                lineHeight: "41px",
+                letterSpacing: "0.8px",
+                wordSpacing: "3px",
+                textShadow: "0 0 10px rgb(0 0 0 / 86%)",
+                color: "#FFF",
+                maxWidth: "min(90%, 1200px)",
                 margin: "0 auto",
+                padding: "0 30px",
               }}
             >
               That night, Basavana Betta became the stage of a sacred drama: man&rsquo;s
