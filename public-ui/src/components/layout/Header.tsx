@@ -27,16 +27,7 @@ type NavChild = {
 type NavItemDef = { key: UiKey; href?: string; defaultHref?: string; children?: NavChild[] };
 
 const navItems: NavItemDef[] = [
-  {
-    key: "nav.about",
-    defaultHref: "/journey-of-awakening",
-    children: [
-      { key: "nav.about.journey",  descKey: "nav.about.journey.desc",  href: "/journey-of-awakening",    Icon: Sunrise },
-      { key: "nav.about.birth",    descKey: "nav.about.birth.desc",    href: "/the-divine-birth",        Icon: Star },
-      { key: "nav.about.babaji",   descKey: "nav.about.babaji.desc",   href: "/mahavatar-babaji-grace",  Icon: Flame },
-      { key: "nav.about.turning",  descKey: "nav.about.turning.desc",  href: "/the-turning-point",       Icon: Footprints },
-    ],
-  },
+  { key: "nav.about", href: "/journey-of-awakening" },
   { key: "nav.trikala", href: "/trikala-jnana" },
   {
     key: "nav.path",
@@ -117,9 +108,13 @@ export function Header() {
   const openDropdown  = (key: string) => { if (closeTimer.current) clearTimeout(closeTimer.current); setActiveDropdown(key); };
   const scheduleClose = ()            => { closeTimer.current = setTimeout(() => setActiveDropdown(null), 130); };
 
+  const aboutSubPages = ["/journey-of-awakening", "/the-divine-birth", "/mahavatar-babaji-grace", "/the-turning-point"];
+
   const isGroupActive = (item: NavItemDef) =>
     item.href
-      ? pathNoLocale === item.href
+      ? item.key === "nav.about"
+        ? aboutSubPages.includes(pathNoLocale)
+        : pathNoLocale === item.href
       : !!item.children?.some((c) => pathNoLocale === c.href);
 
   // Navbar is always dark — text is always light
