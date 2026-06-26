@@ -28,7 +28,7 @@ export default function AboutPage() {
         <div className="absolute top-40 left-0 w-80 h-80 bg-saffron-accent/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-40 right-0 w-96 h-96 bg-antique-gold/10 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="max-w-4xl mx-auto px-4 md:px-8 relative z-10">
 
           {/* Header with portrait */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center mb-12">
@@ -65,7 +65,7 @@ export default function AboutPage() {
 
           <LotusDivider />
 
-          <div className="space-y-16 mt-16 text-lg leading-loose text-deep-brown/85 font-sans">
+          <div className="space-y-10 mt-12 text-lg leading-loose text-deep-brown/85 font-sans">
 
             {/* Sections I–IV */}
             {sections.slice(0, 1).map((s) => (
@@ -95,7 +95,7 @@ export default function AboutPage() {
               className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
               <GradientPanel num="III." title={t("aboutpage.s6.title")} />
-              <div className="space-y-6 p-8">
+              <div className="space-y-4 p-6">
                 <p>{t("aboutpage.s6.p1")}</p>
                 <Link
                   href="/the-turning-point"
@@ -118,7 +118,7 @@ export default function AboutPage() {
               className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
               <GradientPanel num="V." title={t("aboutpage.s5.title")} />
-              <div className="space-y-6 p-8">
+              <div className="space-y-4 p-6">
                 <p>{t("aboutpage.s5.p1")}</p>
                 <span className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent">
                   {t("aboutpage.readmore")} →
@@ -151,7 +151,7 @@ export default function AboutPage() {
 
 function GradientPanel({ num, title }: { num: string; title: string }) {
   return (
-    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[200px] group">
+    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[155px] group">
       {/* Background photo (bottom layer) */}
       <Image
         src="/images/cartphotoAboutsec.webp"
@@ -205,7 +205,7 @@ function SectionBlock({ num, title, paras, id, readMoreHref }: { num: string; ti
       className="flex flex-col bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
     >
       <GradientPanel num={num} title={title} />
-      <div className="space-y-6 p-8">
+      <div className="space-y-4 p-6">
         {paras.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
