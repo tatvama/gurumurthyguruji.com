@@ -12,10 +12,10 @@ import Image from "next/image";
 import { Link } from "@/components/ui/locale-link";
 
 const sections: { num: string; titleKey: UiKey; paras: UiKey[]; id?: string; readMoreHref?: string }[] = [
-  { num: "I.",   titleKey: "aboutpage.s1.title", paras: ["aboutpage.s1.p1", "aboutpage.s1.p2"], id: "divine-birth", readMoreHref: "/the-divine-birth" },
-  { num: "II.",  titleKey: "aboutpage.s2.title", paras: ["aboutpage.s2.p1", "aboutpage.s2.p2"], id: "turning-point", readMoreHref: "/guru-parampara" },
-  { num: "III.", titleKey: "aboutpage.s3.title", paras: ["aboutpage.s3.p1", "aboutpage.s3.p2"], id: "babaji-grace", readMoreHref: "/mahavatar-babaji-grace" },
-  { num: "IV.",  titleKey: "aboutpage.s4.title", paras: ["aboutpage.s4.p1", "aboutpage.s4.p2"], readMoreHref: "/trikala-jnana" },
+  { num: "I.",   titleKey: "aboutpage.s1.title", paras: ["aboutpage.s1.p1"], id: "divine-birth", readMoreHref: "/the-divine-birth" },
+  { num: "II.",  titleKey: "aboutpage.s2.title", paras: ["aboutpage.s2.p1"], id: "turning-point", readMoreHref: "/guru-parampara" },
+  { num: "III.", titleKey: "aboutpage.s3.title", paras: ["aboutpage.s3.p1"], id: "babaji-grace", readMoreHref: "/mahavatar-babaji-grace" },
+  { num: "IV.",  titleKey: "aboutpage.s4.title", paras: ["aboutpage.s4.p1"], readMoreHref: "/trikala-jnana" },
 ];
 
 export default function AboutPage() {
@@ -92,25 +92,16 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="grid grid-cols-1 md:grid-cols-12 items-stretch rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
+              className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
-              <div className="md:col-span-4 flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px] bg-champagne/10">
-                <div className="p-8 font-heading text-2xl font-bold text-deep-brown">
-                  <span className="text-saffron-accent mr-3">III.</span> The Turning Point
-                </div>
-              </div>
-              <div className="md:col-span-8 space-y-6 p-8">
-                <p>
-                  At just 18 years of age, when most youths are caught in the whirlwinds of confusion and worldly desire, the young seeker received something that saints and sages wait lifetimes for — a direct, divine initiation into Kriya Yoga from none other than Mahavatar Babaji Himself.
-                </p>
-                <p>
-                  In the sacred stillness of deep meditation, Babaji appeared radiant with eternal grace — touching him, blessing him, and infusing him with the living current of Kriya Yoga. From that moment, Guruji&apos;s path was irrevocably set: to carry this sacred flame to every sincere soul.
-                </p>
+              <GradientPanel num="III." title={t("aboutpage.s6.title")} />
+              <div className="space-y-6 p-8">
+                <p>{t("aboutpage.s6.p1")}</p>
                 <Link
                   href="/the-turning-point"
                   className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent transition-all duration-200 hover:bg-saffron-accent/8 hover:border-saffron-accent"
                 >
-                  Read More →
+                  {t("aboutpage.readmore")} →
                 </Link>
               </div>
             </motion.section>
@@ -124,21 +115,13 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="grid grid-cols-1 md:grid-cols-12 items-stretch rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
+              className="flex flex-col rounded-3xl border border-champagne/30 bg-white/50 shadow-sm overflow-hidden backdrop-blur-sm"
             >
-              <div className="md:col-span-4 flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px] bg-champagne/10">
-                <div className="p-8 font-heading text-2xl font-bold text-deep-brown">
-                  <span className="text-saffron-accent mr-3">V.</span> {t("aboutpage.s5.title")}
-                </div>
-              </div>
-              <div className="md:col-span-8 space-y-6 p-8">
+              <GradientPanel num="V." title={t("aboutpage.s5.title")} />
+              <div className="space-y-6 p-8">
                 <p>{t("aboutpage.s5.p1")}</p>
-                <p>{t("aboutpage.s5.p2")}</p>
-                <p className="border-l-2 border-antique-gold/50 pl-4 text-[16px] italic text-deep-brown/70">
-                  {t("aboutpage.s5.trust")}
-                </p>
                 <span className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent">
-                  Read More →
+                  {t("aboutpage.readmore")} →
                 </span>
               </div>
             </motion.section>
@@ -166,7 +149,51 @@ export default function AboutPage() {
   );
 }
 
+function GradientPanel({ num, title }: { num: string; title: string }) {
+  return (
+    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[200px]">
+      {/* Background photo (bottom layer) */}
+      <Image
+        src="/images/cartphotoAboutsec.webp"
+        alt=""
+        aria-hidden
+        fill
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      {/* Redness gradient overlay — semi-transparent so the photo shows through */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(115deg, rgba(91,17,24,0.88) 0%, rgba(122,42,34,0.82) 28%, rgba(181,121,58,0.74) 65%, rgba(221,186,94,0.66) 100%)",
+        }}
+      />
+      <span
+        aria-hidden
+        className="absolute z-10 select-none font-heading leading-none"
+        style={{
+          top: "10px",
+          right: "20px",
+          fontSize: "clamp(64px, 8vw, 104px)",
+          color: "rgba(255,255,255,0.12)",
+        }}
+      >
+        ॐ
+      </span>
+      <div
+        className="relative z-10 p-8 font-heading text-2xl font-bold text-white"
+        style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+      >
+        <span className="text-champagne mr-3">{num}</span> {title}
+      </div>
+    </div>
+  );
+}
+
 function SectionBlock({ num, title, paras, id, readMoreHref }: { num: string; title: string; paras: string[]; id?: string; readMoreHref?: string }) {
+  const { t } = useLanguage();
   return (
     <motion.section
       id={id}
@@ -175,17 +202,10 @@ function SectionBlock({ num, title, paras, id, readMoreHref }: { num: string; ti
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
-      className="grid grid-cols-1 md:grid-cols-12 items-stretch bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
+      className="flex flex-col bg-white/50 backdrop-blur-sm rounded-3xl border border-champagne/20 shadow-sm overflow-hidden"
     >
-      {/* Left panel */}
-      <div className="md:col-span-4 flex items-center border-b md:border-b-0 md:border-r border-champagne/30 min-h-[140px] bg-champagne/10">
-        <div className="p-8 font-heading text-2xl font-bold text-deep-brown">
-          <span className="text-saffron-accent mr-3">{num}</span> {title}
-        </div>
-      </div>
-
-      {/* Right panel */}
-      <div className="md:col-span-8 space-y-6 p-8">
+      <GradientPanel num={num} title={title} />
+      <div className="space-y-6 p-8">
         {paras.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
@@ -194,7 +214,7 @@ function SectionBlock({ num, title, paras, id, readMoreHref }: { num: string; ti
             href={readMoreHref}
             className="inline-flex items-center gap-2 rounded-full border border-saffron-accent/40 px-5 py-2 text-sm font-semibold text-saffron-accent transition-all duration-200 hover:bg-saffron-accent/8 hover:border-saffron-accent"
           >
-            Read More →
+            {t("aboutpage.readmore")} →
           </Link>
         )}
       </div>
