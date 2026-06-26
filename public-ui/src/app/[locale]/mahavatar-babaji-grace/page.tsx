@@ -209,7 +209,7 @@ export default function BabajiGracePage() {
               </P>
               <P>
                 By the time they reached the sacred slopes of Basavana Betta, the hour
-                had shifted into Brahma Muhurta — the silent, holy time before dawn
+                had shifted into Brahma Muhurta the silent, holy time before dawn
                 when the veil between heaven and earth grows thin. The sadhus were
                 restless, eyes gleaming with the hope of seizing the mythical gem. But
                 the divine plan was of a different kind.
@@ -219,14 +219,14 @@ export default function BabajiGracePage() {
                 light descended as if the very heavens had opened. In that brilliant
                 aura stood Mahavatar Babaji Himself, radiant, eternal,
                 beyond human description. Behind Him shimmered the luminous presence of
-                a divine serpent — a celestial naga — its hood spread in majesty,
+                a divine serpent a celestial naga its hood spread in majesty,
                 glowing like a crown of eternal guardianship.
               </P>
               <P>
                 The sadhus trembled in shock. They had sought a mere stone, but before
                 their eyes stood the true jewel of immortality. For Guruji, that moment
                 was not of fear but of awakening. The light did not merely shine upon
-                his eyes — it poured into his soul. His being was infused with grace,
+                his eyes it poured into his soul. His being was infused with grace,
                 strength, and the silent command of destiny.
               </P>
             </div>
@@ -234,7 +234,7 @@ export default function BabajiGracePage() {
             <PullQuote>
               The seekers of the Nagamani found nothing but their own disappointment.
               Yet in the very same forest, Guruji received a treasure greater than any
-              gem on earth — the divine vision of Babaji.
+              gem on earth the divine vision of Babaji.
             </PullQuote>
           </section>
 
@@ -284,7 +284,7 @@ export default function BabajiGracePage() {
               greed collapsed, while God&rsquo;s grace unfolded. What seemed like deception
               became the doorway to revelation. From that hour, the course of
               Guruji&rsquo;s life was forever changed. He was no longer just a young
-              seeker — he had become the chosen one, marked by the light of Babaji,
+              seeker he had become the chosen one, marked by the light of Babaji,
               destined to carry forth the flame of Kriya Yoga and spiritual truth.
             </p>
           </section>
@@ -314,13 +314,13 @@ export default function BabajiGracePage() {
               >
                 &ldquo;Child, your heart is pure. Only a soul untouched by worldly
                 delusion is ready to behold the true vision of wisdom. Tonight, I
-                bestow upon you the Jnana Deeksha — not a ritual of the outer world,
+                bestow upon you the Jnana Deeksha not a ritual of the outer world,
                 but the awakening of your inner being.&rdquo;
               </p>
               <P>
                 In that moment, Guruji felt a surge of light pour into him. His breath
                 deepened, his thoughts stilled, and his entire being vibrated with
-                divine energy. It was not a ceremony — it was a transmission of the
+                divine energy. It was not a ceremony it was a transmission of the
                 living flame of truth.
               </P>
             </div>
@@ -382,8 +382,8 @@ export default function BabajiGracePage() {
                 {[
                   "The body is only an instrument; the soul is the true goal.",
                   "Within the rhythm of breath lies the secret of God. He who masters the breath awakens the infinite power within.",
-                  "Kriya Yoga is the eternal bridge—it purifies life, steadies the mind, and unites the soul with the Supreme.",
-                  "Deeksha is not external ritual but an inner transmission—the living current flowing from Guru to disciple.",
+                  "Kriya Yoga is the eternal bridge it purifies life, steadies the mind, and unites the soul with the Supreme.",
+                  "Deeksha is not external ritual but an inner transmission the living current flowing from Guru to disciple.",
                 ].map((item, i) => (
                   <li
                     key={i}

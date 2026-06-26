@@ -177,7 +177,7 @@ export default function DivineBirthPage() {
               >
                 Journey through Time:{" "}
                 <span style={{ fontWeight: 400 }}>
-                  Dr. Sri Gurumurthy Guruji and the Evolution of Puttenahalli &mdash; A
+                  Dr. Sri Gurumurthy Guruji and the Evolution of Puttenahalli A
                   Glimpse into the Past.
                 </span>
               </p>
@@ -208,14 +208,14 @@ export default function DivineBirthPage() {
                 village called <strong>Kottanagatta</strong>, nestled in the
                 Channarayapatna Taluk of Hassan district. This quiet land, rich in
                 spiritual fragrance and ancestral purity, was destined to witness
-                the descent of a divine soul — a soul born not merely out of worldly
+                the descent of a divine soul a soul born not merely out of worldly
                 karma, but out of divine intent.
               </P>
               <P>
                 It was a full moon night, February 22, 1978, the auspicious day of{" "}
                 <strong>Shuddha Pournami</strong>, when the silver light bathed the
                 earth in celestial peace. In the vibrant city of Bengaluru, to the
-                devout couple Sri Nanjappa and Smt. Parvatamma, a child was born —
+                devout couple Sri Nanjappa and Smt. Parvatamma, a child was born
                 not merely into a family, but into a <strong>lineage of light</strong>.
               </P>
               <P>
@@ -255,7 +255,7 @@ export default function DivineBirthPage() {
                   color: body,
                 }}
               >
-                — Mother&rsquo;s words
+               Mother&rsquo;s words
               </p>
             </div>
           </section>
@@ -282,8 +282,8 @@ export default function DivineBirthPage() {
                 <div className="space-y-6">
                   <P>
                     <strong>The year was 1994.</strong> In those days, the southern
-                    part of Bangalore, Puttenahalli — today a bustling corner of J.P.
-                    Nagar — was a completely different world. It was still a quiet
+                    part of Bangalore, Puttenahalli today a bustling corner of J.P.
+                    Nagar was a completely different world. It was still a quiet
                     village, almost like the edge of a forest. The narrow mud paths
                     echoed with the creak of bullock carts, and instead of skyscrapers,
                     there were open fields of ragi and jowar swaying in the wind. The
@@ -297,7 +297,7 @@ export default function DivineBirthPage() {
                     </strong>{" "}
                     His home was modest: walls of clay, a tiled roof, a small courtyard
                     where plants bloomed. At the very heart of his home stood a Tulasi
-                    platform (Tulasi Katte) — sacred, simple, and radiant with daily
+                    platform (Tulasi Katte) sacred, simple, and radiant with daily
                     worship. Each morning he lit a lamp there, each evening he placed
                     offerings with deep reverence.
                   </P>
@@ -349,13 +349,13 @@ export default function DivineBirthPage() {
                 nests. Guruji sat near the Tulasi platform, lit the evening lamp, and
                 closed his eyes in meditation. At that very moment, a gentle,
                 otherworldly radiance began to spread around the Tulasi plant. This
-                was no ordinary light — it was soft, fragrant like sandalwood,
+                was no ordinary light it was soft, fragrant like sandalwood,
                 carrying with it a peace that touched the very soul.
               </P>
               <P>
                 From within that radiant glow appeared the divine form of Shirdi Sai
                 Baba. Seated calmly, draped in white robes, His eyes shone with
-                brilliance — yet filled with a mother&rsquo;s compassion. Guruji&rsquo;s
+                brilliance yet filled with a mother&rsquo;s compassion. Guruji&rsquo;s
                 heart trembled with bliss. It felt as though decades of devotion had
                 blossomed into this single moment of grace.
               </P>
@@ -369,7 +369,7 @@ export default function DivineBirthPage() {
 
             <div className="space-y-6">
               <P>
-                It was not just a sound — it was an inner call. The meaning was clear:
+                It was not just a sound it was an inner call. The meaning was clear:
               </P>
               <P>
                 <strong>
@@ -378,7 +378,7 @@ export default function DivineBirthPage() {
                 </strong>
               </P>
               <P>
-                That divine call was not limited to Guruji&rsquo;s ears — it seemed to
+                That divine call was not limited to Guruji&rsquo;s ears it seemed to
                 ripple through the very winds of Puttenahalli, sanctifying the soil,
                 the trees, and the silence of the village.
               </P>
@@ -389,13 +389,13 @@ export default function DivineBirthPage() {
                 seedbed of spirituality.
               </P>
               <P>
-                The mud houses, the quiet fields, the Tulasi platform — all bore
+                The mud houses, the quiet fields, the Tulasi platform all bore
                 witness to a cosmic event. From then on, Guruji became a guiding light
                 for many seekers, spreading Baba&rsquo;s message, and transforming the
                 once-forgotten village into a sacred space of remembrance.
               </P>
               <P>
-                Thus, that evening in 1994 was not merely a personal vision — it
+                Thus, that evening in 1994 was not merely a personal vision it
                 became a divine milestone, forever etched into the soul of the land
                 itself.
               </P>
@@ -441,7 +441,7 @@ export default function DivineBirthPage() {
                 <>
                   &ldquo;Though confusion pressed upon me, I found the courage to
                   speak. But the old man raised his hand toward the heavens and said,{" "}
-                  <strong>&lsquo;Malik. Kind child, I recognize your essence — but do
+                  <strong>&lsquo;Malik. Kind child, I recognize your essence but do
                   you recognize mine? Are you not concerned with completing the task
                   left unfinished?&rsquo;</strong>&rdquo;
                 </>,

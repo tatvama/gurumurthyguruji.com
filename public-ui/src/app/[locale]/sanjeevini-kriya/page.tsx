@@ -264,7 +264,7 @@ export default function SanjeeviniKriyaEssencePage() {
                 </div>
 
                 <p className="leading-relaxed text-base text-deep-brown/85" style={{ fontFamily: "var(--font-lora), Georgia, serif" }}>
-                  Pujya Sri Gurumurthy Guruji explains that Sanjeevini Kriya is not just a spiritual exercise — it is a{" "}
+                  Pujya Sri Gurumurthy Guruji explains that Sanjeevini Kriya is not just a spiritual exercise it is a{" "}
                   <strong className="font-bold text-deep-brown">way of living in harmony with the universe</strong>.
                   Through this kriya, he teaches seekers to:
                 </p>
@@ -286,7 +286,7 @@ export default function SanjeeviniKriyaEssencePage() {
                 </ul>
 
                 <p className="leading-relaxed text-base text-deep-brown/80 italic" style={{ fontFamily: "var(--font-lora), Georgia, serif" }}>
-                  Guruji reminds us that Sanjeevini Kriya is a gift meant for everyone — simple enough for
+                  Guruji reminds us that Sanjeevini Kriya is a gift meant for everyone simple enough for
                   beginners, yet profound enough to lead to the highest realization.
                 </p>
 
@@ -309,7 +309,7 @@ export default function SanjeeviniKriyaEssencePage() {
                     Pujya Sri Gurumurthy Guruji received direct initiation from Mahavatar Babaji.<br />
                     He walks not ahead, not behind, but{" "}
                     <strong className="font-bold text-deep-brown">beside every seeker</strong>.<br />
-                    He does not demand followers — he awakens leaders, igniting the same flame that Babaji lit in him.
+                    He does not demand followers he awakens leaders, igniting the same flame that Babaji lit in him.
                   </p>
                 </div>
 
@@ -351,7 +351,7 @@ export default function SanjeeviniKriyaEssencePage() {
                     ))}
                   </ul>
                   <p className="text-deep-brown/75 leading-relaxed text-base" style={{ fontFamily: "var(--font-lora), Georgia, serif" }}>
-                    It is short, sacred, and accessible to all — students, professionals, homemakers, elders.
+                    It is short, sacred, and accessible to all students, professionals, homemakers, elders.
                   </p>
                 </section>
 

@@ -131,7 +131,7 @@ export default function TurningPointPage() {
             >
               <Image
                 src="/images/guruji_theTurningPoint.webp"
-                alt="Pujya Sri Gurumurthy Guruji — The Turning Point"
+                alt="Pujya Sri Gurumurthy Guruji The Turning Point"
                 width={768}
                 height={495}
                 sizes="(max-width: 768px) 92vw, 820px"
@@ -146,7 +146,7 @@ export default function TurningPointPage() {
             <P>
               At just <strong>18 years of age</strong>, when most youths are caught in the
               whirlwinds of confusion and worldly desire, the young seeker received something
-              that saints and sages wait lifetimes for — a <strong>direct, divine initiation
+              that saints and sages wait lifetimes for a <strong>direct, divine initiation
               into Kriya Yoga</strong> from none other than <strong>Mahavatar Babaji
               Himself</strong>.
             </P>
@@ -170,10 +170,10 @@ export default function TurningPointPage() {
             <SH width={210}>The Moment Of Grace</SH>
             <Indent>
               <P>
-                In the sacred stillness of deep meditation, Mahavatar Babaji appeared — not
+                In the sacred stillness of deep meditation, Mahavatar Babaji appeared not
                 in physical form, but in spirit, radiant with eternal grace. In a moment
                 beyond time, Babaji touched him, blessed him, and infused him with the{" "}
-                <strong>living current of Kriya Yoga</strong> — the very breath of divine
+                <strong>living current of Kriya Yoga</strong> the very breath of divine
                 evolution.
               </P>
               <P>
@@ -192,7 +192,7 @@ export default function TurningPointPage() {
               <P>
                 From that instant, his life was no longer his own. He belonged to the
                 mission. With no pride and no advertisement, he began walking silently on the
-                path, carrying the fire of Kriya Yoga — not merely as a practice, but as a{" "}
+                path, carrying the fire of Kriya Yoga not merely as a practice, but as a{" "}
                 <strong>living flame</strong>.
               </P>
               <P>That fire now burns bright.</P>
@@ -204,8 +204,8 @@ export default function TurningPointPage() {
             <SH width={185}>Kriya Yoga For All</SH>
             <Indent>
               <P>
-                Without boundaries of caste, creed, gender, age, or nation — without
-                commercialization or conditions —{" "}
+                Without boundaries of caste, creed, gender, age, or nation without
+                commercialization or conditions{" "}
                 <strong>Pujya Sri Gurumurthy Guruji</strong> shares Kriya Yoga freely with
                 all who seek inner peace and divine connection.
               </P>
@@ -224,7 +224,7 @@ export default function TurningPointPage() {
             <SH width={185}>A Divine Message</SH>
             <Indent>
               <P>
-                His birth was not just the beginning of a human life — it was a divine
+                His birth was not just the beginning of a human life it was a divine
                 message to the world:
               </P>
               <p
