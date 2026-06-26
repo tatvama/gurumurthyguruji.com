@@ -151,7 +151,7 @@ export default function AboutPage() {
 
 function GradientPanel({ num, title }: { num: string; title: string }) {
   return (
-    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[200px]">
+    <div className="relative overflow-hidden flex items-end border-b border-champagne/30 min-h-[200px] group">
       {/* Background photo (bottom layer) */}
       <Image
         src="/images/cartphotoAboutsec.webp"
@@ -159,7 +159,7 @@ function GradientPanel({ num, title }: { num: string; title: string }) {
         aria-hidden
         fill
         sizes="100vw"
-        className="object-cover object-center"
+        className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
       />
       {/* Redness gradient overlay — semi-transparent so the photo shows through */}
       <div
