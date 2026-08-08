@@ -76,6 +76,7 @@ const PUBLIC_ROUTES = [
   // (enforced per-route inside galleryRoutes.js / articleRoutes.js).
   { method: "GET",  path: "/api/gallery" },
   { method: "GET",  path: "/api/articles" },
+  { method: "POST", path: "/api/articles/view" },
 ];
 
 app.use((req, res, next) => {

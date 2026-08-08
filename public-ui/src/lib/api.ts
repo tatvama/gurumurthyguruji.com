@@ -1035,6 +1035,8 @@ export async function deleteGalleryImage(id: number): Promise<void> {
 }
 
 /* ── Articles ───────────────────────────────────────────────────── */
+export type ArticleStatus = "draft" | "published" | "archived";
+
 export interface Article {
   id: number;
   slug: string;
@@ -1044,12 +1046,34 @@ export interface Article {
   titleKn: string;
   excerpt: string;
   excerptKn: string;
-  content: string[];
-  published: boolean;
+  /** HTML string from the rich-text editor. Legacy rows may be plain
+   *  text with blank-line paragraph breaks — render helpers should
+   *  handle both (see `articleContentHtml` below). */
+  content: string;
+  status: ArticleStatus;
+  tags: string[];
+  author: string;
+  views: number;
+  metaTitle: string;
+  metaDescription: string;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Legacy seeded rows stored content as plain text with "\n\n" between
+ *  paragraphs; the editor now stores real HTML. Render either safely. */
+export function articleContentHtml(content: string): string {
+  if (!content) return "";
+  if (/<[a-z][\s\S]*>/i.test(content)) return content;
+  return content
+    .split(/\n\s*\n/)
+    .map((p) => `<p>${p.trim()}</p>`)
+    .join("");
 }
 
 function mapArticle(r: Record<string, any>): Article {
+  let tags: string[] = [];
+  try { tags = typeof r.tags === "string" ? JSON.parse(r.tags) : (r.tags ?? []); } catch { tags = []; }
   return {
     id: r.id,
     slug: r.slug,
@@ -1059,13 +1083,19 @@ function mapArticle(r: Record<string, any>): Article {
     titleKn: r.title_kn ?? "",
     excerpt: r.excerpt ?? "",
     excerptKn: r.excerpt_kn ?? "",
-    content: typeof r.content === "string" ? r.content.split("\n\n") : (r.content ?? []),
-    published: r.published !== false,
+    content: r.content ?? "",
+    status: (r.status as ArticleStatus) ?? (r.published !== false ? "published" : "draft"),
+    tags,
+    author: r.author ?? "",
+    views: r.views ?? 0,
+    metaTitle: r.meta_title ?? "",
+    metaDescription: r.meta_description ?? "",
     createdAt: r.created_at,
+    updatedAt: r.updated_at,
   };
 }
 
-// Public read — no admin auth needed, used by the public /articles pages.
+// Public read (published only) — used by the public /articles pages.
 export async function getArticles(): Promise<Article[]> {
   const res = await fetch(`${BASE}/api/articles`);
   if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -1074,23 +1104,56 @@ export async function getArticles(): Promise<Article[]> {
   return rows.map(mapArticle);
 }
 
-export async function createArticle(payload: {
+// Admin read — every status, for the dashboard list + status tabs.
+export async function getAllArticles(): Promise<Article[]> {
+  const json = await getJson(`/api/articles?all=true`);
+  const rows: any[] = Array.isArray(json) ? json : (json.data ?? []);
+  return rows.map(mapArticle);
+}
+
+export interface ArticlePayload {
   title: string; titleKn?: string; category: string; cover: string;
-  excerpt?: string; excerptKn?: string; content: string[]; published?: boolean;
-}): Promise<Article> {
-  const data = await sendJson(`/api/articles`, "POST", {
+  excerpt?: string; excerptKn?: string; content: string; status?: ArticleStatus;
+  tags?: string[]; author?: string; metaTitle?: string; metaDescription?: string;
+}
+
+function toArticleBody(payload: Partial<ArticlePayload>) {
+  return {
     title: payload.title,
     title_kn: payload.titleKn ?? "",
     category: payload.category,
     cover: payload.cover,
     excerpt: payload.excerpt ?? "",
     excerpt_kn: payload.excerptKn ?? "",
-    content: payload.content.join("\n\n"),
-    published: payload.published ?? true,
-  });
+    content: payload.content,
+    status: payload.status ?? "draft",
+    tags: payload.tags ?? [],
+    author: payload.author ?? "",
+    meta_title: payload.metaTitle ?? "",
+    meta_description: payload.metaDescription ?? "",
+  };
+}
+
+export async function createArticle(payload: ArticlePayload): Promise<Article> {
+  const data = await sendJson(`/api/articles`, "POST", toArticleBody(payload));
+  return mapArticle(data.data);
+}
+
+export async function updateArticle(id: number, payload: Partial<ArticlePayload>): Promise<Article> {
+  const data = await sendJson(`/api/articles/${id}`, "PATCH", toArticleBody(payload));
   return mapArticle(data.data);
 }
 
 export async function deleteArticle(id: number): Promise<void> {
   await sendJson(`/api/articles/${id}`, "DELETE");
+}
+
+export async function incrementArticleView(id: number): Promise<void> {
+  try {
+    await fetch(`${BASE}/api/articles/view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+  } catch { /* view counting is best-effort, never block the page */ }
 }

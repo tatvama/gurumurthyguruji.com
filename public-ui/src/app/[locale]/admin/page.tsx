@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { DateTimePicker, TimePicker } from "@/components/DateTimePicker";
 import { useRouter, useSearchParams, useParams, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -67,8 +67,8 @@ import {
   type AuditLog,
   getGalleryImages, createGalleryImage, deleteGalleryImage,
   type GalleryImage,
-  getArticles, createArticle, deleteArticle,
-  type Article,
+  getAllArticles, createArticle, updateArticle, deleteArticle, articleContentHtml,
+  type Article, type ArticleStatus,
 } from "@/lib/api";
 import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import {
@@ -4798,12 +4798,27 @@ export default function AdminPage() {
   const [gallerySaving, setGallerySaving] = useState(false);
   const [galleryDeletingId, setGalleryDeletingId] = useState<number | null>(null);
 
+  /* Articles — CMS-style: a list view (status tabs, search, category
+     filter) plus a full-page editor view (feature image, rich text,
+     tags, SEO), matching the reference admin design. */
+  const ARTICLE_EMPTY_FORM = {
+    title: "", titleKn: "", category: "Meditation", cover: "",
+    excerpt: "", excerptKn: "", content: "", status: "draft" as ArticleStatus,
+    tags: [] as string[], author: "", metaTitle: "", metaDescription: "",
+  };
   const [articleItems, setArticleItems]     = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
-  const [articleForm, setArticleForm] = useState({ title: "", titleKn: "", category: "Meditation", cover: "", excerpt: "", excerptKn: "", content: "" });
+  const [articleView, setArticleView] = useState<"list" | "editor">("list");
+  const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
+  const [articleForm, setArticleForm] = useState(ARTICLE_EMPTY_FORM);
+  const [articleTagInput, setArticleTagInput] = useState("");
   const [articleFileName, setArticleFileName] = useState("");
   const [articleSaving, setArticleSaving] = useState(false);
   const [articleDeletingId, setArticleDeletingId] = useState<number | null>(null);
+  const [articleStatusTab, setArticleStatusTab] = useState<"all" | ArticleStatus>("all");
+  const [articleSearch, setArticleSearch] = useState("");
+  const [articleCategoryFilter, setArticleCategoryFilter] = useState("all");
+  const articleEditorRef = useRef<HTMLDivElement>(null);
 
   const loadGallery = useCallback(async () => {
     setGalleryLoading(true);
@@ -4814,7 +4829,7 @@ export default function AdminPage() {
 
   const loadArticles = useCallback(async () => {
     setArticlesLoading(true);
-    try { setArticleItems(await getArticles()); }
+    try { setArticleItems(await getAllArticles()); }
     catch { toast.error("Could not load articles."); }
     finally { setArticlesLoading(false); }
   }, []);
@@ -4858,30 +4873,66 @@ export default function AdminPage() {
     }
   }
 
-  async function handleAddArticle() {
-    if (!articleForm.title || !articleForm.cover || !articleForm.content) {
-      toast.error("Title, cover image and content are required.");
-      return;
-    }
+  function openNewArticle() {
+    setEditingArticleId(null);
+    setArticleForm(ARTICLE_EMPTY_FORM);
+    setArticleFileName("");
+    setArticleTagInput("");
+    setArticleView("editor");
+    setTimeout(() => { if (articleEditorRef.current) articleEditorRef.current.innerHTML = ""; }, 0);
+  }
+
+  function openEditArticle(a: Article) {
+    setEditingArticleId(a.id);
+    setArticleForm({
+      title: a.title, titleKn: a.titleKn, category: a.category, cover: a.cover,
+      excerpt: a.excerpt, excerptKn: a.excerptKn, content: a.content, status: a.status,
+      tags: a.tags, author: a.author, metaTitle: a.metaTitle, metaDescription: a.metaDescription,
+    });
+    setArticleFileName("");
+    setArticleTagInput("");
+    setArticleView("editor");
+    setTimeout(() => { if (articleEditorRef.current) articleEditorRef.current.innerHTML = articleContentHtml(a.content); }, 0);
+  }
+
+  function addArticleTag() {
+    const tag = articleTagInput.trim().replace(/^#/, "");
+    if (!tag || articleForm.tags.includes(tag)) { setArticleTagInput(""); return; }
+    setArticleForm((f) => ({ ...f, tags: [...f.tags, tag] }));
+    setArticleTagInput("");
+  }
+
+  function removeArticleTag(tag: string) {
+    setArticleForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }));
+  }
+
+  async function handleSaveArticle(status: ArticleStatus) {
+    const html = articleEditorRef.current?.innerHTML.trim() || "";
+    if (!articleForm.title.trim()) { toast.error("Title is required."); return; }
+    if (!articleForm.cover) { toast.error("Please add a feature image."); return; }
+    if (!html || html === "<br>") { toast.error("Article body cannot be empty."); return; }
+
     setArticleSaving(true);
+    const payload = { ...articleForm, content: html, status };
     try {
-      await createArticle({
-        ...articleForm,
-        content: articleForm.content.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
-      });
-      toast.success("Article published.");
-      setArticleForm({ title: "", titleKn: "", category: articleForm.category, cover: "", excerpt: "", excerptKn: "", content: "" });
-      setArticleFileName("");
+      if (editingArticleId) {
+        await updateArticle(editingArticleId, payload);
+        toast.success(status === "published" ? "Article published." : "Draft saved.");
+      } else {
+        await createArticle(payload);
+        toast.success(status === "published" ? "Article published." : "Draft saved.");
+      }
+      setArticleView("list");
       await loadArticles();
     } catch (err: any) {
-      toast.error(err?.message || "Could not publish article.");
+      toast.error(err?.message || "Could not save article.");
     } finally {
       setArticleSaving(false);
     }
   }
 
   async function handleDeleteArticle(id: number) {
-    if (!window.confirm("Delete this article?")) return;
+    if (!window.confirm("Delete this article? This cannot be undone.")) return;
     setArticleDeletingId(id);
     try {
       await deleteArticle(id);
@@ -4892,6 +4943,15 @@ export default function AdminPage() {
     } finally {
       setArticleDeletingId(null);
     }
+  }
+
+  function execEditorCmd(cmd: string, value?: string) {
+    articleEditorRef.current?.focus();
+    document.execCommand(cmd, false, value);
+  }
+
+  function insertArticleImage(dataUrl: string) {
+    execEditorCmd("insertImage", dataUrl);
   }
 
   /* ── check existing session ── */
@@ -6362,124 +6422,361 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── Articles (public site content) ──────────────────────────── */}
-        {tab === "articles" && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
-            <div className="adm-hero-card">
-              <div className="adm-hero-row">
-                <div className="adm-hero-left">
-                  <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
-                  <div className="adm-hero-icon-wrap"><BookUser size={22} color="#0d9488" /></div>
-                  <div className="adm-hero-text">
-                    <p className="adm-hero-eyebrow">Public Site Content</p>
-                    <h1 className="adm-hero-h1">Articles ({articleItems.length})</h1>
+        {/* ── Articles (public site content) — CMS list + editor ──────── */}
+        {tab === "articles" && (() => {
+          const ARTICLE_CATEGORIES = ["Meditation", "Sanjeevini Kriya", "Guru Parampara", "Seva", "Deeksha"];
+          const STATUS_TABS: { key: "all" | ArticleStatus; label: string }[] = [
+            { key: "all", label: "All" },
+            { key: "draft", label: "Drafts" },
+            { key: "published", label: "Published" },
+            { key: "archived", label: "Archived" },
+          ];
+          const statusCounts = {
+            all: articleItems.length,
+            draft: articleItems.filter((a) => a.status === "draft").length,
+            published: articleItems.filter((a) => a.status === "published").length,
+            archived: articleItems.filter((a) => a.status === "archived").length,
+          };
+          const filteredArticles = articleItems.filter((a) => {
+            if (articleStatusTab !== "all" && a.status !== articleStatusTab) return false;
+            if (articleCategoryFilter !== "all" && a.category !== articleCategoryFilter) return false;
+            if (articleSearch && !(`${a.title} ${a.slug} ${a.excerpt}`.toLowerCase().includes(articleSearch.toLowerCase()))) return false;
+            return true;
+          });
+          const STATUS_STYLES: Record<ArticleStatus, { bg: string; fg: string }> = {
+            draft:     { bg: "#f3f4f6", fg: "#6b7280" },
+            published: { bg: "#dcfce7", fg: "#16a34a" },
+            archived:  { bg: "#fee2e2", fg: "#dc2626" },
+          };
+
+          /* ══════════ EDITOR VIEW ══════════ */
+          if (articleView === "editor") {
+            return (
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
+                {/* Editor top bar */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "#3a2418", color: "#fff", flexWrap: "wrap", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <button onClick={() => setArticleView("list")} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.12)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ArrowRight size={15} style={{ transform: "rotate(180deg)" }} />
+                    </button>
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 800 }}>{editingArticleId ? "Edit Article" : "New Article"}</p>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+                        {editingArticleId ? `Editing — ${articleForm.status}` : "unsaved draft"}
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => handleSaveArticle("draft")}
+                      disabled={articleSaving}
+                      style={{ padding: "9px 16px", borderRadius: 8, border: "1.5px solid rgba(255,255,255,0.25)", background: "transparent", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: articleSaving ? "not-allowed" : "pointer" }}
+                    >
+                      Save draft
+                    </button>
+                    <button
+                      onClick={() => handleSaveArticle("published")}
+                      disabled={articleSaving}
+                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: articleSaving ? "#9ca3af" : "#d97706", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: articleSaving ? "not-allowed" : "pointer" }}
+                    >
+                      {articleSaving ? "Saving…" : "Publish"}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 20, padding: 20, flexWrap: "wrap" }}>
+                  {/* Main column */}
+                  <div style={{ flex: "1 1 560px", minWidth: 320, display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 20 }}>
+                      <input
+                        placeholder="Article title…"
+                        value={articleForm.title}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, title: e.target.value }))}
+                        style={{ width: "100%", border: "none", outline: "none", fontSize: 26, fontWeight: 800, color: articleForm.title ? "#111827" : "#d1d5db", fontFamily: "inherit" }}
+                      />
+                      <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
+                        URL&nbsp;/&nbsp;{articleForm.title ? articleForm.title.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-") : "auto-generated-from-title"}
+                      </p>
+                      <input
+                        placeholder="Title (Kannada) — optional"
+                        value={articleForm.titleKn}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, titleKn: e.target.value }))}
+                        style={{ width: "100%", marginTop: 12, padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                      />
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 20 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Excerpt</p>
+                      <textarea
+                        placeholder="A compelling teaser shown on article cards…"
+                        value={articleForm.excerpt}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, excerpt: e.target.value }))}
+                        rows={2}
+                        style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
+                      />
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                      {/* Rich text toolbar */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: 10, borderBottom: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                        {[
+                          { label: "B", cmd: "bold", style: { fontWeight: 800 } },
+                          { label: "I", cmd: "italic", style: { fontStyle: "italic" } },
+                          { label: "U", cmd: "underline", style: { textDecoration: "underline" } },
+                        ].map((b) => (
+                          <button key={b.cmd} onClick={() => execEditorCmd(b.cmd)} title={b.cmd}
+                            style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, ...b.style }}>
+                            {b.label}
+                          </button>
+                        ))}
+                        <div style={{ width: 1, background: "#e5e7eb", margin: "2px 4px" }} />
+                        {["H1", "H2", "H3"].map((h) => (
+                          <button key={h} onClick={() => execEditorCmd("formatBlock", `<${h.toLowerCase()}>`)} title={h}
+                            style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>
+                            {h}
+                          </button>
+                        ))}
+                        <div style={{ width: 1, background: "#e5e7eb", margin: "2px 4px" }} />
+                        <button onClick={() => execEditorCmd("insertUnorderedList")} title="Bullet list" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13 }}>•—</button>
+                        <button onClick={() => execEditorCmd("insertOrderedList")} title="Numbered list" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 11 }}>1.</button>
+                        <button onClick={() => execEditorCmd("formatBlock", "<blockquote>")} title="Quote" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 14 }}>&ldquo;</button>
+                        <button
+                          onClick={() => { const url = window.prompt("Link URL:"); if (url) execEditorCmd("createLink", url); }}
+                          title="Link" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+                          🔗
+                        </button>
+                        <label title="Insert image" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          🖼️
+                          <input type="file" accept="image/*" style={{ display: "none" }}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const dataUrl = await readFileAsDataUrl(file);
+                              insertArticleImage(dataUrl);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                        <div style={{ width: 1, background: "#e5e7eb", margin: "2px 4px" }} />
+                        <button onClick={() => execEditorCmd("undo")} title="Undo" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13 }}>↺</button>
+                        <button onClick={() => execEditorCmd("redo")} title="Redo" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13 }}>↻</button>
+                      </div>
+                      <div
+                        ref={articleEditorRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        data-placeholder="Begin your story here…"
+                        className="adm-article-editor"
+                        style={{ minHeight: 320, padding: "18px 20px", fontSize: 14.5, lineHeight: 1.8, color: "#1f2937", outline: "none" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sidebar column */}
+                  <div style={{ flex: "0 1 320px", minWidth: 280, display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Status</p>
+                      <select
+                        value={articleForm.status}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, status: e.target.value as ArticleStatus }))}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                      >
+                        <option value="draft">Draft — not visible</option>
+                        <option value="published">Published — live on site</option>
+                        <option value="archived">Archived — hidden</option>
+                      </select>
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Feature Image</p>
+                      {articleForm.cover ? (
+                        <div style={{ position: "relative", marginBottom: 10 }}>
+                          <img src={articleForm.cover} alt="Cover" style={{ width: "100%", height: 130, objectFit: "cover", borderRadius: 8 }} />
+                          <button onClick={() => setArticleForm((f) => ({ ...f, cover: "" }))}
+                            style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", cursor: "pointer" }}>
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, height: 110, borderRadius: 8, border: "1.5px dashed #d1d5db", cursor: "pointer", background: "#f9fafb", marginBottom: 10 }}>
+                          <Plus size={16} color="#9ca3af" />
+                          <span style={{ fontSize: 11.5, color: "#9ca3af" }}>Drop image here, or Browse files</span>
+                          <input type="file" accept="image/*" style={{ display: "none" }}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setArticleFileName(file.name);
+                              const dataUrl = await readFileAsDataUrl(file);
+                              setArticleForm((f) => ({ ...f, cover: dataUrl }));
+                            }}
+                          />
+                        </label>
+                      )}
+                      <p style={{ fontSize: 10, color: "#9ca3af" }}>Recommended: 1200×630px · JPG or PNG</p>
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Category &amp; Tags</p>
+                      <select
+                        value={articleForm.category}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, category: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, marginBottom: 10 }}
+                      >
+                        {ARTICLE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                        <input
+                          placeholder="Add tag (Enter or , to add)"
+                          value={articleTagInput}
+                          onChange={(e) => setArticleTagInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addArticleTag(); } }}
+                          style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                        />
+                      </div>
+                      {articleForm.tags.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {articleForm.tags.map((tag) => (
+                            <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 999, background: "#f3f4f6", fontSize: 11, color: "#374151" }}>
+                              #{tag}
+                              <button onClick={() => removeArticleTag(tag)} style={{ border: "none", background: "none", cursor: "pointer", color: "#9ca3af", display: "flex" }}><X size={10} /></button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Author</p>
+                      <input
+                        placeholder={loggedName || "Author name"}
+                        value={articleForm.author}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, author: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                      />
+                    </div>
+
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>SEO</p>
+                      <input
+                        placeholder="Meta title (50-60 chars)"
+                        value={articleForm.metaTitle}
+                        maxLength={70}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, metaTitle: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, marginBottom: 8 }}
+                      />
+                      <textarea
+                        placeholder="Meta description (150-160 chars)"
+                        value={articleForm.metaDescription}
+                        maxLength={200}
+                        rows={3}
+                        onChange={(e) => setArticleForm((f) => ({ ...f, metaDescription: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            );
+          }
 
-            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
-              {/* Add new article */}
-              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Write a new article</p>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 8, border: "1.5px dashed #d1d5db", cursor: "pointer", fontSize: 12.5, color: "#6b7280", background: "#f9fafb" }}>
-                    <Plus size={14} />
-                    {articleFileName || "Choose cover image…"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setArticleFileName(file.name);
-                        const dataUrl = await readFileAsDataUrl(file);
-                        setArticleForm((f) => ({ ...f, cover: dataUrl }));
-                      }}
-                    />
-                  </label>
-                  <select
-                    value={articleForm.category}
-                    onChange={(e) => setArticleForm((f) => ({ ...f, category: e.target.value }))}
-                    style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, color: "#374151" }}
-                  >
-                    {["Meditation", "Sanjeevini Kriya", "Guru Parampara", "Seva", "Deeksha"].map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  {articleForm.cover && (
-                    <img src={articleForm.cover} alt="Preview" style={{ height: 36, width: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }} />
-                  )}
+          /* ══════════ LIST VIEW ══════════ */
+          return (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
+              <div className="adm-hero-card">
+                <div className="adm-hero-row">
+                  <div className="adm-hero-left">
+                    <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
+                    <div className="adm-hero-icon-wrap"><BookUser size={22} color="#0d9488" /></div>
+                    <div className="adm-hero-text">
+                      <p className="adm-hero-eyebrow">Content</p>
+                      <h1 className="adm-hero-h1">Articles</h1>
+                      <p style={{ fontSize: 11.5, color: "#9ca3af", marginTop: 2 }}>Long-form content for the public site</p>
+                    </div>
+                  </div>
+                  <button onClick={openNewArticle}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, border: "none", background: "#d97706", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                    <Plus size={14} /> New Article
+                  </button>
                 </div>
-
-                <input
-                  placeholder="Title (English)"
-                  value={articleForm.title}
-                  onChange={(e) => setArticleForm((f) => ({ ...f, title: e.target.value }))}
-                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
-                />
-                <input
-                  placeholder="Title (Kannada) — optional"
-                  value={articleForm.titleKn}
-                  onChange={(e) => setArticleForm((f) => ({ ...f, titleKn: e.target.value }))}
-                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
-                />
-                <textarea
-                  placeholder="Short excerpt (shown on the card)"
-                  value={articleForm.excerpt}
-                  onChange={(e) => setArticleForm((f) => ({ ...f, excerpt: e.target.value }))}
-                  rows={2}
-                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
-                />
-                <textarea
-                  placeholder="Full article — separate paragraphs with a blank line"
-                  value={articleForm.content}
-                  onChange={(e) => setArticleForm((f) => ({ ...f, content: e.target.value }))}
-                  rows={6}
-                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
-                />
-
-                <button
-                  onClick={handleAddArticle}
-                  disabled={articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content}
-                  style={{ alignSelf: "flex-start", padding: "9px 18px", borderRadius: 8, border: "none", background: (articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content) ? "#9ca3af" : "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: (articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content) ? "not-allowed" : "pointer" }}
-                >
-                  {articleSaving ? "Publishing…" : "Publish Article"}
-                </button>
               </div>
 
-              {/* List */}
-              {articlesLoading ? (
-                <p style={{ color: "#9ca3af", fontSize: 13 }}>Loading articles…</p>
-              ) : articleItems.length === 0 ? (
-                <p style={{ color: "#9ca3af", fontSize: 13 }}>No articles yet — write the first one above.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {articleItems.map((a) => (
-                    <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 10 }}>
-                      <img src={a.cover} alt={a.title} style={{ width: 72, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#0d9488" }}>{a.category}</span>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.title}</p>
-                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.excerpt}</p>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteArticle(a.id)}
-                        disabled={articleDeletingId === a.id}
-                        title="Delete article"
-                        style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+              <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+                {/* Status tabs */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {STATUS_TABS.map((s) => (
+                    <button key={s.key} onClick={() => setArticleStatusTab(s.key)}
+                      style={{
+                        padding: "7px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
+                        background: articleStatusTab === s.key ? "#d97706" : "#fff",
+                        color: articleStatusTab === s.key ? "#fff" : "#6b7280",
+                        boxShadow: articleStatusTab === s.key ? "none" : "0 0 0 1px #e5e7eb inset",
+                      }}>
+                      {s.label} ({statusCounts[s.key]})
+                    </button>
                   ))}
                 </div>
-              )}
+
+                {/* Search + filters */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                  <input
+                    placeholder="Search title, slug, excerpt…"
+                    value={articleSearch}
+                    onChange={(e) => setArticleSearch(e.target.value)}
+                    style={{ flex: "1 1 240px", padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                  />
+                  <select
+                    value={articleCategoryFilter}
+                    onChange={(e) => setArticleCategoryFilter(e.target.value)}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, color: "#374151" }}
+                  >
+                    <option value="all">All categories</option>
+                    {ARTICLE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <span style={{ alignSelf: "center", fontSize: 11.5, color: "#9ca3af" }}>{filteredArticles.length} articles</span>
+                </div>
+
+                {/* Table */}
+                {articlesLoading ? (
+                  <p style={{ color: "#9ca3af", fontSize: 13 }}>Loading articles…</p>
+                ) : filteredArticles.length === 0 ? (
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 40, textAlign: "center" }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>No articles yet</p>
+                    <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Click &quot;New Article&quot; to get started.</p>
+                  </div>
+                ) : (
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 0.7fr 1fr 0.5fr", gap: 8, padding: "10px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af" }}>
+                      <span>Article</span><span>Author</span><span>Category</span><span>Status</span><span>Views</span><span>Updated</span><span></span>
+                    </div>
+                    {filteredArticles.map((a) => (
+                      <div key={a.id} style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1fr 1fr 0.7fr 1fr 0.5fr", gap: 8, padding: "12px 16px", borderBottom: "1px solid #f3f4f6", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, cursor: "pointer" }} onClick={() => openEditArticle(a)}>
+                          <img src={a.cover} alt={a.title} style={{ width: 44, height: 34, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+                          <p style={{ fontSize: 12.5, fontWeight: 700, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.title}</p>
+                        </div>
+                        <span style={{ fontSize: 12, color: "#6b7280" }}>{a.author || "—"}</span>
+                        <span style={{ fontSize: 11.5, color: "#6b7280" }}>{a.category}</span>
+                        <span>
+                          <span style={{ padding: "2px 8px", borderRadius: 999, fontSize: 10.5, fontWeight: 700, textTransform: "capitalize", background: STATUS_STYLES[a.status].bg, color: STATUS_STYLES[a.status].fg }}>
+                            {a.status}
+                          </span>
+                        </span>
+                        <span style={{ fontSize: 12, color: "#6b7280" }}>{a.views}</span>
+                        <span style={{ fontSize: 11.5, color: "#9ca3af" }}>{a.updatedAt ? new Date(a.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}</span>
+                        <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                          <button onClick={() => handleDeleteArticle(a.id)} disabled={articleDeletingId === a.id} title="Delete"
+                            style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid #fecaca", background: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── Devotee Contacts ─────────────────────────────────────────── */}
         {tab === "devotees" && (() => {

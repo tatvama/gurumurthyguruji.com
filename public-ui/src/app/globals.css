@@ -2986,3 +2986,47 @@ table.admin-table tbody td:last-child  { padding-right: 20px; }
 .admin-sidebar-item.selected { background: rgba(216,183,106,0.10); border-right: 2.5px solid var(--admin-gold); }
 .admin-sidebar-item-name     { font-size: 13.5px; font-weight: 700; color: var(--admin-text-primary); }
 .admin-sidebar-item-sub      { font-size: 11.5px; color: var(--admin-text-muted); margin-top: 1px; }
+
+/* Rendered article body (rich-text HTML from the admin editor) */
+.prose-article p { margin-bottom: 1.25rem; }
+.prose-article h1, .prose-article h2, .prose-article h3 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-deep-brown);
+  margin: 1.75rem 0 0.75rem;
+  line-height: 1.25;
+}
+.prose-article h1 { font-size: 1.6rem; }
+.prose-article h2 { font-size: 1.35rem; }
+.prose-article h3 { font-size: 1.15rem; }
+.prose-article ul, .prose-article ol { margin: 0 0 1.25rem 1.25rem; }
+.prose-article ul { list-style: disc; }
+.prose-article ol { list-style: decimal; }
+.prose-article li { margin-bottom: 0.4rem; }
+.prose-article blockquote {
+  border-left: 3px solid var(--color-antique-gold);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: rgba(42,28,19,0.7);
+}
+.prose-article a { color: var(--color-saffron-accent); text-decoration: underline; }
+.prose-article img { border-radius: 0.75rem; margin: 1.5rem 0; max-width: 100%; height: auto; }
+.prose-article strong { font-weight: 700; }
+
+/* Admin article rich-text editor (contentEditable) placeholder + basic
+   element styling so it visually matches the rendered public article */
+.adm-article-editor:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  font-style: italic;
+  pointer-events: none;
+}
+.adm-article-editor h1 { font-size: 1.6rem; font-weight: 800; margin: 0.75rem 0; }
+.adm-article-editor h2 { font-size: 1.3rem; font-weight: 800; margin: 0.7rem 0; }
+.adm-article-editor h3 { font-size: 1.1rem; font-weight: 700; margin: 0.6rem 0; }
+.adm-article-editor ul { list-style: disc; margin-left: 1.25rem; }
+.adm-article-editor ol { list-style: decimal; margin-left: 1.25rem; }
+.adm-article-editor blockquote { border-left: 3px solid #d97706; padding-left: 12px; color: #6b7280; font-style: italic; margin: 0.75rem 0; }
+.adm-article-editor img { max-width: 100%; border-radius: 8px; margin: 0.75rem 0; }
+.adm-article-editor a { color: #d97706; text-decoration: underline; }

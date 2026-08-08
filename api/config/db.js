@@ -611,6 +611,17 @@ export const initDB = async () => {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published);`);
 
+    /* CMS-style fields for the richer editor (status workflow, tags,
+       views, author, SEO meta) — additive, so existing rows keep working. */
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'published';`);
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS tags TEXT DEFAULT '[]';`);
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0;`);
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS meta_title VARCHAR(70) DEFAULT '';`);
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS meta_description VARCHAR(200) DEFAULT '';`);
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS author VARCHAR(120) DEFAULT '';`);
+    await client.query(`UPDATE articles SET status = CASE WHEN published THEN 'published' ELSE 'draft' END WHERE status IS NULL;`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status);`);
+
     /* One-time seed so the public gallery/articles pages aren't empty on
        first switch-over from the old hardcoded data.ts — only runs while
        each table is still empty, safe to leave in permanently. */

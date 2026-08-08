@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Link } from "@/components/ui/locale-link";
-import { getArticles, type Article } from "@/lib/api";
+import { getArticles, incrementArticleView, articleContentHtml, type Article } from "@/lib/api";
 import { articleCategoryKn } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import { motion } from "framer-motion";
@@ -46,6 +46,16 @@ export default function ArticleDetailPage() {
     return () => { cancelled = true; };
   }, []);
 
+  const article = articles?.find((a) => a.slug === params.slug);
+
+  // Best-effort view counter — fires once per mount, only once the article
+  // is actually resolved (declared before any early return so hook order
+  // stays stable across renders per the Rules of Hooks).
+  useEffect(() => {
+    if (article) incrementArticleView(article.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article?.id]);
+
   if (articles === null) {
     return (
       <>
@@ -55,8 +65,6 @@ export default function ArticleDetailPage() {
       </>
     );
   }
-
-  const article = articles.find((a) => a.slug === params.slug);
 
   if (!article) {
     return (
@@ -74,7 +82,6 @@ export default function ArticleDetailPage() {
   }
 
   const catLabel = lang === "kn" ? articleCategoryKn[article.category] ?? article.category : article.category;
-  const content = article.content;
   const related = articles.filter((a) => a.slug !== article.slug && a.category === article.category).slice(0, 2);
 
   return (
@@ -133,13 +140,21 @@ export default function ArticleDetailPage() {
         </div>
 
         {/* ── Content ──────────────────────────────────────────────── */}
-        <article className="mx-auto max-w-2xl px-4 pt-10 md:px-8">
-          {content.map((paragraph, i) => (
-            <p key={i} className="mb-5 text-[16px] leading-[1.85] text-deep-brown/85" style={{ fontFamily: "var(--font-lora), Georgia, serif" }}>
-              {paragraph}
-            </p>
-          ))}
-        </article>
+        <article
+          className="prose-article mx-auto max-w-2xl px-4 pt-10 md:px-8 text-[16px] leading-[1.85] text-deep-brown/85"
+          style={{ fontFamily: "var(--font-lora), Georgia, serif" }}
+          dangerouslySetInnerHTML={{ __html: articleContentHtml(article.content) }}
+        />
+
+        {article.tags.length > 0 && (
+          <div className="mx-auto mt-6 flex max-w-2xl flex-wrap gap-2 px-4 md:px-8">
+            {article.tags.map((tag) => (
+              <span key={tag} className="rounded-full border border-antique-gold/25 bg-antique-gold/5 px-3 py-1 text-[11px] font-medium text-deep-brown/60">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* ── Related articles ─────────────────────────────────────── */}
         {related.length > 0 && (
