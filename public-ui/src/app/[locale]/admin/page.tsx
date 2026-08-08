@@ -6488,20 +6488,26 @@ export default function AdminPage() {
                   {/* Main column */}
                   <div style={{ flex: "1 1 560px", minWidth: 320, display: "flex", flexDirection: "column", gap: 16 }}>
                     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 20 }}>
+                      <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#d97706", marginBottom: 6 }}>
+                        Title (English) *
+                      </p>
                       <input
                         placeholder="Article title…"
                         value={articleForm.title}
                         onChange={(e) => setArticleForm((f) => ({ ...f, title: e.target.value }))}
-                        style={{ width: "100%", border: "none", outline: "none", fontSize: 26, fontWeight: 800, color: articleForm.title ? "#111827" : "#d1d5db", fontFamily: "inherit" }}
+                        style={{ width: "100%", border: "none", borderBottom: "2px solid #f3f4f6", outline: "none", paddingBottom: 8, fontSize: 26, fontWeight: 800, color: articleForm.title ? "#111827" : "#d1d5db", fontFamily: "inherit" }}
                       />
                       <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
                         URL&nbsp;/&nbsp;{articleForm.title ? articleForm.title.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-") : "auto-generated-from-title"}
                       </p>
+                      <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginTop: 16, marginBottom: 6 }}>
+                        Title (Kannada) — optional
+                      </p>
                       <input
-                        placeholder="Title (Kannada) — optional"
+                        placeholder="ಕನ್ನಡ ಶೀರ್ಷಿಕೆ…"
                         value={articleForm.titleKn}
                         onChange={(e) => setArticleForm((f) => ({ ...f, titleKn: e.target.value }))}
-                        style={{ width: "100%", marginTop: 12, padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
                       />
                     </div>
 
