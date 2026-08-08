@@ -11,11 +11,8 @@ import { getArticles, incrementArticleView, articleContentHtml, type Article } f
 import { articleCategoryKn } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, Sparkles, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, Sparkles, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-
-const GOLD_LINE =
-  "absolute left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-antique-gold/70 to-transparent";
 
 function formatDate(iso: string | undefined, lang: "en" | "kn") {
   if (!iso) return "";
@@ -106,31 +103,19 @@ export default function ArticleDetailPage() {
     <>
       <Header />
       <main className="flex-1 relative overflow-x-hidden bg-ivory bg-chakra-texture pb-20">
-        {/* ── Slim top bar — back link, overlaid on the hero image below ── */}
-        <div className="relative z-20 bg-deep-brown pt-20 pb-3 sm:pt-24">
-          <div className={`${GOLD_LINE} bottom-0`} />
-          <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <Link
-              href="/articles"
-              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-champagne/70 transition-colors hover:text-champagne"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              {t("articles.backToAll")}
-            </Link>
+        {/* ── Feature image — 70vw wide, centered, 70vh tall ───────────── */}
+        <div className="relative mx-auto overflow-hidden rounded-2xl pt-24 sm:pt-28" style={{ width: "70vw" }}>
+          <div className="relative w-full overflow-hidden rounded-2xl" style={{ height: "70vh" }}>
+            <Image
+              src={article.cover}
+              alt={tr({ en: article.title, kn: article.titleKn })}
+              fill
+              sizes="70vw"
+              className="object-cover"
+              priority
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
           </div>
-        </div>
-
-        {/* ── Feature image — full width, 70vh ─────────────────────────── */}
-        <div className="relative w-full" style={{ height: "70vh" }}>
-          <Image
-            src={article.cover}
-            alt={tr({ en: article.title, kn: article.titleKn })}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
         </div>
 
         {/* ── Slider (left) + Text (right) ─────────────────────────────── */}
