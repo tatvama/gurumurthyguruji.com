@@ -10,7 +10,8 @@ import { Link } from "@/components/ui/locale-link";
 import { getArticles, incrementArticleView, articleContentHtml, type Article } from "@/lib/api";
 import { articleCategoryKn } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
-import { ArrowLeft, CalendarDays, Sparkles, ChevronDown, Images } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, CalendarDays, Sparkles, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 const GOLD_LINE =
@@ -30,7 +31,7 @@ export default function ArticleDetailPage() {
   const params = useParams<{ slug: string }>();
   const { t, tr, lang } = useLanguage();
   const [articles, setArticles] = useState<Article[] | null>(null);
-  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +50,24 @@ export default function ArticleDetailPage() {
     if (article) incrementArticleView(article.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article?.id]);
+
+  const allPhotos = article ? [article.cover, ...article.gallery] : [];
+
+  const closeLightbox = () => setLightboxIndex(null);
+  const showPrev = () => setLightboxIndex((i) => (i === null ? null : (i - 1 + allPhotos.length) % allPhotos.length));
+  const showNext = () => setLightboxIndex((i) => (i === null ? null : (i + 1) % allPhotos.length));
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") showPrev();
+      if (e.key === "ArrowRight") showNext();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightboxIndex]);
 
   if (articles === null) {
     return (
@@ -77,19 +96,16 @@ export default function ArticleDetailPage() {
 
   const catLabel = lang === "kn" ? articleCategoryKn[article.category] ?? article.category : article.category;
   const related = articles.filter((a) => a.slug !== article.slug && a.category === article.category).slice(0, 2);
-  // Feature image is always the first thumbnail, followed by any extra gallery photos.
-  const allPhotos = [article.cover, ...article.gallery];
+  const activePhoto = lightboxIndex !== null ? allPhotos[lightboxIndex] : null;
 
   return (
     <>
       <Header />
       <main className="flex-1 relative overflow-x-hidden bg-ivory bg-chakra-texture pb-20">
-        {/* ── Slim top bar — just the back-link, title/category moved into
-            the right-hand text column below for the image-left/text-right
-            layout. ─────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden bg-deep-brown pt-24 pb-6 sm:pt-28">
+        {/* ── Slim top bar — back link, overlaid on the hero image below ── */}
+        <div className="relative z-20 bg-deep-brown pt-20 pb-3 sm:pt-24">
           <div className={`${GOLD_LINE} bottom-0`} />
-          <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
+          <div className="mx-auto max-w-7xl px-4 md:px-8">
             <Link
               href="/articles"
               className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-champagne/70 transition-colors hover:text-champagne"
@@ -98,47 +114,40 @@ export default function ArticleDetailPage() {
               {t("articles.backToAll")}
             </Link>
           </div>
-        </section>
+        </div>
 
-        {/* ── Image (left, ~70%) + Text (right, ~30%) ─────────────────── */}
+        {/* ── Feature image — full width, 70vh ─────────────────────────── */}
+        <div className="relative w-full" style={{ height: "70vh" }}>
+          <Image
+            src={article.cover}
+            alt={tr({ en: article.title, kn: article.titleKn })}
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        </div>
+
+        {/* ── Slider (left) + Text (right) ─────────────────────────────── */}
         <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[7fr_3fr] lg:gap-12">
-            {/* LEFT — feature image + photo gallery dropdown */}
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr_3fr] lg:gap-12">
+            {/* LEFT — horizontal image slider: feature image + every gallery photo */}
             <div>
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-antique-gold/25 shadow-[0_20px_60px_-20px_rgba(75,13,19,0.35)]">
-                <Image
-                  src={article.cover}
-                  alt={tr({ en: article.title, kn: article.titleKn })}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 70vw"
-                  className="object-cover"
-                  priority
-                />
-              </div>
-
-              {/* Photo Gallery dropdown — feature image + every extra
-                  photo, so seekers can revisit all images from one spot. */}
-              <div className="mt-4 overflow-hidden rounded-xl border border-antique-gold/20 bg-white">
-                <button
-                  onClick={() => setGalleryOpen((v) => !v)}
-                  className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Images className="h-4 w-4 text-saffron-accent" />
-                    <span className="font-heading text-[15px] font-bold text-deep-brown">Photo Gallery</span>
-                    <span className="text-[11px] font-medium text-deep-brown/40">({allPhotos.length})</span>
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-deep-brown/50 transition-transform duration-300 ${galleryOpen ? "rotate-180" : ""}`} />
-                </button>
-                {galleryOpen && (
-                  <div className="grid grid-cols-3 gap-2 border-t border-antique-gold/15 p-4 sm:grid-cols-4">
-                    {allPhotos.map((src, idx) => (
-                      <div key={idx} className="relative aspect-square overflow-hidden rounded-lg">
-                        <Image src={src} alt={`${tr({ en: article.title, kn: article.titleKn })} — photo ${idx + 1}`} fill sizes="150px" className="object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-antique-gold">
+                Photo Gallery ({allPhotos.length})
+              </p>
+              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollSnapType: "x mandatory" }}>
+                {allPhotos.map((src, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setLightboxIndex(idx)}
+                    className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl border border-antique-gold/25 shadow-sm transition-transform duration-300 hover:-translate-y-0.5"
+                    style={{ scrollSnapAlign: "start" }}
+                  >
+                    <Image src={src} alt={`${tr({ en: article.title, kn: article.titleKn })} — photo ${idx + 1}`} fill sizes="150px" className="object-cover" />
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -206,6 +215,47 @@ export default function ArticleDetailPage() {
         )}
       </main>
       <Footer />
+
+      {/* ── Lightbox — click any slider thumbnail to view it larger ───── */}
+      <AnimatePresence>
+        {activePhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-4 backdrop-blur-sm"
+            onClick={closeLightbox}
+          >
+            <button
+              onClick={closeLightbox}
+              aria-label="Close"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 sm:right-6 sm:top-6"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); showPrev(); }}
+              aria-label="Previous"
+              className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 sm:left-6"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); showNext(); }}
+              aria-label="Next"
+              className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20 sm:right-6"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            <div
+              className="relative aspect-[4/3] w-full max-w-3xl overflow-hidden rounded-xl border border-antique-gold/25 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image src={activePhoto} alt="" fill sizes="90vw" className="object-contain bg-black" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
