@@ -13,6 +13,7 @@ import {
   MapPin, HeartHandshake,
   Sparkles, Route, GraduationCap,
   Sunrise, Star, Flame, Footprints,
+  Quote, Images, Newspaper,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,6 +44,14 @@ const navItems: NavItemDef[] = [
       { key: "nav.sky.essence", descKey: "nav.sky.essence.desc", href: "/sanjeevini-kriya",                Icon: Sparkles },
       { key: "nav.sky.path",    descKey: "nav.sky.path.desc",    href: "/sanjeevini-kriya/the-path",       Icon: Route },
       { key: "nav.sky.learn",   descKey: "nav.sky.learn.desc",   href: "/sanjeevini-kriya/learn-practice", Icon: GraduationCap },
+    ],
+  },
+  {
+    key: "nav.explore",
+    children: [
+      { key: "nav.guruvani", descKey: "nav.guruvani.desc", href: "/guruvani", Icon: Quote },
+      { key: "nav.gallery",  descKey: "nav.gallery.desc",  href: "/gallery",  Icon: Images },
+      { key: "nav.articles", descKey: "nav.articles.desc", href: "/articles", Icon: Newspaper },
     ],
   },
   { key: "nav.contact", href: "/contact" },

@@ -232,17 +232,17 @@ export default function SanjeeviniKriyaLearnPage() {
         <div className="absolute top-40 right-0 w-80 h-80 bg-saffron-accent/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-40 left-0 w-96 h-96 bg-antique-gold/5 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Hero image — 65vw × 45vh centered, full image visible */}
-        <div className="flex justify-center">
-          <div style={{ width: "88vw", height: "45vh", borderRadius: "28px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* Hero image — container aspect matches the photo's own ratio
+            (3:2), so the rounded corners sit right on the image edges
+            with no empty gap above/below like the old fixed-45vh box had. */}
+        <div className="flex justify-center px-4">
+          <div className="relative aspect-[3/2] w-full max-w-[820px] overflow-hidden rounded-2xl sm:rounded-[28px]">
             <Image
-              src="/images/learn-practice-sanjeevini-img.png"
+              src="/images/Sanjivini_L&P_Hero.png"
               alt="Sanjeevini Kriya — Learn & Practice"
-              width={1440}
-              height={620}
-              sizes="65vw"
-              className="object-contain"
-              style={{ width: "100%", height: "100%" }}
+              fill
+              sizes="(max-width: 768px) 92vw, 820px"
+              className="object-cover"
               priority
             />
           </div>
@@ -256,9 +256,9 @@ export default function SanjeeviniKriyaLearnPage() {
               fontFamily: "var(--font-baskervville), 'Baskervville', serif",
               fontWeight: 500,
               textTransform: "uppercase",
-              fontSize: "clamp(14px, 3.6vw, 18px)",
+              fontSize: "clamp(11px, 3vw, 18px)",
               lineHeight: 1.6,
-              letterSpacing: "clamp(3px, 1.6vw, 10px)",
+              letterSpacing: "clamp(1.5px, 1vw, 10px)",
               color: "#CC3366",
             }}
           >
@@ -271,10 +271,10 @@ export default function SanjeeviniKriyaLearnPage() {
             className="inline-block mb-1"
             style={{
               fontFamily: "var(--font-baskervville), 'Baskervville', serif",
-              fontSize: "clamp(20px, 6vw, 29px)",
+              fontSize: "clamp(15px, 4.5vw, 29px)",
               fontWeight: 500,
               textTransform: "uppercase",
-              letterSpacing: "clamp(4px, 2vw, 10px)",
+              letterSpacing: "clamp(1.5px, 1.2vw, 10px)",
               lineHeight: "1.2",
               color: "#000",
             }}
@@ -284,8 +284,8 @@ export default function SanjeeviniKriyaLearnPage() {
 
           <div className="flex justify-center mb-4">
             <div style={{
-              height: "4px",
-              width: "min(320px, 80%)",
+              height: "clamp(2px, 0.5vw, 4px)",
+              width: "min(320px, 60vw)",
               background: "linear-gradient(to right, transparent 0%, #d4af37 20%, #d4af37 80%, transparent 100%)",
               borderRadius: "2px",
             }} />
@@ -295,7 +295,7 @@ export default function SanjeeviniKriyaLearnPage() {
             className="mb-5"
             style={{
               fontFamily: "var(--font-caveat), 'Caveat', cursive",
-              fontSize: "clamp(1.25rem, 5.5vw, 1.8rem)",
+              fontSize: "clamp(1rem, 4vw, 1.8rem)",
               fontWeight: 300,
               lineHeight: 1.5,
               color: "#C2765D",

@@ -9,6 +9,7 @@ import { ashrams, ashramStatusKn } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { MapPin, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 const COSMIC =
   "radial-gradient(ellipse at center,rgba(132,88,68,0.22) 0%,transparent 40%)," +
@@ -59,7 +60,7 @@ export default function AshramsPage() {
           <div className={`${GOLD_LINE} bottom-0`} />
         </section>
 
-        {/* ── Map placeholder ─────────────────────────────────────── */}
+        {/* ── Ashram banner ────────────────────────────────────────── */}
         <section className="py-10">
           <div className="mx-auto max-w-6xl px-4 md:px-8">
             <motion.div
@@ -67,19 +68,35 @@ export default function AshramsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
               className="group relative overflow-hidden rounded-2xl border border-antique-gold/20 shadow-[0_4px_32px_rgba(75,13,19,0.12)]"
-              style={{ background: COSMIC }}
             >
-              <div className={`${GOLD_LINE} top-0`} />
-              <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-repeat bg-[size:120px] opacity-[0.04]" />
+              <div className={`${GOLD_LINE} top-0 z-20`} />
 
-              <div className="relative z-10 flex flex-col items-center justify-center px-6 py-12 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-antique-gold/30 bg-antique-gold/15 transition-transform duration-300 group-hover:scale-110">
-                  <MapPin className="h-6 w-6 text-champagne" />
+              <div className="relative aspect-[16/9] w-full sm:aspect-[21/9]">
+                <Image
+                  src="/ashramImg.png"
+                  alt="Sadhguru Sai Samsthana Ashram at sunrise, on the river's edge"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 1152px"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  priority
+                />
+                {/* Scrim so the title/caption stay legible over any part of the photo */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
+
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-end px-6 pb-7 text-center sm:pb-9">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-antique-gold/40 bg-antique-gold/20 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14">
+                    <MapPin className="h-5 w-5 text-champagne sm:h-6 sm:w-6" />
+                  </div>
+                  <p className="font-heading text-lg font-bold text-pearl drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] sm:text-xl">
+                    {t("ashramspage.map.title")}
+                  </p>
+                  <p className="mt-1.5 text-xs text-pearl/70 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] sm:text-sm">
+                    {t("ashramspage.map.caption")}
+                  </p>
                 </div>
-                <p className="font-heading text-xl font-bold text-pearl">{t("ashramspage.map.title")}</p>
-                <p className="mt-1.5 text-sm text-pearl/45">{t("ashramspage.map.caption")}</p>
               </div>
-              <div className={`${GOLD_LINE} bottom-0`} />
+
+              <div className={`${GOLD_LINE} bottom-0 z-20`} />
             </motion.div>
           </div>
         </section>

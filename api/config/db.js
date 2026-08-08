@@ -576,6 +576,156 @@ export const initDB = async () => {
       ON CONFLICT (mobile) DO NOTHING;
     `);
 
+    /* ── Gallery images (admin-managed, public read) ──────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS gallery_images (
+        id          SERIAL PRIMARY KEY,
+        src         TEXT         NOT NULL,
+        category    VARCHAR(60)  NOT NULL DEFAULT 'Guruji',
+        caption     VARCHAR(300) NOT NULL DEFAULT '',
+        caption_kn  VARCHAR(300) NOT NULL DEFAULT '',
+        created_by  VARCHAR(120),
+        created_at  TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_gallery_images_category ON gallery_images(category);`);
+
+    /* ── Articles (admin-managed, public read) ─────────────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS articles (
+        id          SERIAL PRIMARY KEY,
+        slug        VARCHAR(200) NOT NULL UNIQUE,
+        category    VARCHAR(60)  NOT NULL DEFAULT 'Meditation',
+        cover       TEXT         NOT NULL,
+        title       VARCHAR(300) NOT NULL,
+        title_kn    VARCHAR(300) NOT NULL DEFAULT '',
+        excerpt     VARCHAR(500) NOT NULL DEFAULT '',
+        excerpt_kn  VARCHAR(500) NOT NULL DEFAULT '',
+        content     TEXT         NOT NULL,
+        published   BOOLEAN      DEFAULT true,
+        created_by  VARCHAR(120),
+        created_at  TIMESTAMPTZ  DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ  DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published);`);
+
+    /* One-time seed so the public gallery/articles pages aren't empty on
+       first switch-over from the old hardcoded data.ts — only runs while
+       each table is still empty, safe to leave in permanently. */
+    const { rows: [{ count: galleryCount }] } = await client.query(`SELECT COUNT(*)::int AS count FROM gallery_images;`);
+    if (galleryCount === 0) {
+      const seedImages = [
+        ["/images/GuruJiHeroImg1.png", "Guruji", "Pujya Sri Gurumurthy Guruji in silent meditation", "ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿ ಮೌನ ಧ್ಯಾನದಲ್ಲಿ"],
+        ["/images/sanjivini_Hero_Img.png", "Sanjeevini Kriya", "A seeker in silent meditation at sunrise", "ಸೂರ್ಯೋದಯದಲ್ಲಿ ಮೌನ ಧ್ಯಾನದಲ್ಲಿ ಒಬ್ಬ ಸಾಧಕ"],
+        ["/images/Sanjivini_L&P_Hero.png", "Sanjeevini Kriya", "The sacred path of Sanjeevini Kriya", "ಸಂಜೀವಿನಿ ಕ್ರಿಯಾದ ಪವಿತ್ರ ಪಥ"],
+        ["/ashramImg.png", "Ashrams", "Sadhguru Sai Samsthana Ashram at sunrise", "ಸೂರ್ಯೋದಯದಲ್ಲಿ ಸದ್ಗುರು ಸಾಯಿ ಸಂಸ್ಥಾನ ಆಶ್ರಮ"],
+        ["/images/pranaShuddhiDeeksha.webp", "Deeksha", "Prana Shuddhi Deeksha — the seeker's first step", "ಪ್ರಾಣ ಶುದ್ಧಿ ದೀಕ್ಷೆ — ಸಾಧಕನ ಮೊದಲ ಹೆಜ್ಜೆ"],
+        ["/images/atmaJagrutiDeeksha.webp", "Deeksha", "Atma Jagruti Deeksha — balance and depth", "ಆತ್ಮ ಜಾಗೃತಿ ದೀಕ್ಷೆ — ಸಮತೋಲನ ಮತ್ತು ಆಳ"],
+        ["/images/divyaSamadhiDeeksha.webp", "Deeksha", "Divya Samadhi Deeksha — divine absorption", "ದಿವ್ಯ ಸಮಾಧಿ ದೀಕ್ಷೆ — ದಿವ್ಯ ಲೀನತೆ"],
+        ["/images/guruji-meditating.png", "Guruji", "Guruji in deep meditation", "ಆಳ ಧ್ಯಾನದಲ್ಲಿ ಗುರೂಜಿ"],
+        ["/images/guru-parampara-tree.jpg", "Guruji", "The unbroken Guru Parampara lineage", "ಅಖಂಡ ಗುರು ಪರಂಪರೆಯ ವಂಶಾವಳಿ"],
+        ["/images/sadhguru_darshan_guruji_tumbnail-scaled.webp", "Guruji", "Seekers in darshan with Guruji", "ಗುರೂಜಿಯ ದರ್ಶನದಲ್ಲಿ ಸಾಧಕರು"],
+        ["/images/basavana-betta-mountains.webp", "Ashrams", "Basavana Betta — the sacred hills", "ಬಸವನ ಬೆಟ್ಟ — ಪವಿತ್ರ ಗುಡ್ಡಗಳು"],
+        ["/images/arshamCartImg.png", "Ashrams", "A quiet moment of devotion", "ಭಕ್ತಿಯ ಒಂದು ಶಾಂತ ಕ್ಷಣ"],
+      ];
+      for (const [src, category, caption, caption_kn] of seedImages) {
+        await client.query(
+          `INSERT INTO gallery_images (src, category, caption, caption_kn, created_by) VALUES ($1,$2,$3,$4,'seed')`,
+          [src, category, caption, caption_kn]
+        );
+      }
+    }
+
+    const { rows: [{ count: articleCount }] } = await client.query(`SELECT COUNT(*)::int AS count FROM articles;`);
+    if (articleCount === 0) {
+      const seedArticles = [
+        {
+          slug: "silence-within-meditation-begins-with-stillness",
+          category: "Meditation",
+          cover: "/images/guruji-meditating.png",
+          title: "The Silence Within: Why Meditation Begins With Stillness",
+          title_kn: "ಆಂತರಿಕ ಮೌನ: ಧ್ಯಾನ ಸ್ಥಿರತೆಯಿಂದ ಏಕೆ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ",
+          excerpt: "Before the mind can awaken, it must first learn to rest. A reflection on why stillness — not effort — is the true starting point of every meditative practice.",
+          excerpt_kn: "ಮನಸ್ಸು ಜಾಗೃತವಾಗುವ ಮೊದಲು, ಅದು ಮೊದಲು ವಿಶ್ರಾಂತಿ ಪಡೆಯಲು ಕಲಿಯಬೇಕು.",
+          content: [
+            "Most seekers begin their meditation practice searching for an experience — a light, a vision, a feeling of peace that announces itself. But the mind that searches is still a mind in motion, and motion cannot see itself clearly.",
+            "Guruji often reminds seekers that silence is not the absence of thought, but the space in which thought is finally seen for what it is — passing, temporary, not the Self. The first sittings of any sadhana are rarely about achieving stillness; they are about noticing how rarely the mind is still at all.",
+            "This is not a discouragement — it is the doorway. Every seeker who has walked the path of Sanjeevini Kriya begins exactly here, with the honest recognition of restlessness. From that recognition, and only from it, does true stillness begin to grow.",
+            "Sit for a few minutes today with no goal other than to notice. Not to fix, not to force — simply to notice. That noticing, practiced gently and daily, is the seed of everything that follows.",
+          ].join("\n\n"),
+        },
+        {
+          slug: "understanding-sanjeevini-kriya-path-of-breath-and-grace",
+          category: "Sanjeevini Kriya",
+          cover: "/images/sanjivini_Hero_Img.png",
+          title: "Understanding Sanjeevini Kriya: A Path of Breath and Grace",
+          title_kn: "ಸಂಜೀವಿನಿ ಕ್ರಿಯಾವನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳುವುದು: ಶ್ವಾಸ ಮತ್ತು ಕೃಪೆಯ ಪಥ",
+          excerpt: "Sanjeevini Kriya asks for no outer change, only inner sincerity. A gentle introduction to what this practice is, and why it can be received by seekers of any background.",
+          excerpt_kn: "ಸಂಜೀವಿನಿ ಕ್ರಿಯಾ ಯಾವುದೇ ಬಾಹ್ಯ ಬದಲಾವಣೆಯನ್ನು ಕೇಳುವುದಿಲ್ಲ, ಕೇವಲ ಆಂತರಿಕ ಪ್ರಾಮಾಣಿಕತೆಯನ್ನು ಮಾತ್ರ.",
+          content: [
+            "In the lineage of Mahavatar Babaji, Sanjeevini Kriya is offered not as a technique to be mastered through effort, but as a grace to be received through sincerity. It asks nothing of the seeker's outer life — no particular diet, no renunciation, no change of circumstance.",
+            "What it asks for is a few honest minutes each day: a willingness to sit, to breathe with awareness, and to let the practice work quietly beneath the surface of daily life. Over time, seekers describe this as breath becoming prayer, and silence becoming strength.",
+            "The path unfolds in stages — each a deeksha, a transmission received directly rather than learned from a book. This is why the guidance of a living master matters: Sanjeevini Kriya is a current of energy and grace as much as it is a technique of breath.",
+            "If you feel drawn to begin, know that no prior experience is needed. Every seeker starts exactly where they are.",
+          ].join("\n\n"),
+        },
+        {
+          slug: "unbroken-lineage-kriya-yoga-babaji-to-today",
+          category: "Guru Parampara",
+          cover: "/images/guru-parampara-tree.jpg",
+          title: "The Unbroken Lineage: Kriya Yoga From Babaji to Today",
+          title_kn: "ಅಖಂಡ ಪರಂಪರೆ: ಬಾಬಾಜಿಯಿಂದ ಇಂದಿನವರೆಗೆ ಕ್ರಿಯಾ ಯೋಗ",
+          excerpt: "From Mahavatar Babaji to Lahiri Mahasaya, Sri Yukteswar, and beyond — a look at how one unbroken chain of transmission carries Kriya Yoga's wisdom forward.",
+          excerpt_kn: "ಮಹಾವತಾರ ಬಾಬಾಜಿಯಿಂದ ಇಂದಿನವರೆಗಿನ ಅಖಂಡ ಪ್ರಸರಣ ಸರಪಳಿಯ ನೋಟ.",
+          content: [
+            "A guru parampara is not a list of names — it is a living current, passed from one awakened being to the next, each carrying forward what was received without dilution.",
+            "The chain begins, in this tradition, with Adi Guru Ishwara and the Saptarishis, moves through the Siddha tradition and Sage Agastya, and reaches the modern world through the deathless Mahavatar Babaji, who revived Kriya Yoga for this age.",
+            "From Babaji, the transmission passed to Lahiri Mahasaya, the householder yogi who made Kriya accessible to ordinary seekers; to Sri Yukteswar, the Jñāna Avatar; and to Paramahansa Yogananda, who carried this light to the West.",
+            "Today, that same current continues through Pujya Sri Gurumurthy Guruji — not as history to be studied, but as a living transmission still available to any sincere seeker who comes forward.",
+          ].join("\n\n"),
+        },
+        {
+          slug: "living-a-life-of-seva-quiet-power-of-selfless-service",
+          category: "Seva",
+          cover: "/ashramImg.png",
+          title: "Living a Life of Seva: The Quiet Power of Selfless Service",
+          title_kn: "ಸೇವಾಮಯ ಜೀವನ: ನಿಸ್ವಾರ್ಥ ಸೇವೆಯ ಮೌನ ಶಕ್ತಿ",
+          excerpt: "Every day, Annadana feeds over a thousand people — not as charity, but as prayer. On why selfless service is treated as a spiritual practice in its own right.",
+          excerpt_kn: "ಪ್ರತಿದಿನ, ಅನ್ನದಾನವು ಸಾವಿರಕ್ಕೂ ಹೆಚ್ಚು ಜನರಿಗೆ ಆಹಾರ ನೀಡುತ್ತದೆ.",
+          content: [
+            "It is easy to think of meditation and service as two separate paths — one turned inward, the other turned outward. But in this tradition, they are understood as one and the same practice, wearing different clothes.",
+            "Seva asks the seeker to offer effort without attachment to the outcome, and without seeking recognition for it. Annadana — the daily feeding of those in need — is one of the clearest expressions of this: food offered simply because someone is hungry, with no question asked in return.",
+            "Guruji often says that a mind trained in silent meditation but closed to another's suffering has not yet understood stillness at all. True inner peace naturally overflows into compassion for others.",
+            "Whether through Annadana, through supporting an ashram's daily work, or through a small act of kindness in your own home, seva is available to every seeker, every day — no special qualification required, only willingness.",
+          ].join("\n\n"),
+        },
+        {
+          slug: "three-signs-you-are-ready-for-deeksha",
+          category: "Deeksha",
+          cover: "/images/pranaShuddhiDeeksha.webp",
+          title: "Three Signs You Are Ready for Deeksha",
+          title_kn: "ನೀವು ದೀಕ್ಷೆಗೆ ಸಿದ್ಧರಿದ್ದೀರಿ ಎಂಬುದರ ಮೂರು ಸೂಚನೆಗಳು",
+          excerpt: "Deeksha is not earned through years of preparation — it is received through sincerity. Some gentle signs that a seeker is ready to take the next step.",
+          excerpt_kn: "ದೀಕ್ಷೆಯನ್ನು ವರ್ಷಗಳ ಸಿದ್ಧತೆಯಿಂದ ಗಳಿಸಲಾಗುವುದಿಲ್ಲ.",
+          content: [
+            "Many seekers wait, believing they must first become 'ready' in some measurable way before approaching a Guru for deeksha. In truth, readiness rarely looks the way we expect.",
+            "The first sign is simple honesty — an admission, even quietly to oneself, that the mind is restless and seeking something it cannot name. This honesty, not achievement, is the true starting point.",
+            "The second sign is a longing for guidance rather than more information — a sense that reading and thinking alone have reached their limit, and that what is needed now is direct transmission from a living master.",
+            "The third sign is simply the willingness to begin with just a few minutes a day. Deeksha does not ask for a transformed life in advance — it offers the very grace that makes transformation possible. If these signs feel familiar, the path is already open to you.",
+          ].join("\n\n"),
+        },
+      ];
+      for (const a of seedArticles) {
+        await client.query(
+          `INSERT INTO articles (slug, category, cover, title, title_kn, excerpt, excerpt_kn, content, created_by)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'seed')`,
+          [a.slug, a.category, a.cover, a.title, a.title_kn, a.excerpt, a.excerpt_kn, a.content]
+        );
+      }
+    }
+
     console.log("Database tables verified / created.");
   } finally {
     client.release();

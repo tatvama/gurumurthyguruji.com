@@ -11,7 +11,7 @@ export function AboutPreview() {
 
   return (
     <section className="section-pearl px-4 py-12 sm:py-16 md:px-8 md:py-20">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-14">
         <Reveal>
           <span className="eyebrow">{t("about.eyebrow")}</span>
           <h2 className="font-heading mt-4 text-2xl font-medium leading-[1.08] tracking-tight text-deep-brown sm:text-3xl lg:text-[2.6rem]">
@@ -32,15 +32,15 @@ export function AboutPreview() {
             width={400}
             height={500}
             sizes="(max-width: 768px) 60vw, 35vw"
-            className="h-auto w-[60%] object-contain sm:w-[50%] md:mx-auto md:w-[65%]"
+            className="h-auto w-[45%] object-contain sm:w-[40%] md:mx-auto md:w-[48%]"
           />
           {/* Quote card — inline centered on mobile, floating absolute on md+ */}
-          <div className="relative z-20 mt-4 w-full max-w-[260px] rounded-2xl border border-champagne/35 bg-white/95 p-4 backdrop-blur-sm sm:max-w-[240px] md:absolute md:-bottom-4 md:-left-8 md:mt-0 md:max-w-[220px] md:p-5">
-            <Quote className="pointer-events-none absolute left-2 top-2 h-5 w-5 text-antique-gold/25" />
-            <p className="font-heading relative z-10 pl-2 text-sm italic leading-relaxed text-deep-brown/95">
+          <div className="relative z-20 mt-4 w-full max-w-[210px] rounded-xl border border-champagne/35 bg-white/95 p-3 backdrop-blur-sm sm:max-w-[195px] md:absolute md:-bottom-4 md:-left-8 md:mt-0 md:max-w-[175px] md:p-3.5">
+            <Quote className="pointer-events-none absolute left-1.5 top-1.5 h-4 w-4 text-antique-gold/25" />
+            <p className="font-heading relative z-10 pl-1.5 text-xs italic leading-relaxed text-deep-brown/95">
               {t("about.quote")}
             </p>
-            <span className="mt-2 block text-right text-[9px] font-bold uppercase tracking-widest text-antique-gold">
+            <span className="mt-1.5 block text-right text-[8px] font-bold uppercase tracking-widest text-antique-gold">
               {t("about.quoteBy")}
             </span>
           </div>

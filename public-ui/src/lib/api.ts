@@ -987,3 +987,110 @@ export async function getWaLogs(limit = 50): Promise<any[]> {
     return json.data ?? [];
   } catch { return []; }
 }
+
+/* ── Gallery ────────────────────────────────────────────────────── */
+export interface GalleryImage {
+  id: number;
+  src: string;
+  category: string;
+  caption: string;
+  captionKn: string;
+  createdAt?: string;
+}
+
+function mapGalleryImage(r: Record<string, any>): GalleryImage {
+  return {
+    id: r.id,
+    src: r.src,
+    category: r.category,
+    caption: r.caption ?? "",
+    captionKn: r.caption_kn ?? "",
+    createdAt: r.created_at,
+  };
+}
+
+// Public read — no admin auth needed, used by the public /gallery page.
+export async function getGalleryImages(): Promise<GalleryImage[]> {
+  const res = await fetch(`${BASE}/api/gallery`);
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  const json = await res.json();
+  const rows: any[] = Array.isArray(json) ? json : (json.data ?? []);
+  return rows.map(mapGalleryImage);
+}
+
+export async function createGalleryImage(payload: {
+  src: string; category: string; caption?: string; captionKn?: string;
+}): Promise<GalleryImage> {
+  const data = await sendJson(`/api/gallery`, "POST", {
+    src: payload.src,
+    category: payload.category,
+    caption: payload.caption ?? "",
+    caption_kn: payload.captionKn ?? "",
+  });
+  return mapGalleryImage(data.data);
+}
+
+export async function deleteGalleryImage(id: number): Promise<void> {
+  await sendJson(`/api/gallery/${id}`, "DELETE");
+}
+
+/* ── Articles ───────────────────────────────────────────────────── */
+export interface Article {
+  id: number;
+  slug: string;
+  category: string;
+  cover: string;
+  title: string;
+  titleKn: string;
+  excerpt: string;
+  excerptKn: string;
+  content: string[];
+  published: boolean;
+  createdAt?: string;
+}
+
+function mapArticle(r: Record<string, any>): Article {
+  return {
+    id: r.id,
+    slug: r.slug,
+    category: r.category,
+    cover: r.cover,
+    title: r.title,
+    titleKn: r.title_kn ?? "",
+    excerpt: r.excerpt ?? "",
+    excerptKn: r.excerpt_kn ?? "",
+    content: typeof r.content === "string" ? r.content.split("\n\n") : (r.content ?? []),
+    published: r.published !== false,
+    createdAt: r.created_at,
+  };
+}
+
+// Public read — no admin auth needed, used by the public /articles pages.
+export async function getArticles(): Promise<Article[]> {
+  const res = await fetch(`${BASE}/api/articles`);
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  const json = await res.json();
+  const rows: any[] = Array.isArray(json) ? json : (json.data ?? []);
+  return rows.map(mapArticle);
+}
+
+export async function createArticle(payload: {
+  title: string; titleKn?: string; category: string; cover: string;
+  excerpt?: string; excerptKn?: string; content: string[]; published?: boolean;
+}): Promise<Article> {
+  const data = await sendJson(`/api/articles`, "POST", {
+    title: payload.title,
+    title_kn: payload.titleKn ?? "",
+    category: payload.category,
+    cover: payload.cover,
+    excerpt: payload.excerpt ?? "",
+    excerpt_kn: payload.excerptKn ?? "",
+    content: payload.content.join("\n\n"),
+    published: payload.published ?? true,
+  });
+  return mapArticle(data.data);
+}
+
+export async function deleteArticle(id: number): Promise<void> {
+  await sendJson(`/api/articles/${id}`, "DELETE");
+}

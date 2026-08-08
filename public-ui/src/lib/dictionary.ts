@@ -39,6 +39,11 @@ export const ui = {
     "nav.seva": "Seva & Annadana",
     "nav.seva.desc": "Compassionate service & daily feeding",
     "nav.trust": "Sadhguru Sai Samsthana Trust",
+    "nav.explore": "Wisdom & Media",
+    "nav.gallery": "Gallery",
+    "nav.gallery.desc": "Moments from satsangs, events & ashrams",
+    "nav.articles": "Articles",
+    "nav.articles.desc": "Reflections & teachings on the spiritual path",
 
     // ── Calls to action ─────────────────────────────────────────
     "cta.book": "Book a Free Appointment",
@@ -388,6 +393,17 @@ export const ui = {
     "guruvani.hero.titleAccent": "The Master's Voice",
     "guruvani.hero.subtitle": "Timeless wisdom and sacred quotes to illuminate your spiritual path.",
     "guruvani.filters.all": "All",
+    // [gallery]
+    "gallery.hero.titlePrefix": "Sacred ",
+    "gallery.hero.titleAccent": "Gallery",
+    "gallery.hero.subtitle": "Moments of grace from satsangs, deekshas, and ashram life across Karnataka.",
+    "gallery.filters.all": "All",
+    // [articles]
+    "articles.hero.titlePrefix": "Wisdom ",
+    "articles.hero.titleAccent": "Articles",
+    "articles.hero.subtitle": "Reflections, teachings, and insights on the path of Sanjeevini Kriya.",
+    "articles.filters.all": "All",
+    "articles.backToAll": "Back to all articles",
     // [parampara]
     "parampara.hero.titleLead": "The Sacred",
     "parampara.hero.titleHighlight": "Lineage",
@@ -469,6 +485,11 @@ export const ui = {
     "nav.seva": "ಸೇವೆ ಮತ್ತು ಅನ್ನದಾನ",
     "nav.seva.desc": "ಕರುಣಾಮಯ ಸೇವೆ ಮತ್ತು ನಿತ್ಯ ಅನ್ನದಾನ",
     "nav.trust": "ಸದ್ಗುರು ಸಾಯಿ ಸಂಸ್ಥಾನ ಟ್ರಸ್ಟ್",
+    "nav.explore": "ಜ್ಞಾನ ಮತ್ತು ಮಾಧ್ಯಮ",
+    "nav.gallery": "ಗ್ಯಾಲರಿ",
+    "nav.gallery.desc": "ಸತ್ಸಂಗ, ಕಾರ್ಯಕ್ರಮಗಳು ಮತ್ತು ಆಶ್ರಮಗಳ ಕ್ಷಣಗಳು",
+    "nav.articles": "ಲೇಖನಗಳು",
+    "nav.articles.desc": "ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದ ಬಗ್ಗೆ ಚಿಂತನೆಗಳು ಮತ್ತು ಬೋಧನೆಗಳು",
 
     // ── Calls to action ─────────────────────────────────────────
     "cta.book": "ಉಚಿತ ದರ್ಶನ ಕಾಯ್ದಿರಿಸಿ",
@@ -808,6 +829,17 @@ export const ui = {
     "guruvani.hero.titleAccent": "ಗುರುಗಳ ದಿವ್ಯ ವಾಣಿ",
     "guruvani.hero.subtitle": "ನಿಮ್ಮ ಆಧ್ಯಾತ್ಮಿಕ ಪಥವನ್ನು ಬೆಳಗಿಸುವ ಕಾಲಾತೀತ ಜ್ಞಾನ ಮತ್ತು ಪವಿತ್ರ ನುಡಿಮುತ್ತುಗಳು.",
     "guruvani.filters.all": "ಎಲ್ಲಾ",
+    // [gallery]
+    "gallery.hero.titlePrefix": "ಪವಿತ್ರ ",
+    "gallery.hero.titleAccent": "ಗ್ಯಾಲರಿ",
+    "gallery.hero.subtitle": "ಕರ್ನಾಟಕದಾದ್ಯಂತ ಸತ್ಸಂಗ, ದೀಕ್ಷೆ ಮತ್ತು ಆಶ್ರಮ ಜೀವನದ ಕೃಪಾ ಕ್ಷಣಗಳು.",
+    "gallery.filters.all": "ಎಲ್ಲಾ",
+    // [articles]
+    "articles.hero.titlePrefix": "ಜ್ಞಾನ ",
+    "articles.hero.titleAccent": "ಲೇಖನಗಳು",
+    "articles.hero.subtitle": "ಸಂಜೀವಿನಿ ಕ್ರಿಯಾ ಮಾರ್ಗದ ಬಗ್ಗೆ ಚಿಂತನೆಗಳು, ಬೋಧನೆಗಳು ಮತ್ತು ಒಳನೋಟಗಳು.",
+    "articles.filters.all": "ಎಲ್ಲಾ",
+    "articles.backToAll": "ಎಲ್ಲಾ ಲೇಖನಗಳಿಗೆ ಹಿಂತಿರುಗಿ",
     // [parampara]
     "parampara.hero.titleLead": "ಪವಿತ್ರ",
     "parampara.hero.titleHighlight": "ಗುರುಪರಂಪರೆ",

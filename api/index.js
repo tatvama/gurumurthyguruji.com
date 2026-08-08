@@ -23,6 +23,8 @@ import whatsappRoutes from "./routes/whatsappRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import galleryRoutes from "./routes/galleryRoutes.js";
+import articleRoutes from "./routes/articleRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,6 +71,11 @@ const PUBLIC_ROUTES = [
   { method: "POST", path: "/api/admin-users/send-otp" },
   { method: "POST", path: "/api/admin-users/verify-otp" },
   { method: "GET",  path: "/api/notifications/stream" },
+  // Public site reads — gallery/articles listing is shown on the public
+  // website without admin login. Create/update/delete still require auth
+  // (enforced per-route inside galleryRoutes.js / articleRoutes.js).
+  { method: "GET",  path: "/api/gallery" },
+  { method: "GET",  path: "/api/articles" },
 ];
 
 app.use((req, res, next) => {
@@ -96,6 +103,8 @@ app.use("/api/whatsapp",        whatsappRoutes);
 app.use("/api/settings",        settingsRoutes);
 app.use("/api/documents",       documentRoutes);
 app.use("/api/notifications",   notificationRoutes);
+app.use("/api/gallery",         galleryRoutes);
+app.use("/api/articles",        articleRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });

@@ -142,6 +142,26 @@ export const pageMeta: Record<string, PageMeta> = {
       kn: "ನಿಮ್ಮ ಪಥವನ್ನು ಬೆಳಗಿಸುವ ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿಯ ಕಾಲಾತೀತ ಬೋಧನೆಗಳು ಮತ್ತು ಪವಿತ್ರ ನುಡಿಮುತ್ತುಗಳು.",
     },
   },
+  "/gallery": {
+    title: {
+      en: "Gallery — Moments From Satsangs & Ashram Life",
+      kn: "ಗ್ಯಾಲರಿ — ಸತ್ಸಂಗ ಮತ್ತು ಆಶ್ರಮ ಜೀವನದ ಕ್ಷಣಗಳು",
+    },
+    description: {
+      en: "A photo gallery of Pujya Sri Gurumurthy Guruji, deekshas, satsangs and ashram life across Karnataka.",
+      kn: "ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿ, ದೀಕ್ಷೆಗಳು, ಸತ್ಸಂಗ ಮತ್ತು ಕರ್ನಾಟಕದಾದ್ಯಂತ ಆಶ್ರಮ ಜೀವನದ ಚಿತ್ರ ಗ್ಯಾಲರಿ.",
+    },
+  },
+  "/articles": {
+    title: {
+      en: "Articles — Reflections on the Spiritual Path",
+      kn: "ಲೇಖನಗಳು — ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದ ಚಿಂತನೆಗಳು",
+    },
+    description: {
+      en: "Articles and reflections on meditation, Sanjeevini Kriya, Guru Parampara and seva from Pujya Sri Gurumurthy Guruji's teachings.",
+      kn: "ಪೂಜ್ಯ ಶ್ರೀ ಗುರುಮೂರ್ತಿ ಗುರೂಜಿಯ ಬೋಧನೆಗಳಿಂದ ಧ್ಯಾನ, ಸಂಜೀವಿನಿ ಕ್ರಿಯಾ, ಗುರು ಪರಂಪರೆ ಮತ್ತು ಸೇವೆಯ ಬಗ್ಗೆ ಲೇಖನಗಳು ಮತ್ತು ಚಿಂತನೆಗಳು.",
+    },
+  },
   "/meet-guruji": {
     title: {
       en: "Meet Guruji — Book a Free Sacred Appointment",

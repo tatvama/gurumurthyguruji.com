@@ -65,6 +65,10 @@ import {
   type AiReport,
   type ChatMessage,
   type AuditLog,
+  getGalleryImages, createGalleryImage, deleteGalleryImage,
+  type GalleryImage,
+  getArticles, createArticle, deleteArticle,
+  type Article,
 } from "@/lib/api";
 import { usePlacesAutocomplete } from "@/lib/googlePlaces";
 import {
@@ -124,6 +128,10 @@ const SECTION_GROUPS = [
     { id: "guruji",   label: "Guruji Darshan" },
     { id: "devotees", label: "Devotee Contacts" },
   ]},
+  { group: "CONTENT", items: [
+    { id: "gallery",  label: "Gallery" },
+    { id: "articles", label: "Articles" },
+  ]},
   { group: "CONFIGURATION", items: [
     { id: "admins",   label: "Staff Users" },
     { id: "settings", label: "Settings" },
@@ -131,7 +139,7 @@ const SECTION_GROUPS = [
 ];
 const ALL_SECTION_IDS = SECTION_GROUPS.flatMap(g => g.items.map(i => i.id));
 
-type Tab = "today" | "bookings" | "contacts" | "admins" | "trikala" | "devotees" | "appointments" | "reports" | "settings";
+type Tab = "today" | "bookings" | "contacts" | "admins" | "trikala" | "devotees" | "appointments" | "reports" | "settings" | "gallery" | "articles";
 
 /* ── CustomSelect ──────────────────────────────────────────────────── */
 function CustomSelect({
@@ -4704,7 +4712,7 @@ export default function AdminPage() {
   const searchParams = useSearchParams();
   const routeParams  = useParams();
   const locale       = (routeParams?.locale as string) || "en";
-  const VALID_TABS: Tab[] = ["today", "bookings", "contacts", "admins", "trikala", "devotees", "appointments", "reports", "settings"];
+  const VALID_TABS: Tab[] = ["today", "bookings", "contacts", "admins", "trikala", "devotees", "appointments", "reports", "settings", "gallery", "articles"];
   const initTab = (searchParams.get("tab") as Tab | null);
   const [tab, setTab] = useState<Tab>(VALID_TABS.includes(initTab as Tab) ? (initTab as Tab) : "today");
   const [bookings, setBookings] = useState<AppointmentBooking[]>([]);
@@ -4781,6 +4789,110 @@ export default function AdminPage() {
   const [scheduleAppt, setScheduleAppt]             = useState<Appointment | null>(null);
   const [apptActionErr, setApptActionErr]           = useState<string | null>(null);
   const [addDevoteeOpen, setAddDevoteeOpen] = useState(false);
+
+  /* ── Content: Gallery & Articles (admin-managed public content) ── */
+  const [galleryItems, setGalleryItems]     = useState<GalleryImage[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [galleryForm, setGalleryForm] = useState({ src: "", category: "Guruji", caption: "", captionKn: "" });
+  const [galleryFileName, setGalleryFileName] = useState("");
+  const [gallerySaving, setGallerySaving] = useState(false);
+  const [galleryDeletingId, setGalleryDeletingId] = useState<number | null>(null);
+
+  const [articleItems, setArticleItems]     = useState<Article[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articleForm, setArticleForm] = useState({ title: "", titleKn: "", category: "Meditation", cover: "", excerpt: "", excerptKn: "", content: "" });
+  const [articleFileName, setArticleFileName] = useState("");
+  const [articleSaving, setArticleSaving] = useState(false);
+  const [articleDeletingId, setArticleDeletingId] = useState<number | null>(null);
+
+  const loadGallery = useCallback(async () => {
+    setGalleryLoading(true);
+    try { setGalleryItems(await getGalleryImages()); }
+    catch { toast.error("Could not load gallery."); }
+    finally { setGalleryLoading(false); }
+  }, []);
+
+  const loadArticles = useCallback(async () => {
+    setArticlesLoading(true);
+    try { setArticleItems(await getArticles()); }
+    catch { toast.error("Could not load articles."); }
+    finally { setArticlesLoading(false); }
+  }, []);
+
+  function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleAddGalleryImage() {
+    if (!galleryForm.src) { toast.error("Please choose an image."); return; }
+    setGallerySaving(true);
+    try {
+      await createGalleryImage(galleryForm);
+      toast.success("Image added to gallery.");
+      setGalleryForm({ src: "", category: galleryForm.category, caption: "", captionKn: "" });
+      setGalleryFileName("");
+      await loadGallery();
+    } catch (err: any) {
+      toast.error(err?.message || "Could not add image.");
+    } finally {
+      setGallerySaving(false);
+    }
+  }
+
+  async function handleDeleteGalleryImage(id: number) {
+    if (!window.confirm("Remove this image from the gallery?")) return;
+    setGalleryDeletingId(id);
+    try {
+      await deleteGalleryImage(id);
+      setGalleryItems((prev) => prev.filter((g) => g.id !== id));
+      toast.success("Image removed.");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not remove image.");
+    } finally {
+      setGalleryDeletingId(null);
+    }
+  }
+
+  async function handleAddArticle() {
+    if (!articleForm.title || !articleForm.cover || !articleForm.content) {
+      toast.error("Title, cover image and content are required.");
+      return;
+    }
+    setArticleSaving(true);
+    try {
+      await createArticle({
+        ...articleForm,
+        content: articleForm.content.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean),
+      });
+      toast.success("Article published.");
+      setArticleForm({ title: "", titleKn: "", category: articleForm.category, cover: "", excerpt: "", excerptKn: "", content: "" });
+      setArticleFileName("");
+      await loadArticles();
+    } catch (err: any) {
+      toast.error(err?.message || "Could not publish article.");
+    } finally {
+      setArticleSaving(false);
+    }
+  }
+
+  async function handleDeleteArticle(id: number) {
+    if (!window.confirm("Delete this article?")) return;
+    setArticleDeletingId(id);
+    try {
+      await deleteArticle(id);
+      setArticleItems((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Article deleted.");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not delete article.");
+    } finally {
+      setArticleDeletingId(null);
+    }
+  }
 
   /* ── check existing session ── */
   useEffect(() => {
@@ -4932,6 +5044,8 @@ export default function AdminPage() {
 
   useEffect(() => { if (authed && tab === "devotees")     fetchDevotees();     }, [authed, tab, fetchDevotees]);
   useEffect(() => { if (authed && tab === "appointments") fetchAppointments(); }, [authed, tab, fetchAppointments]);
+  useEffect(() => { if (authed && tab === "gallery")      loadGallery();       }, [authed, tab, loadGallery]);
+  useEffect(() => { if (authed && tab === "articles")     loadArticles();      }, [authed, tab, loadArticles]);
 
   /* ── open a devotee 360 profile ── */
   const openDevotee = useCallback(async (d: Devotee) => {
@@ -5186,6 +5300,24 @@ export default function AdminPage() {
           </p>
           {([
             { key: "devotees" as const, label: "Devotee Contacts", icon: "🙏", section: "devotees" },
+          ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
+            <button key={key} onClick={() => tabChange(key)}
+              className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer", marginBottom: 3, borderLeft: tab === key ? "3px solid #0d9488" : "3px solid transparent", transition: "all 0.15s", background: "transparent" }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: tab === key ? 700 : 500, textAlign: "left", color: tab === key ? "#0d9488" : "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+            </button>
+          ))}
+
+          <div style={{ height: 1, background: "#f0f0f0", margin: "10px 0 12px" }} />
+
+          {/* Content — public site's Gallery & Articles, admin-managed */}
+          <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#9ca3af", padding: "0 8px", marginBottom: 8 }}>
+            Content
+          </p>
+          {([
+            { key: "gallery"  as const, label: "Gallery",  icon: "🖼️", section: "gallery" },
+            { key: "articles" as const, label: "Articles", icon: "📰", section: "articles" },
           ]).filter(({ section }) => canAccess(section)).map(({ key, label, icon }) => (
             <button key={key} onClick={() => tabChange(key)}
               className={`adm-nav-btn${tab === key ? " adm-nav-btn-active" : ""}`}
@@ -6126,6 +6258,228 @@ export default function AdminPage() {
             </div>
           );
         })()}
+
+        {/* ── Gallery (public site content) ───────────────────────────── */}
+        {tab === "gallery" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
+            <div className="adm-hero-card">
+              <div className="adm-hero-row">
+                <div className="adm-hero-left">
+                  <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
+                  <div className="adm-hero-icon-wrap"><Camera size={22} color="#0d9488" /></div>
+                  <div className="adm-hero-text">
+                    <p className="adm-hero-eyebrow">Public Site Content</p>
+                    <h1 className="adm-hero-h1">Gallery ({galleryItems.length})</h1>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Add new image */}
+              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 12 }}>Add a photo</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 8, border: "1.5px dashed #d1d5db", cursor: "pointer", fontSize: 12.5, color: "#6b7280", background: "#f9fafb" }}>
+                    <Plus size={14} />
+                    {galleryFileName || "Choose image…"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setGalleryFileName(file.name);
+                        const dataUrl = await readFileAsDataUrl(file);
+                        setGalleryForm((f) => ({ ...f, src: dataUrl }));
+                      }}
+                    />
+                  </label>
+                  <select
+                    value={galleryForm.category}
+                    onChange={(e) => setGalleryForm((f) => ({ ...f, category: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, color: "#374151" }}
+                  >
+                    {["Guruji", "Sanjeevini Kriya", "Ashrams", "Deeksha"].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <input
+                    placeholder="Caption (English)"
+                    value={galleryForm.caption}
+                    onChange={(e) => setGalleryForm((f) => ({ ...f, caption: e.target.value }))}
+                    style={{ flex: "1 1 200px", padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                  />
+                  <input
+                    placeholder="Caption (Kannada) — optional"
+                    value={galleryForm.captionKn}
+                    onChange={(e) => setGalleryForm((f) => ({ ...f, captionKn: e.target.value }))}
+                    style={{ flex: "1 1 200px", padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                  />
+                  <button
+                    onClick={handleAddGalleryImage}
+                    disabled={gallerySaving || !galleryForm.src}
+                    style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: gallerySaving || !galleryForm.src ? "#9ca3af" : "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: gallerySaving || !galleryForm.src ? "not-allowed" : "pointer" }}
+                  >
+                    {gallerySaving ? "Adding…" : "Add to Gallery"}
+                  </button>
+                </div>
+                {galleryForm.src && (
+                  <div style={{ marginTop: 12 }}>
+                    <img src={galleryForm.src} alt="Preview" style={{ height: 80, width: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Grid */}
+              {galleryLoading ? (
+                <p style={{ color: "#9ca3af", fontSize: 13 }}>Loading gallery…</p>
+              ) : galleryItems.length === 0 ? (
+                <p style={{ color: "#9ca3af", fontSize: 13 }}>No photos yet — add the first one above.</p>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+                  {galleryItems.map((img) => (
+                    <div key={img.id} style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: "1px solid #e5e7eb", background: "#fff" }}>
+                      <img src={img.src} alt={img.caption} style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }} />
+                      <div style={{ padding: "8px 10px" }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#0d9488" }}>{img.category}</span>
+                        <p style={{ fontSize: 11.5, color: "#374151", marginTop: 2, lineHeight: 1.4 }}>{img.caption}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteGalleryImage(img.id)}
+                        disabled={galleryDeletingId === img.id}
+                        title="Remove"
+                        style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.55)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Articles (public site content) ──────────────────────────── */}
+        {tab === "articles" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
+            <div className="adm-hero-card">
+              <div className="adm-hero-row">
+                <div className="adm-hero-left">
+                  <button className="adm-hero-ham" onClick={() => setSidebarOpen(v => !v)}><Menu size={20} /></button>
+                  <div className="adm-hero-icon-wrap"><BookUser size={22} color="#0d9488" /></div>
+                  <div className="adm-hero-text">
+                    <p className="adm-hero-eyebrow">Public Site Content</p>
+                    <h1 className="adm-hero-h1">Articles ({articleItems.length})</h1>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Add new article */}
+              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Write a new article</p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 8, border: "1.5px dashed #d1d5db", cursor: "pointer", fontSize: 12.5, color: "#6b7280", background: "#f9fafb" }}>
+                    <Plus size={14} />
+                    {articleFileName || "Choose cover image…"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setArticleFileName(file.name);
+                        const dataUrl = await readFileAsDataUrl(file);
+                        setArticleForm((f) => ({ ...f, cover: dataUrl }));
+                      }}
+                    />
+                  </label>
+                  <select
+                    value={articleForm.category}
+                    onChange={(e) => setArticleForm((f) => ({ ...f, category: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, color: "#374151" }}
+                  >
+                    {["Meditation", "Sanjeevini Kriya", "Guru Parampara", "Seva", "Deeksha"].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  {articleForm.cover && (
+                    <img src={articleForm.cover} alt="Preview" style={{ height: 36, width: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }} />
+                  )}
+                </div>
+
+                <input
+                  placeholder="Title (English)"
+                  value={articleForm.title}
+                  onChange={(e) => setArticleForm((f) => ({ ...f, title: e.target.value }))}
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                />
+                <input
+                  placeholder="Title (Kannada) — optional"
+                  value={articleForm.titleKn}
+                  onChange={(e) => setArticleForm((f) => ({ ...f, titleKn: e.target.value }))}
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                />
+                <textarea
+                  placeholder="Short excerpt (shown on the card)"
+                  value={articleForm.excerpt}
+                  onChange={(e) => setArticleForm((f) => ({ ...f, excerpt: e.target.value }))}
+                  rows={2}
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
+                />
+                <textarea
+                  placeholder="Full article — separate paragraphs with a blank line"
+                  value={articleForm.content}
+                  onChange={(e) => setArticleForm((f) => ({ ...f, content: e.target.value }))}
+                  rows={6}
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }}
+                />
+
+                <button
+                  onClick={handleAddArticle}
+                  disabled={articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content}
+                  style={{ alignSelf: "flex-start", padding: "9px 18px", borderRadius: 8, border: "none", background: (articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content) ? "#9ca3af" : "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: (articleSaving || !articleForm.title || !articleForm.cover || !articleForm.content) ? "not-allowed" : "pointer" }}
+                >
+                  {articleSaving ? "Publishing…" : "Publish Article"}
+                </button>
+              </div>
+
+              {/* List */}
+              {articlesLoading ? (
+                <p style={{ color: "#9ca3af", fontSize: 13 }}>Loading articles…</p>
+              ) : articleItems.length === 0 ? (
+                <p style={{ color: "#9ca3af", fontSize: 13 }}>No articles yet — write the first one above.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {articleItems.map((a) => (
+                    <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 10 }}>
+                      <img src={a.cover} alt={a.title} style={{ width: 72, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#0d9488" }}>{a.category}</span>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.title}</p>
+                        <p style={{ fontSize: 11.5, color: "#6b7280", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.excerpt}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteArticle(a.id)}
+                        disabled={articleDeletingId === a.id}
+                        title="Delete article"
+                        style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #fecaca", background: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Devotee Contacts ─────────────────────────────────────────── */}
         {tab === "devotees" && (() => {

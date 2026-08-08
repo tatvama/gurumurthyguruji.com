@@ -92,45 +92,51 @@ export default function SanjeeviniKriyaPathPage() {
         <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10">
 
           {/* Hero */}
-          <div className="text-center mb-14">
+          <div className="text-center mb-8 sm:mb-10 lg:mb-14">
 
-            {/* Decorative border frame — no image */}
-            {/* Top Hero Image */}
-<div className="flex justify-center mb-10">
-  <Image
-    src="/images/sanjeeviniKriyaThePath.png"
-    alt="Sanjeevini Kriya The Path"
-    width={700}
-    height={420}
-    priority
-    sizes="(max-width: 768px) 100vw, 700px"
-    className="rounded-2xl"
-    style={{ width: "100%", maxWidth: "700px", height: "auto" }}
-  />
-</div>
-
-            {/* Label */}
-            <p
-              className="mb-5"
-              style={{
-                fontFamily: "var(--font-baskervville), 'Baskervville', serif",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                fontSize: "clamp(14px, 3.6vw, 18px)",
-                lineHeight: 1.6,
-                letterSpacing: "clamp(3px, 1.6vw, 10px)",
-                color: "#CC3366",
-              }}
-            >
-              <span style={{ display: "inline", height: "1em", width: "1em", margin: "0 0.07em", verticalAlign: "-0.1em" }}>🔱</span>
-              {" "}Sanjeevini Kriya{" "}
-              <span style={{ display: "inline", height: "1em", width: "1em", margin: "0 0.07em", verticalAlign: "-0.1em" }}>🔱</span>
-            </p>
-
+            {/* Top Hero Image — cinematic banner: ambient glow behind a
+                gold-rimmed frame, with the "Sanjeevini Kriya" label overlaid
+                on the image itself (bottom scrim) instead of sitting below
+                it, so the whole thing reads as one polished visual moment. */}
+            <div className="relative mx-auto mb-6 max-w-[1020px] sm:mb-8 lg:mb-10">
+              <div className="pointer-events-none absolute -inset-4 rounded-[2.25rem] bg-antique-gold/15 blur-3xl sm:-inset-8" />
+              <div className="relative overflow-hidden rounded-2xl border border-antique-gold/30 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.45)] sm:rounded-3xl">
+                <Image
+                  src="/images/sanjivini_Hero_Img.png"
+                  alt="A seeker in silent meditation at sunrise on Sanjeevini Kriya's path"
+                  width={1536}
+                  height={1024}
+                  priority
+                  sizes="(max-width: 768px) 100vw, 1020px"
+                  className="aspect-[2/1] w-full object-cover"
+                />
+                {/* Bottom scrim — keeps the overlaid label legible against any part of the photo */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                {/* Overlaid label */}
+                <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-2.5 px-4 sm:bottom-7 sm:gap-4">
+                  <span className="h-px w-6 bg-gradient-to-r from-transparent to-antique-gold sm:w-14" />
+                  <p
+                    className="whitespace-nowrap text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
+                    style={{
+                      fontFamily: "var(--font-baskervville), 'Baskervville', serif",
+                      fontWeight: 500,
+                      textTransform: "uppercase",
+                      fontSize: "clamp(11px, 3vw, 17px)",
+                      letterSpacing: "clamp(2px, 1.4vw, 8px)",
+                    }}
+                  >
+                    <span style={{ display: "inline", margin: "0 0.15em", verticalAlign: "-0.1em" }}>🔱</span>
+                    Sanjeevini Kriya
+                    <span style={{ display: "inline", margin: "0 0.15em", verticalAlign: "-0.1em" }}>🔱</span>
+                  </p>
+                  <span className="h-px w-6 bg-gradient-to-l from-transparent to-antique-gold sm:w-14" />
+                </div>
+              </div>
+            </div>
 
           </div>
 
-          <LotusDivider className="mb-10" />
+          <LotusDivider className="mb-6 sm:mb-8 lg:mb-10" />
 
           {/* THE PATH heading + gold underline — above From Breath to Bliss */}
           <div className="text-center mb-4">
@@ -138,10 +144,10 @@ export default function SanjeeviniKriyaPathPage() {
               className="inline-block mb-1"
               style={{
                 fontFamily: "var(--font-baskervville), 'Baskervville', serif",
-                fontSize: "clamp(30px, 9vw, 47px)",
+                fontSize: "clamp(22px, 7vw, 47px)",
                 fontWeight: 500,
                 textTransform: "uppercase",
-                letterSpacing: "clamp(4px, 2vw, 10px)",
+                letterSpacing: "clamp(2px, 1.4vw, 10px)",
                 wordSpacing: 0,
                 color: "#000",
               }}
@@ -164,7 +170,7 @@ export default function SanjeeviniKriyaPathPage() {
             style={{
               textAlign: "center",
               fontFamily: "var(--font-caveat), 'Caveat', cursive",
-              fontSize: "clamp(1.25rem, 5.5vw, 1.8rem)",
+              fontSize: "clamp(1rem, 4vw, 1.8rem)",
               fontWeight: 300,
               lineHeight: 1.5,
               color: "#C2765D",

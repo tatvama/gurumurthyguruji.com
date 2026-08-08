@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface AshramCardProps {
   name: string;
@@ -9,25 +10,36 @@ interface AshramCardProps {
   statusLabel?: string;
 }
 
-const COSMIC =
-  "radial-gradient(ellipse at center,rgba(132,88,68,0.18) 0%,transparent 50%)," +
-  "linear-gradient(135deg,#4b0d13 0%,#5b1118 35%,#65161c 65%,#430a10 100%)";
-
 export function AshramCard({ name, location, status, description, statusLabel }: AshramCardProps) {
   const isActive = status === "Active";
 
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-antique-gold/20 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-antique-gold/40 hover:shadow-[0_10px_30px_rgba(75,13,19,0.12)]">
 
-      {/* Card top banner — cosmic */}
-      <div
-        className="relative flex items-center justify-between overflow-hidden px-5 py-4"
-        style={{ background: COSMIC }}
-      >
+      {/* Card top banner — same short height as before. Image stretches to
+          fill the full width (object-cover), so there's no empty maroon
+          gap on either side; height doesn't need to preserve the whole
+          photo, some vertical crop is fine. */}
+      <div className="relative flex h-24 items-center justify-between overflow-hidden px-5 py-4 sm:h-28">
+        <Image
+          src="/images/arshamCartImg.png"
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 400px"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+        {/* Maroon scrim — keeps the icon/badge legible and ties the photo into the site's palette */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(75,13,19,0.7) 0%, rgba(91,17,24,0.58) 35%, rgba(101,22,28,0.45) 65%, rgba(67,10,16,0.68) 100%)",
+          }}
+        />
         {/* gold top line */}
-        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-antique-gold/70 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 z-10 h-[1.5px] bg-gradient-to-r from-transparent via-antique-gold/70 to-transparent" />
         {/* OM watermark */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-end justify-end overflow-hidden select-none pr-2 pb-1 opacity-[0.08]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-10 flex items-end justify-end overflow-hidden select-none pr-2 pb-1 opacity-[0.1]">
           <span className="font-heading text-[64px] leading-none text-champagne">ॐ</span>
         </div>
 
