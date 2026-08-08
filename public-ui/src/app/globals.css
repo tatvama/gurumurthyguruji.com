@@ -33,47 +33,27 @@ body {
   background-attachment: fixed;
 }
 
-/* ── Hero name — char-by-char reveal (left→right), then golden light sweep. Loops every 8s ── */
-.hero-name { display: inline-block; }
-.hn-char {
+/* ── Hero name — classic typewriter: type in, pause, delete, retype, with a blinking caret ── */
+.hero-typewrite {
   display: inline-block;
-  background-image: linear-gradient(
-    100deg,
-    #FEFCF7 0%, #FEFCF7 38%,
-    #EFCC7E 44%, #FBEFC8 50%, #EFCC7E 56%,
-    #FEFCF7 62%, #FEFCF7 100%
-  );
-  background-size: 300% 100%;
-  background-position: 100% 50%;
-  background-repeat: no-repeat;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  opacity: 0;
-  will-change: transform, opacity, background-position;
-  animation: hnCharReveal 8s ease-in-out infinite, hnShine 8s ease-in-out infinite;
+  min-height: 1em;
 }
-@keyframes hnCharReveal {
-  0%   { opacity: 0; transform: translateY(0.7em)  scale(0.80); }
-  6%   { opacity: 1; transform: translateY(0)       scale(1);    }
-  85%  { opacity: 1; transform: translateY(0)       scale(1);    }
-  96%  { opacity: 0; transform: translateY(-0.2em) scale(0.98); }
-  100% { opacity: 0; transform: translateY(0.7em)  scale(0.80); }
+.hero-typewrite::after {
+  content: "";
+  display: inline-block;
+  width: 0.08em;
+  margin-left: 0.08em;
+  height: 0.9em;
+  vertical-align: -0.05em;
+  background: currentColor;
+  animation: hero-caret-blink 0.9s step-end infinite;
 }
-@keyframes hnShine {
-  0%, 22% { background-position: 100% 50%; }
-  40%     { background-position:   0% 50%; }
-  100%    { background-position:   0% 50%; }
+@keyframes hero-caret-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hn-char {
-    animation: none;
-    opacity: 1;
-    transform: none;
-    background-position: 0% 50%;
-    will-change: auto;
-  }
+  .hero-typewrite::after { animation: none; opacity: 1; }
 }
 
 /* Custom Background Patterns & Overlays */
@@ -569,7 +549,7 @@ html[lang="kn"] body { line-height: 1.85; }
   box-shadow: 0 40px 80px -36px rgba(122, 79, 30, 0.5);
 }
 .golden-aura {
-  background: radial-gradient(circle at 50% 42%, rgba(216, 183, 106, 0.55) 0%, rgba(201, 130, 43, 0.22) 38%, transparent 70%);
+  background: radial-gradient(circle at 50% 58%, rgba(216, 183, 106, 0.32) 0%, rgba(201, 130, 43, 0.13) 38%, transparent 68%);
   filter: blur(36px);
 }
 
@@ -596,8 +576,8 @@ html[lang="kn"] body { line-height: 1.85; }
 
 /* Slow, calm mandala glow pulse */
 @keyframes mandala-glow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%      { opacity: 0.85; transform: scale(1.04); }
+  0%, 100% { opacity: 0.32; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.04); }
 }
 .animate-mandala-glow { animation: mandala-glow 9s ease-in-out infinite; }
 
@@ -1025,6 +1005,20 @@ a:focus-visible, button:focus-visible {
 .btn-champagne-pill:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 32px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.40);
+}
+.btn-champagne-pill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.65s ease;
+}
+.btn-champagne-pill:hover::after {
+  left: 150%;
 }
 
 /* Dark outline pill — for CTAs on maroon/dark backgrounds */

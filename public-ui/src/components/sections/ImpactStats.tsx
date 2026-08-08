@@ -78,7 +78,7 @@ export function ImpactStats() {
   }, []);
 
   return (
-    <section className="section-gold-band py-16 sm:py-20">
+    <section className="section-gold-band py-10 sm:py-14">
       <div className="gold-band-border top" />
       <div className="gold-band-border bottom" />
       <div
@@ -101,7 +101,7 @@ export function ImpactStats() {
             </span>
 
             {/* Label */}
-            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-deep-brown/52 sm:text-[11px]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-deep-brown/70 sm:text-[11px]">
               {t(stat.labelKey)}
             </span>
           </div>

@@ -22,7 +22,7 @@ export function TrikalaTeaser() {
   const { t } = useLanguage();
 
   return (
-    <section className="section-cosmic relative overflow-hidden border-y border-champagne/10 px-4 py-20 sm:py-28 md:px-8">
+    <section className="section-cosmic relative overflow-hidden border-y border-champagne/10 px-4 py-14 sm:py-20 md:px-8">
       {/* Chakra texture overlay */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-[size:200px] bg-repeat opacity-[0.04]" />
 
@@ -45,7 +45,7 @@ export function TrikalaTeaser() {
             <span className="h-px w-14 bg-gradient-to-l from-transparent to-champagne/40" />
           </div>
 
-          <h2 className="font-heading text-4xl font-medium leading-[1.04] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+          <h2 className="font-heading text-3xl font-medium leading-[1.04] tracking-tight sm:text-4xl lg:text-[2.8rem]">
             <span className="italic text-shimmer-gold">{t("nav.trikala")}</span>
           </h2>
 
@@ -53,7 +53,7 @@ export function TrikalaTeaser() {
             {t("trikala.subtitle")}
           </p>
 
-          <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-[1.8] text-pearl/65">
+          <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-[1.8] text-pearl/80">
             {t("trikala.intro")}
           </p>
         </Reveal>
@@ -118,7 +118,7 @@ export function TrikalaTeaser() {
                   <p
                     className={[
                       "mt-3 text-[13.5px] leading-relaxed",
-                      time.isCenter ? "text-pearl/68" : "text-pearl/45",
+                      time.isCenter ? "text-pearl/90" : "text-pearl/70",
                     ].join(" ")}
                   >
                     {t(time.lineKey)}
@@ -132,7 +132,7 @@ export function TrikalaTeaser() {
         {/* Clarifier + CTA */}
         <Reveal delay={0.14}>
           <div className="mx-auto mt-10 max-w-3xl">
-            <p className="rounded-2xl border border-champagne/12 bg-white/[0.03] px-6 py-5 text-[14px] italic leading-relaxed text-pearl/65 backdrop-blur-sm">
+            <p className="rounded-2xl border border-champagne/12 bg-white/[0.03] px-6 py-5 text-[14px] italic leading-relaxed text-pearl/80 backdrop-blur-sm">
               ✦ {t("trikala.clarifier")}
             </p>
           </div>

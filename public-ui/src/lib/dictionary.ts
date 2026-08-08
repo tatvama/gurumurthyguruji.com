@@ -59,7 +59,7 @@ export const ui = {
     "hero.body":
       "Blessed by Shri Thrayambak Babaji and Shirdi Sai Baba. Through the divine sight of Trikāla Jñāna and the sacred path of Sanjeevini Kriya, seekers are guided toward inner peace, clarity, and awakening.",
     "hero.quote":
-      "“The journey within is the path to true enlightenment; every soul guided is a step closer to divine harmony.”",
+      "The journey within is the path to true enlightenment; every soul guided is a step closer to divine harmony.",
     "hero.trust.guided": "5,000+ Seekers Guided",
     "hero.trust.blessed": "Blessed by Babaji & Sai Baba",
     "hero.trust.free": "Always Free of Charge",
@@ -489,7 +489,7 @@ export const ui = {
     "hero.body":
       "ಶ್ರೀ ತ್ರ್ಯಂಬಕ ಬಾಬಾಜಿ ಮತ್ತು ಶಿರಡಿ ಸಾಯಿಬಾಬಾ ಅವರ ಆಶೀರ್ವಾದ ಪಡೆದವರು. ತ್ರಿಕಾಲ ಜ್ಞಾನದ ದಿವ್ಯ ದೃಷ್ಟಿ ಮತ್ತು ಸಂಜೀವಿನಿ ಕ್ರಿಯಾದ ಪವಿತ್ರ ಪಥದ ಮೂಲಕ, ಸಾಧಕರು ಆಂತರಿಕ ಶಾಂತಿ, ಸ್ಪಷ್ಟತೆ ಮತ್ತು ಜಾಗೃತಿಯೆಡೆಗೆ ಮಾರ್ಗದರ್ಶನ ಪಡೆಯುತ್ತಾರೆ.",
     "hero.quote":
-      "“ಅಂತರಂಗದ ಪಯಣವೇ ನಿಜವಾದ ಜ್ಞಾನೋದಯದ ಮಾರ್ಗ; ಮಾರ್ಗದರ್ಶನ ಪಡೆದ ಪ್ರತಿ ಆತ್ಮವೂ ದಿವ್ಯ ಸಾಮರಸ್ಯಕ್ಕೆ ಒಂದು ಹೆಜ್ಜೆ ಹತ್ತಿರ.”",
+      "ಅಂತರಂಗದ ಪಯಣವೇ ನಿಜವಾದ ಜ್ಞಾನೋದಯದ ಮಾರ್ಗ; ಮಾರ್ಗದರ್ಶನ ಪಡೆದ ಪ್ರತಿ ಆತ್ಮವೂ ದಿವ್ಯ ಸಾಮರಸ್ಯಕ್ಕೆ ಒಂದು ಹೆಜ್ಜೆ ಹತ್ತಿರ.",
     "hero.trust.guided": "5,000+ ಸಾಧಕರಿಗೆ ಮಾರ್ಗದರ್ಶನ",
     "hero.trust.blessed": "ಬಾಬಾಜಿ ಮತ್ತು ಸಾಯಿಬಾಬಾ ಅವರ ಆಶೀರ್ವಾದ",
     "hero.trust.free": "ಯಾವಾಗಲೂ ಉಚಿತ",

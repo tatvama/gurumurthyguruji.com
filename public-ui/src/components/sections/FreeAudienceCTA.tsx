@@ -9,7 +9,7 @@ export function FreeAudienceCTA() {
   const { t } = useLanguage();
 
   return (
-    <section className="sacred-burgundy-bg relative overflow-hidden px-4 py-24 text-center md:px-8">
+    <section className="sacred-burgundy-bg relative overflow-hidden px-4 py-14 sm:py-20 text-center md:px-8">
       {/* Chakra texture */}
       <div className="pointer-events-none absolute inset-0 bg-[url('/images/pattern-chakras.png')] bg-[size:130px] bg-repeat opacity-[0.055]" />
 
@@ -75,7 +75,7 @@ export function FreeAudienceCTA() {
         </div>
 
         {/* Heading */}
-        <h2 className="font-heading mb-5 text-4xl font-medium tracking-tight text-champagne text-gold-glow sm:text-5xl lg:text-[3.4rem]">
+        <h2 className="font-heading mb-5 text-3xl font-medium tracking-tight text-champagne text-gold-glow sm:text-4xl lg:text-[2.8rem]">
           {t("final.title")}
         </h2>
 
@@ -104,7 +104,7 @@ export function FreeAudienceCTA() {
           />
         </div>
 
-        <p className="mx-auto mb-9 max-w-2xl text-lg leading-relaxed text-pearl/82">
+        <p className="mx-auto mb-9 max-w-2xl text-lg leading-relaxed text-pearl/90">
           {t("final.body")}
         </p>
 

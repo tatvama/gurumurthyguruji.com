@@ -10,11 +10,11 @@ export function AboutPreview() {
   const { t } = useLanguage();
 
   return (
-    <section className="section-pearl px-4 py-16 sm:py-20 md:px-8 md:py-24">
+    <section className="section-pearl px-4 py-12 sm:py-16 md:px-8 md:py-20">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-14">
         <Reveal>
           <span className="eyebrow">{t("about.eyebrow")}</span>
-          <h2 className="font-heading mt-4 text-3xl font-medium leading-[1.08] tracking-tight text-deep-brown sm:text-4xl lg:text-[3.2rem]">
+          <h2 className="font-heading mt-4 text-2xl font-medium leading-[1.08] tracking-tight text-deep-brown sm:text-3xl lg:text-[2.6rem]">
             {t("about.title.a")}{" "}
             <span className="italic text-gradient-gold-rich">{t("about.title.b")}</span>
           </h2>

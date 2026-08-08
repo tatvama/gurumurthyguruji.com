@@ -135,7 +135,7 @@ export function TestimonialCarousel() {
                            sm:flex-[0_0_80%]
                            md:flex-[0_0_62%]
                            lg:flex-[0_0_34%]
-                           h-[360px] sm:h-[380px] lg:h-[420px]
+                           h-[320px] sm:h-[340px] lg:h-[380px]
                            flex items-center"
               >
                 {/* ── Card ──────────────────────────────────────────── */}
@@ -144,10 +144,10 @@ export function TestimonialCarousel() {
                     "relative flex h-full w-full flex-col items-center overflow-hidden rounded-[2rem] border text-center",
                     "transition-[opacity,transform,box-shadow,border-color,padding,background-color] duration-500 ease-in-out",
                     pos === "center"
-                      ? "translate-y-0 scale-100 border-antique-gold/50 bg-white px-6 py-8 md:px-8 md:py-10 opacity-100 z-10"
+                      ? "translate-y-0 scale-100 border-antique-gold/50 bg-white px-6 py-6 md:px-8 md:py-8 opacity-100 z-10"
                       : pos === "left" || pos === "right"
-                      ? "translate-y-4 scale-95 border-champagne/30 bg-white/70 px-5 py-7 opacity-55 z-0"
-                      : "opacity-0 scale-90 pointer-events-none border-transparent bg-white/70 px-5 py-7"
+                      ? "translate-y-4 scale-95 border-champagne/30 bg-white/70 px-5 py-5 opacity-55 z-0"
+                      : "opacity-0 scale-90 pointer-events-none border-transparent bg-white/70 px-5 py-5"
                   )}
                 >
                   {/* Top accent bar — active only */}
@@ -180,7 +180,7 @@ export function TestimonialCarousel() {
                   </div>
 
                   {/* Quote — consistent size across all positions prevents reflow */}
-                  <p className="font-heading relative z-10 italic leading-relaxed text-deep-brown mb-6 px-2 text-sm md:text-base lg:text-[1.05rem]">
+                  <p className="font-heading relative z-10 italic leading-relaxed text-deep-brown mb-4 px-2 text-sm md:text-base lg:text-[1.05rem]">
                     &ldquo;{tr(testimonial.quote)}&rdquo;
                   </p>
 

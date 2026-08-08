@@ -8,7 +8,7 @@ export function HomeTestimonials() {
   const { t } = useLanguage();
 
   return (
-    <section className="section-ivory overflow-hidden py-20 sm:py-24">
+    <section className="section-ivory overflow-hidden py-12 sm:py-16 md:py-20">
       <Reveal className="mx-auto mb-12 max-w-3xl px-6 text-center">
         <span className="eyebrow eyebrow-center">{t("testimonials.eyebrow")}</span>
         <h2 className="font-heading mt-4 text-4xl font-medium leading-[1.08] tracking-tight text-deep-brown sm:text-5xl">

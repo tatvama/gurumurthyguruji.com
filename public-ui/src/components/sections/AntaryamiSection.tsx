@@ -21,7 +21,7 @@ export function AntaryamiSection({ variant = "home" }: { variant?: "home" | "ful
   const Heading = isHome ? "h2" : "h2";
 
   return (
-    <section className="section-ivory bg-mandala-soft relative overflow-hidden py-20 sm:py-28">
+    <section className="section-ivory bg-mandala-soft relative overflow-hidden py-14 sm:py-20">
       {/* warm glow accents */}
       <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-champagne/14 blur-[120px]" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-saffron-accent/10 blur-[120px]" />
@@ -35,7 +35,7 @@ export function AntaryamiSection({ variant = "home" }: { variant?: "home" | "ful
           <Heading
             className={cn(
               "font-heading mt-4 font-medium leading-[1.04] tracking-tight text-deep-brown",
-              isHome ? "text-4xl sm:text-5xl lg:text-[3.4rem]" : "text-4xl sm:text-5xl",
+              isHome ? "text-3xl sm:text-4xl lg:text-[3rem]" : "text-3xl sm:text-4xl",
             )}
           >
             {t("antaryami.title")}
@@ -49,7 +49,7 @@ export function AntaryamiSection({ variant = "home" }: { variant?: "home" | "ful
           </p>
 
           {/* small trust line */}
-          <p className="mt-7 flex items-start gap-2.5 border-l-2 border-champagne/50 pl-4 text-[14.5px] italic leading-relaxed text-deep-brown/62">
+          <p className="mt-7 flex items-start gap-2.5 border-l-2 border-champagne/50 pl-4 text-[14.5px] italic leading-relaxed text-deep-brown/75">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-antique-gold/70" />
             {t("antaryami.stat")}
           </p>
@@ -89,8 +89,8 @@ export function AntaryamiSection({ variant = "home" }: { variant?: "home" | "ful
                 <span className="font-heading text-lg leading-none text-antique-gold">ॐ</span>
                 <span className="h-px flex-1 bg-deep-brown/15" />
               </div>
-              <p className="mt-3 text-center text-[10.5px] font-bold uppercase tracking-[0.24em] text-antique-gold/65">
-                {t("antaryami.eyebrow")}
+              <p className="mt-3 text-center text-[10.5px] font-bold uppercase tracking-[0.2em] text-antique-gold/65">
+                {t("hero.h1.name")}
               </p>
             </div>
           </motion.div>
