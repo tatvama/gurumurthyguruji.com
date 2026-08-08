@@ -31,6 +31,7 @@ export default function ArticleDetailPage() {
   const params = useParams<{ slug: string }>();
   const { t, tr, lang } = useLanguage();
   const [articles, setArticles] = useState<Article[] | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -52,6 +53,9 @@ export default function ArticleDetailPage() {
   }, [article?.id]);
 
   const allPhotos = article ? [article.cover, ...article.gallery] : [];
+
+  const carouselPrev = () => setCarouselIndex((i) => (i - 1 + allPhotos.length) % allPhotos.length);
+  const carouselNext = () => setCarouselIndex((i) => (i + 1) % allPhotos.length);
 
   const closeLightbox = () => setLightboxIndex(null);
   const showPrev = () => setLightboxIndex((i) => (i === null ? null : (i - 1 + allPhotos.length) % allPhotos.length));
@@ -132,23 +136,60 @@ export default function ArticleDetailPage() {
         {/* ── Slider (left) + Text (right) ─────────────────────────────── */}
         <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr_3fr] lg:gap-12">
-            {/* LEFT — horizontal image slider: feature image + every gallery photo */}
+            {/* LEFT — one-image-at-a-time carousel: feature image + every
+                gallery photo, with side arrows and dot indicators. Click
+                the image itself to open the full-screen lightbox. */}
             <div>
               <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-antique-gold">
                 Photo Gallery ({allPhotos.length})
               </p>
-              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollSnapType: "x mandatory" }}>
-                {allPhotos.map((src, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setLightboxIndex(idx)}
-                    className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl border border-antique-gold/25 shadow-sm transition-transform duration-300 hover:-translate-y-0.5"
-                    style={{ scrollSnapAlign: "start" }}
-                  >
-                    <Image src={src} alt={`${tr({ en: article.title, kn: article.titleKn })} — photo ${idx + 1}`} fill sizes="150px" className="object-cover" />
-                  </button>
-                ))}
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-antique-gold/25 bg-black shadow-[0_16px_40px_-16px_rgba(75,13,19,0.35)]">
+                <button
+                  onClick={() => setLightboxIndex(carouselIndex)}
+                  className="absolute inset-0 z-0"
+                  aria-label="View larger"
+                >
+                  <Image
+                    src={allPhotos[carouselIndex]}
+                    alt={`${tr({ en: article.title, kn: article.titleKn })} — photo ${carouselIndex + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover"
+                  />
+                </button>
+                {allPhotos.length > 1 && (
+                  <>
+                    <button
+                      onClick={carouselPrev}
+                      aria-label="Previous photo"
+                      className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={carouselNext}
+                      aria-label="Next photo"
+                      className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
               </div>
+              {allPhotos.length > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  {allPhotos.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCarouselIndex(idx)}
+                      aria-label={`Go to photo ${idx + 1}`}
+                      className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                        idx === carouselIndex ? "bg-saffron-accent" : "bg-antique-gold/25"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* RIGHT — all text content */}
