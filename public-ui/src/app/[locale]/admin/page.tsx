@@ -6474,7 +6474,7 @@ export default function AdminPage() {
             return (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "#f9fafb", minHeight: 0 }}>
                 {/* Editor top bar */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "#3a2418", color: "#fff", flexWrap: "wrap", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "#0d9488", color: "#fff", flexWrap: "wrap", gap: 10 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <button onClick={() => setArticleView("list")} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.12)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <ArrowRight size={15} style={{ transform: "rotate(180deg)" }} />
@@ -6497,7 +6497,7 @@ export default function AdminPage() {
                     <button
                       onClick={() => handleSaveArticle("published")}
                       disabled={articleSaving}
-                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: articleSaving ? "#9ca3af" : "#d97706", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: articleSaving ? "not-allowed" : "pointer" }}
+                      style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: articleSaving ? "#9ca3af" : "#0f766e", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: articleSaving ? "not-allowed" : "pointer" }}
                     >
                       {articleSaving ? "Saving…" : "Publish"}
                     </button>
@@ -6508,7 +6508,7 @@ export default function AdminPage() {
                   {/* Main column */}
                   <div style={{ flex: "1 1 560px", minWidth: 320, display: "flex", flexDirection: "column", gap: 16 }}>
                     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 20 }}>
-                      <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#d97706", marginBottom: 6 }}>
+                      <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#0d9488", marginBottom: 6 }}>
                         Title (English) *
                       </p>
                       <input
@@ -6674,7 +6674,7 @@ export default function AdminPage() {
                         <button
                           onClick={() => { if (articleGalleryUrlInput.trim()) { addArticleGalleryImage(articleGalleryUrlInput.trim()); setArticleGalleryUrlInput(""); } }}
                           disabled={!articleGalleryUrlInput.trim()}
-                          style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: articleGalleryUrlInput.trim() ? "#d97706" : "#e5e7eb", color: articleGalleryUrlInput.trim() ? "#fff" : "#9ca3af", fontSize: 12, fontWeight: 700, cursor: articleGalleryUrlInput.trim() ? "pointer" : "not-allowed" }}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: articleGalleryUrlInput.trim() ? "#0d9488" : "#e5e7eb", color: articleGalleryUrlInput.trim() ? "#fff" : "#9ca3af", fontSize: 12, fontWeight: 700, cursor: articleGalleryUrlInput.trim() ? "pointer" : "not-allowed" }}
                         >
                           Add
                         </button>
@@ -6773,7 +6773,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <button onClick={openNewArticle}
-                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, border: "none", background: "#d97706", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, border: "none", background: "#0d9488", color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
                     <Plus size={14} /> New Article
                   </button>
                 </div>
@@ -6786,7 +6786,7 @@ export default function AdminPage() {
                     <button key={s.key} onClick={() => setArticleStatusTab(s.key)}
                       style={{
                         padding: "7px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
-                        background: articleStatusTab === s.key ? "#d97706" : "#fff",
+                        background: articleStatusTab === s.key ? "#0d9488" : "#fff",
                         color: articleStatusTab === s.key ? "#fff" : "#6b7280",
                         boxShadow: articleStatusTab === s.key ? "none" : "0 0 0 1px #e5e7eb inset",
                       }}>
