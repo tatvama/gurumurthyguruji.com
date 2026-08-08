@@ -6983,7 +6983,7 @@ export default function AdminPage() {
         })()}
 
         {/* ── Bookings / Contacts: dark hero card ─────────────────────── */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && tab !== "gallery" && tab !== "articles" && (
           <div className="adm-hero-card">
             <div className="adm-hero-row">
 
@@ -7041,7 +7041,7 @@ export default function AdminPage() {
 
 
         {/* Search + filter bar */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && tab !== "gallery" && tab !== "articles" && (
           <div className="adm-searchbar">
             {/* Search input */}
             <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -7202,7 +7202,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Bookings / Contacts Table ── */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && tab !== "gallery" && tab !== "articles" && (
           <div className="adm-content">
             {loading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, color: "#6b7280", fontSize: 14, gap: 10 }}>
@@ -7393,7 +7393,7 @@ export default function AdminPage() {
         )}
 
         {/* Pagination */}
-        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && !loading && !error && filtered.length > PAGE_SIZE && (
+        {tab !== "admins" && tab !== "trikala" && tab !== "devotees" && tab !== "today" && tab !== "appointments" && tab !== "reports" && tab !== "settings" && tab !== "gallery" && tab !== "articles" && !loading && !error && filtered.length > PAGE_SIZE && (
           <footer className="adm-pagination">
             <p style={{ fontSize: 12, color: "#6b7280" }}>
               Page {safePage} of {totalPages} · {filtered.length} total
