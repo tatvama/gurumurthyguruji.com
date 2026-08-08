@@ -4804,7 +4804,7 @@ export default function AdminPage() {
   const ARTICLE_EMPTY_FORM = {
     title: "", titleKn: "", category: "Meditation", cover: "",
     excerpt: "", excerptKn: "", content: "", status: "draft" as ArticleStatus,
-    tags: [] as string[], author: "", metaTitle: "", metaDescription: "",
+    tags: [] as string[], gallery: [] as string[], author: "", metaTitle: "", metaDescription: "",
   };
   const [articleItems, setArticleItems]     = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
@@ -4812,6 +4812,7 @@ export default function AdminPage() {
   const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
   const [articleForm, setArticleForm] = useState(ARTICLE_EMPTY_FORM);
   const [articleTagInput, setArticleTagInput] = useState("");
+  const [articleGalleryUrlInput, setArticleGalleryUrlInput] = useState("");
   const [articleFileName, setArticleFileName] = useState("");
   const [articleSaving, setArticleSaving] = useState(false);
   const [articleDeletingId, setArticleDeletingId] = useState<number | null>(null);
@@ -4878,6 +4879,7 @@ export default function AdminPage() {
     setArticleForm(ARTICLE_EMPTY_FORM);
     setArticleFileName("");
     setArticleTagInput("");
+    setArticleGalleryUrlInput("");
     setArticleView("editor");
     setTimeout(() => { if (articleEditorRef.current) articleEditorRef.current.innerHTML = ""; }, 0);
   }
@@ -4887,10 +4889,11 @@ export default function AdminPage() {
     setArticleForm({
       title: a.title, titleKn: a.titleKn, category: a.category, cover: a.cover,
       excerpt: a.excerpt, excerptKn: a.excerptKn, content: a.content, status: a.status,
-      tags: a.tags, author: a.author, metaTitle: a.metaTitle, metaDescription: a.metaDescription,
+      tags: a.tags, gallery: a.gallery, author: a.author, metaTitle: a.metaTitle, metaDescription: a.metaDescription,
     });
     setArticleFileName("");
     setArticleTagInput("");
+    setArticleGalleryUrlInput("");
     setArticleView("editor");
     setTimeout(() => { if (articleEditorRef.current) articleEditorRef.current.innerHTML = articleContentHtml(a.content); }, 0);
   }
@@ -4904,6 +4907,23 @@ export default function AdminPage() {
 
   function removeArticleTag(tag: string) {
     setArticleForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }));
+  }
+
+  function addArticleGalleryImage(src: string) {
+    if (!src) return;
+    setArticleForm((f) => ({ ...f, gallery: [...f.gallery, src] }));
+  }
+
+  function removeArticleGalleryImage(idx: number) {
+    setArticleForm((f) => ({ ...f, gallery: f.gallery.filter((_, i) => i !== idx) }));
+  }
+
+  async function handleArticleGalleryFiles(files: FileList | File[]) {
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const dataUrl = await readFileAsDataUrl(file);
+      addArticleGalleryImage(dataUrl);
+    }
   }
 
   async function handleSaveArticle(status: ArticleStatus) {
@@ -6619,6 +6639,59 @@ export default function AdminPage() {
                         </label>
                       )}
                       <p style={{ fontSize: 10, color: "#9ca3af" }}>Recommended: 1200×630px · JPG or PNG</p>
+                    </div>
+
+                    {/* Photos & Gallery — extra images shown in a dropdown
+                        on the public article page, separate from the
+                        single required Feature Image above. */}
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: 10 }}>Photos &amp; Gallery</p>
+                      <label
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (e.dataTransfer.files?.length) handleArticleGalleryFiles(e.dataTransfer.files);
+                        }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, padding: "20px 10px", borderRadius: 8, border: "1.5px dashed #d1d5db", cursor: "pointer", background: "#f9fafb", marginBottom: 10 }}
+                      >
+                        <Plus size={16} color="#9ca3af" />
+                        <span style={{ fontSize: 11.5, color: "#9ca3af" }}>Drop images here, or Browse files</span>
+                        <input type="file" accept="image/*" multiple style={{ display: "none" }}
+                          onChange={async (e) => {
+                            if (e.target.files?.length) await handleArticleGalleryFiles(e.target.files);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                        <input
+                          placeholder="…or paste image URL"
+                          value={articleGalleryUrlInput}
+                          onChange={(e) => setArticleGalleryUrlInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter" && articleGalleryUrlInput.trim()) { e.preventDefault(); addArticleGalleryImage(articleGalleryUrlInput.trim()); setArticleGalleryUrlInput(""); } }}
+                          style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: "1.5px solid #e5e7eb", fontSize: 12.5 }}
+                        />
+                        <button
+                          onClick={() => { if (articleGalleryUrlInput.trim()) { addArticleGalleryImage(articleGalleryUrlInput.trim()); setArticleGalleryUrlInput(""); } }}
+                          disabled={!articleGalleryUrlInput.trim()}
+                          style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: articleGalleryUrlInput.trim() ? "#d97706" : "#e5e7eb", color: articleGalleryUrlInput.trim() ? "#fff" : "#9ca3af", fontSize: 12, fontWeight: 700, cursor: articleGalleryUrlInput.trim() ? "pointer" : "not-allowed" }}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {articleForm.gallery.length > 0 && (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                          {articleForm.gallery.map((src, idx) => (
+                            <div key={idx} style={{ position: "relative" }}>
+                              <img src={src} alt={`Gallery ${idx + 1}`} style={{ width: "100%", height: 60, objectFit: "cover", borderRadius: 6 }} />
+                              <button onClick={() => removeArticleGalleryImage(idx)}
+                                style={{ position: "absolute", top: 3, right: 3, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <X size={9} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 16 }}>

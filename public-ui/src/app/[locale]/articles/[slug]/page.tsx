@@ -11,7 +11,7 @@ import { getArticles, incrementArticleView, articleContentHtml, type Article } f
 import { articleCategoryKn } from "@/lib/data";
 import { useLanguage } from "@/lib/i18n";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarDays, Sparkles, ChevronDown, Images } from "lucide-react";
 import Image from "next/image";
 
 const COSMIC =
@@ -37,6 +37,7 @@ export default function ArticleDetailPage() {
   const params = useParams<{ slug: string }>();
   const { t, tr, lang } = useLanguage();
   const [articles, setArticles] = useState<Article[] | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,6 +154,37 @@ export default function ArticleDetailPage() {
                 #{tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* ── Photo Gallery — collapsible dropdown, only shown when the
+            article has extra images attached beyond the feature image */}
+        {article.gallery.length > 0 && (
+          <div className="mx-auto mt-8 max-w-2xl px-4 md:px-8">
+            <div className="overflow-hidden rounded-xl border border-antique-gold/20 bg-white">
+              <button
+                onClick={() => setGalleryOpen((v) => !v)}
+                className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Images className="h-4 w-4 text-saffron-accent" />
+                  <span className="font-heading text-[15px] font-bold text-deep-brown">
+                    Photo Gallery
+                  </span>
+                  <span className="text-[11px] font-medium text-deep-brown/40">({article.gallery.length})</span>
+                </span>
+                <ChevronDown className={`h-4 w-4 text-deep-brown/50 transition-transform duration-300 ${galleryOpen ? "rotate-180" : ""}`} />
+              </button>
+              {galleryOpen && (
+                <div className="grid grid-cols-2 gap-2 border-t border-antique-gold/15 p-4 sm:grid-cols-3">
+                  {article.gallery.map((src, idx) => (
+                    <div key={idx} className="relative aspect-square overflow-hidden rounded-lg">
+                      <Image src={src} alt={`${tr({ en: article.title, kn: article.titleKn })} — photo ${idx + 1}`} fill sizes="200px" className="object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

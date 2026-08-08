@@ -621,6 +621,10 @@ export const initDB = async () => {
     await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS author VARCHAR(120) DEFAULT '';`);
     await client.query(`UPDATE articles SET status = CASE WHEN published THEN 'published' ELSE 'draft' END WHERE status IS NULL;`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status);`);
+    /* Photos & Gallery — extra images attached to the article, shown in a
+       dropdown/accordion on the public detail page (separate from the
+       single required Feature Image). Stored as a JSON array of URLs. */
+    await client.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS gallery TEXT DEFAULT '[]';`);
 
     /* One-time seed so the public gallery/articles pages aren't empty on
        first switch-over from the old hardcoded data.ts — only runs while

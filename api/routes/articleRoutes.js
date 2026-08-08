@@ -42,7 +42,7 @@ router.post("/", ALL_ADMIN, async (req, res, next) => {
   try {
     const {
       title, title_kn, category, cover, excerpt, excerpt_kn, content,
-      status, tags, author, meta_title, meta_description,
+      status, tags, author, meta_title, meta_description, gallery,
     } = req.body;
     if (!title || !cover || !content) {
       return res.status(400).json({ success: false, message: "title, cover and content are required." });
@@ -55,8 +55,8 @@ router.post("/", ALL_ADMIN, async (req, res, next) => {
     const { rows } = await pool.query(
       `INSERT INTO articles
          (slug, category, cover, title, title_kn, excerpt, excerpt_kn, content,
-          published, status, tags, author, meta_title, meta_description, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+          published, status, tags, author, meta_title, meta_description, gallery, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
       [
         slug,
         category || "Meditation",
@@ -72,6 +72,7 @@ router.post("/", ALL_ADMIN, async (req, res, next) => {
         author || req.user?.name || "",
         meta_title || "",
         meta_description || "",
+        JSON.stringify(Array.isArray(gallery) ? gallery : []),
         req.user?.name || null,
       ]
     );
@@ -84,7 +85,7 @@ router.patch("/:id", ALL_ADMIN, async (req, res, next) => {
   try {
     const allowed = [
       "title", "title_kn", "category", "cover", "excerpt", "excerpt_kn",
-      "content", "status", "tags", "author", "meta_title", "meta_description",
+      "content", "status", "tags", "author", "meta_title", "meta_description", "gallery",
     ];
     const fields = allowed.filter((k) => req.body[k] !== undefined);
     if (!fields.length) return res.status(400).json({ success: false, message: "No updatable fields." });
@@ -94,7 +95,7 @@ router.patch("/:id", ALL_ADMIN, async (req, res, next) => {
     let i = 2;
     for (const k of fields) {
       sets.push(`${k} = $${i}`);
-      vals.push(k === "tags" ? JSON.stringify(req.body[k] || []) : req.body[k]);
+      vals.push((k === "tags" || k === "gallery") ? JSON.stringify(req.body[k] || []) : req.body[k]);
       i++;
     }
     // Keep the legacy `published` boolean in sync whenever status changes.

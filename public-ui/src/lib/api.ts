@@ -1052,6 +1052,9 @@ export interface Article {
   content: string;
   status: ArticleStatus;
   tags: string[];
+  /** Extra images attached to the article (separate from the required
+   *  `cover`), shown in a "Photo Gallery" dropdown on the public page. */
+  gallery: string[];
   author: string;
   views: number;
   metaTitle: string;
@@ -1074,6 +1077,8 @@ export function articleContentHtml(content: string): string {
 function mapArticle(r: Record<string, any>): Article {
   let tags: string[] = [];
   try { tags = typeof r.tags === "string" ? JSON.parse(r.tags) : (r.tags ?? []); } catch { tags = []; }
+  let gallery: string[] = [];
+  try { gallery = typeof r.gallery === "string" ? JSON.parse(r.gallery) : (r.gallery ?? []); } catch { gallery = []; }
   return {
     id: r.id,
     slug: r.slug,
@@ -1086,6 +1091,7 @@ function mapArticle(r: Record<string, any>): Article {
     content: r.content ?? "",
     status: (r.status as ArticleStatus) ?? (r.published !== false ? "published" : "draft"),
     tags,
+    gallery,
     author: r.author ?? "",
     views: r.views ?? 0,
     metaTitle: r.meta_title ?? "",
@@ -1114,7 +1120,7 @@ export async function getAllArticles(): Promise<Article[]> {
 export interface ArticlePayload {
   title: string; titleKn?: string; category: string; cover: string;
   excerpt?: string; excerptKn?: string; content: string; status?: ArticleStatus;
-  tags?: string[]; author?: string; metaTitle?: string; metaDescription?: string;
+  tags?: string[]; gallery?: string[]; author?: string; metaTitle?: string; metaDescription?: string;
 }
 
 function toArticleBody(payload: Partial<ArticlePayload>) {
@@ -1128,6 +1134,7 @@ function toArticleBody(payload: Partial<ArticlePayload>) {
     content: payload.content,
     status: payload.status ?? "draft",
     tags: payload.tags ?? [],
+    gallery: payload.gallery ?? [],
     author: payload.author ?? "",
     meta_title: payload.metaTitle ?? "",
     meta_description: payload.metaDescription ?? "",
